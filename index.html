@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Sales DB</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --surface: #fff;
+    --surface2: #f0ebe0;
+    --border: #ddd5c0;
+    --ink: #1a1408;
+    --muted: #8a7d65;
+    --accent: #1a6b3a;
+    --accent-light: #e8f4ed;
+    --danger: #8b2020;
+    --danger-light: #fdf0f0;
+    --gold: #b8860b;
+    --gold-light: #fdf8e8;
+    --shadow: 0 2px 12px rgba(26,20,8,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-style: italic;
+    letter-spacing: -0.5px;
+    color: #f5f0e8;
+  }
+
+  .logo strong { font-style: normal; color: #90d4a8; }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .user-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px;
+    padding: 5px 12px 5px 8px;
+    font-size: 11px;
+    color: #c8bfa8;
+  }
+
+  .user-avatar {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    color: white;
+    font-weight: 500;
+  }
+
+  .btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 7px 16px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--surface2); border-color: var(--muted); }
+  .btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn.primary:hover { background: #155a30; }
+  .btn.danger { background: var(--danger); color: white; border-color: var(--danger); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-sm { padding: 5px 10px; font-size: 10px; }
+
+  /* LOGIN SCREEN */
+  #login-screen {
+    min-height: calc(100vh - 56px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 48px 40px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+
+  .login-icon {
+    width: 64px; height: 64px;
+    background: var(--accent-light);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 28px;
+  }
+
+  .login-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .login-sub {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+
+  .ms-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 13px 20px;
+    background: #0078d4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .ms-btn:hover { background: #006abc; }
+
+  .ms-logo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    width: 18px; height: 18px;
+    flex-shrink: 0;
+  }
+  .ms-logo div { border-radius: 1px; }
+  .ms-logo div:nth-child(1) { background: #f25022; }
+  .ms-logo div:nth-child(2) { background: #7fba00; }
+  .ms-logo div:nth-child(3) { background: #00a4ef; }
+  .ms-logo div:nth-child(4) { background: #ffb900; }
+
+  .login-note {
+    margin-top: 20px;
+    font-size: 10px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* APP LAYOUT */
+  #app-screen { display: none; }
+
+  .app-body {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    min-height: calc(100vh - 56px);
+  }
+
+  @media (max-width: 768px) {
+    .app-body { grid-template-columns: 1fr; }
+    .chat-panel { display: none; }
+    .chat-panel.mobile-open { display: flex; position: fixed; inset: 56px 0 0 0; z-index: 40; }
+  }
+
+  /* DATA PANEL */
+  .data-panel {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border);
+    min-height: calc(100vh - 56px);
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .panel-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-style: italic;
+  }
+
+  .panel-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    overflow-x: auto;
+  }
+
+  .tab {
+    padding: 11px 18px;
+    font-size: 11px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--surface); }
+
+  .tab-pane { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+  .tab-pane.active { display: flex; }
+
+  /* TABLE */
+  .table-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .search-box {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    background: var(--bg);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-box:focus { border-color: var(--accent); }
+  .search-box::placeholder { color: var(--muted); }
+
+  .rec-count { font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+  .table-wrap { overflow: auto; flex: 1; }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead { position: sticky; top: 0; z-index: 2; }
+
+  th {
+    background: var(--surface2);
+    padding: 9px 14px;
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  th:hover { color: var(--ink); }
+
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #ede8dc;
+    font-size: 12px;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  tr:hover td { background: var(--accent-light); }
+  tr.selected td { background: #dff0e8; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    letter-spacing: 0.3px;
+    font-weight: 500;
+  }
+  .badge-won { background: var(--accent-light); color: var(--accent); }
+  .badge-lost { background: var(--danger-light); color: var(--danger); }
+  .badge-open { background: #e8f0fd; color: #1a3a8b; }
+  .badge-prospect { background: var(--gold-light); color: var(--gold); }
+
+  /* FORM */
+  .form-wrap {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .form-section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-style: italic;
+    margin-bottom: 20px;
+    color: var(--ink);
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  input[type=text], input[type=number], input[type=date], select, textarea {
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    background: var(--bg);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 80px; }
+
+  .form-actions { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+
+  /* REPORTS */
+  .report-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .report-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    font-size: 13px;
+    line-height: 1.8;
+    white-space: pre-wrap;
+  }
+
+  .report-placeholder {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 12px;
+    font-style: italic;
+    font-family: 'Playfair Display', serif;
+  }
+
+  /* CHAT PANEL */
+  .chat-panel {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    height: calc(100vh - 56px);
+    position: sticky;
+    top: 56px;
+  }
+
+  .chat-top {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface2);
+  }
+
+  .chat-top-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    font-style: italic;
+  }
+
+  .chat-msgs {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .msg { display: flex; flex-direction: column; gap: 4px; animation: fadeUp 0.25s ease; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+
+  .msg-who { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+
+  .msg-body {
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+  }
+
+  .msg.user .msg-body {
+    background: var(--accent);
+    color: white;
+    align-self: flex-end;
+    max-width: 88%;
+    border-radius: 6px 6px 2px 6px;
+  }
+
+  .msg.assistant .msg-body {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--ink);
+  }
+
+  .msg.system .msg-body {
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--muted);
+    font-size: 11px;
+    font-style: italic;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .typing {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 12px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    width: fit-content;
+  }
+  .typing span {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--muted);
+    animation: blink 1.2s infinite;
+  }
+  .typing span:nth-child(2){animation-delay:.2s}
+  .typing span:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,80%,100%{opacity:.3}40%{opacity:1}}
+
+  .chat-bottom {
+    padding: 12px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .suggestion {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    transition: all 0.15s;
+  }
+  .suggestion:hover { border-color: var(--accent); color: var(--accent); }
+
+  .input-row { display: flex; gap: 8px; }
+
+  #chat-input {
+    flex: 1;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    background: var(--surface);
+    color: var(--ink);
+    outline: none;
+    resize: none;
+    height: 40px;
+    transition: border-color 0.2s;
+  }
+  #chat-input:focus { border-color: var(--accent); }
+  #chat-input::placeholder { color: var(--muted); }
+
+  /* LOADING OVERLAY */
+  #loading {
+    position: fixed; inset: 0;
+    background: rgba(245,240,232,0.9);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+  }
+  #loading.show { display: flex; }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading p { color: var(--muted); font-size: 12px; font-style: italic; font-family: 'Playfair Display', serif; }
+
+  /* TOAST */
+  #toast {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: var(--ink);
+    color: var(--bg);
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 200;
+    transition: transform 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+  #toast.success { background: var(--accent); }
+  #toast.error { background: var(--danger); }
+
+  /* MOBILE CHAT TOGGLE */
+  .mobile-chat-btn {
+    display: none;
+    position: fixed;
+    bottom: 20px; right: 20px;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(26,107,58,0.35);
+    z-index: 30;
+    align-items: center;
+    justify-content: center;
+  }
+  @media (max-width: 768px) { .mobile-chat-btn { display: flex; } }
+
+  /* SYNC STATUS */
+  .sync-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+  .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .sync-badge.saving { background: var(--gold-light); color: var(--gold); }
+  .sync-badge.saving .sync-dot { background: var(--gold); animation: pulse 1s infinite; }
+  .sync-badge.error { background: var(--danger-light); color: var(--danger); }
+  .sync-badge.error .sync-dot { background: var(--danger); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    gap: 12px;
+    padding: 40px;
+    text-align: center;
+  }
+  .empty-state .es-icon { font-size: 32px; opacity: 0.4; }
+  .empty-state p { font-size: 12px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="spinner"></div>
+  <p id="loading-msg">Connecting to OneDrive...</p>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">Sales<strong>DB</strong></div>
+  <div class="header-right">
+    <div class="user-pill" id="user-pill" style="display:none">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <span id="user-name">Loading...</span>
+    </div>
+    <button class="btn btn-sm" id="sync-btn" onclick="syncToOneDrive()" style="display:none;background:#1a2a1a;color:#90d4a8;border-color:#2a4a2a">↑ Save to OneDrive</button>
+    <button class="btn btn-sm" id="signout-btn" onclick="signOut()" style="display:none;background:rgba(255,255,255,0.08);color:#c8bfa8;border-color:rgba(255,255,255,0.15)">Sign out</button>
+  </div>
+</header>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-icon">📊</div>
+    <div class="login-title">Sales Database</div>
+    <div class="login-sub">Sign in with your Microsoft account to access and manage your sales data directly from OneDrive.</div>
+    <button class="ms-btn" onclick="signIn()">
+      <div class="ms-logo"><div></div><div></div><div></div><div></div></div>
+      Sign in with Microsoft
+    </button>
+    <div class="login-note">Your data stays in OneDrive. This app reads and writes directly to <strong>sales DB - Claude.xlsx</strong></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <div class="app-body">
+
+    <!-- DATA PANEL -->
+    <div class="data-panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">sales DB — Claude.xlsx</div>
+          <div id="sync-status" class="sync-badge" style="margin-top:4px">
+            <div class="sync-dot"></div>
+            <span id="sync-text">Synced with OneDrive</span>
+          </div>
+        </div>
+        <div class="panel-actions">
+          <button class="btn btn-sm" onclick="refreshFromOneDrive()">↻ Refresh</button>
+          <button class="btn btn-sm primary" onclick="switchTab('add')">+ Add Record</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('view')">View Data</div>
+        <div class="tab" onclick="switchTab('add')">Add Record</div>
+        <div class="tab" onclick="switchTab('edit')">Edit Record</div>
+        <div class="tab" onclick="switchTab('reports')">Reports</div>
+      </div>
+
+      <!-- VIEW -->
+      <div class="tab-pane active" id="pane-view">
+        <div class="table-toolbar">
+          <input type="text" class="search-box" placeholder="Search..." id="search-input" oninput="filterTable()">
+          <span class="rec-count" id="rec-count">— records</span>
+        </div>
+        <div class="table-wrap">
+          <div class="empty-state" id="empty-state">
+            <div class="es-icon">📂</div>
+            <p>Your sales data will appear here<br>after signing in.</p>
+          </div>
+          <table id="data-table" style="display:none">
+            <thead id="tbl-head"></thead>
+            <tbody id="tbl-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ADD -->
+      <div class="tab-pane" id="pane-add">
+        <div class="form-wrap">
+          <div class="form-section-title">Add New Record</div>
+          <div class="form-grid" id="add-fields"></div>
+          <div class="form-actions">
+            <button class="btn primary" onclick="addRecord()">Add & Save to OneDrive</button>
+            <button class="btn" onclick="switchTab('view')">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- EDIT -->
+      <div class="tab-pane" id="pane-edit">
+        <div class="form-wrap">
+          <div class="form-section-title">Edit Record</div>
+          <p style="color:var(--muted);font-size:12px;margin-bottom:16px" id="edit-hint">← Select a row in View Data to edit it.</p>
+          <div class="form-grid" id="edit-fields"></div>
+          <div class="form-actions" id="edit-actions" style="display:none">
+            <button class="btn primary" onclick="saveEdit()">Save & Sync to OneDrive</button>
+            <button class="btn" onclick="cancelEdit()">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPORTS -->
+      <div class="tab-pane" id="pane-reports">
+        <div class="report-btns">
+          <button class="btn" onclick="genReport('summary')">📊 Summary</button>
+          <button class="btn" onclick="genReport('top')">🏆 Top Performers</button>
+          <button class="btn" onclick="genReport('pipeline')">🔮 Pipeline</button>
+          <button class="btn" onclick="genReport('trends')">📈 Trends</button>
+        </div>
+        <div class="report-placeholder" id="report-placeholder">
+          <span style="font-family:'Playfair Display',serif;font-style:italic">Select a report above</span>
+        </div>
+        <div class="report-body" id="report-body" style="display:none"></div>
+      </div>
+
+    </div>
+
+    <!-- CHAT PANEL -->
+    <div class="chat-panel" id="chat-panel">
+      <div class="chat-top">
+        <div class="chat-top-title">Ask Claude</div>
+        <button class="btn btn-sm" onclick="clearChat()">Clear</button>
+      </div>
+      <div class="chat-msgs" id="chat-msgs">
+        <div class="msg system">
+          <div class="msg-body">Sign in to start asking questions about your sales data.</div>
+        </div>
+      </div>
+      <div class="chat-bottom">
+        <div class="suggestions">
+          <button class="suggestion" onclick="useSug(this)">Total revenue?</button>
+          <button class="suggestion" onclick="useSug(this)">Top 3 deals?</button>
+          <button class="suggestion" onclick="useSug(this)">Open pipeline value?</button>
+          <button class="suggestion" onclick="useSug(this)">Win rate?</button>
+          <button class="suggestion" onclick="useSug(this)">Deals closing this month?</button>
+        </div>
+        <div class="input-row">
+          <textarea id="chat-input" placeholder="Ask about your data..." onkeydown="handleKey(event)"></textarea>
+          <button class="btn primary" onclick="sendChat()">→</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<button class="mobile-chat-btn" onclick="toggleMobileChat()">💬</button>
+<div id="toast"></div>
+
+<!-- SheetJS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- MSAL -->
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.10.0/lib/msal-browser.min.js"></script>
+
+<script>
+// ── CONFIG ─────────────────────────────────────────────
+const CLIENT_ID = 'cd53b987-59ab-4b81-9bfb-178cfa8ee5b2';
+const REDIRECT_URI = 'https://sengdiepevo.github.io/Sales-database/';
+const FILE_NAME = 'sales DB - Claude.xlsx';
+const SCOPES = ['Files.ReadWrite', 'User.Read'];
+const ANTHROPIC_KEY = ''; // ← Paste your Anthropic API key here
+
+const msalConfig = {
+  auth: {
+    clientId: CLIENT_ID,
+    authority: 'https://login.microsoftonline.com/consumers',
+    redirectUri: REDIRECT_URI,
+  },
+  cache: { cacheLocation: 'sessionStorage' }
+};
+
+let msalInstance = null;
+async function getMsal() {
+  if (!msalInstance) {
+    msalInstance = await msal.PublicClientApplication.createPublicClientApplication(msalConfig);
+  }
+  return msalInstance;
+}
+
+// ── STATE ──────────────────────────────────────────────
+let allData = [];
+let headers = [];
+let filteredData = [];
+let selectedRowIdx = -1;
+let editRowIdx = -1;
+let fileId = null;
+let accessToken = null;
+let unsavedChanges = false;
+
+// ── AUTH ───────────────────────────────────────────────
+async function signIn() {
+  try {
+    showLoading('Redirecting to Microsoft login...');
+    const pca = await getMsal();
+    await pca.loginRedirect({ scopes: SCOPES });
+    // Page will redirect — execution continues in init after return
+  } catch(e) {
+    hideLoading();
+    toast('Sign in failed: ' + e.message, 'error');
+  }
+}
+
+async function afterSignIn(account) {
+  showLoading('Loading your sales data...');
+  try {
+    // Get user info
+    const me = await graphGet('https://graph.microsoft.com/v1.0/me');
+    const initials = (me.displayName || 'U').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('user-avatar').textContent = initials;
+    document.getElementById('user-name').textContent = me.displayName || me.userPrincipalName;
+    document.getElementById('user-pill').style.display = 'flex';
+    document.getElementById('sync-btn').style.display = 'inline-flex';
+    document.getElementById('signout-btn').style.display = 'inline-flex';
+
+    // Find & load the file
+    await loadFileFromOneDrive();
+
+    // Show app
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+
+    addMsg('system', `Connected! Loaded ${allData.length} records from "${FILE_NAME}". Ask me anything about your sales data.`);
+    hideLoading();
+  } catch(e) {
+    hideLoading();
+    toast('Error loading data: ' + e.message, 'error');
+  }
+}
+
+async function signOut() {
+  const pca = await getMsal();
+  await pca.logoutRedirect();
+}
+
+async function getToken() {
+  const pca = await getMsal();
+  const accounts = pca.getAllAccounts();
+  if (!accounts.length) throw new Error('Not signed in');
+  const result = await pca.acquireTokenSilent({ scopes: SCOPES, account: accounts[0] });
+  accessToken = result.accessToken;
+  return accessToken;
+}
+
+// ── ONEDRIVE / GRAPH ───────────────────────────────────
+async function graphGet(url) {
+  const token = await getToken();
+  const res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+  if (!res.ok) throw new Error(`Graph error: ${res.status}`);
+  return res.json();
+}
+
+async function loadFileFromOneDrive() {
+  // Search for the file
+  const encoded = encodeURIComponent(FILE_NAME);
+  const search = await graphGet(`https://graph.microsoft.com/v1.0/me/drive/root/search(q='${encoded}')`);
+  const file = search.value?.find(f => f.name === FILE_NAME);
+  if (!file) throw new Error(`Could not find "${FILE_NAME}" in your OneDrive. Make sure the file exists.`);
+  fileId = file.id;
+
+  // Download content
+  const token = await getToken();
+  const contentRes = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/content`, {
+    headers: { Authorization: 'Bearer ' + token }
+  });
+  if (!contentRes.ok) throw new Error('Could not download file');
+
+  const arrayBuffer = await contentRes.arrayBuffer();
+  const wb = XLSX.read(arrayBuffer, { type: 'array' });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+  if (!json.length) throw new Error('File appears to be empty');
+  headers = Object.keys(json[0]);
+  allData = json;
+  filteredData = [...allData];
+
+  renderTable();
+  buildForms();
+  setSyncStatus('synced');
+}
+
+async function refreshFromOneDrive() {
+  try {
+    showLoading('Refreshing from OneDrive...');
+    await loadFileFromOneDrive();
+    hideLoading();
+    toast('Refreshed from OneDrive', 'success');
+  } catch(e) {
+    hideLoading();
+    toast('Refresh failed: ' + e.message, 'error');
+  }
+}
+
+async function syncToOneDrive() {
+  if (!fileId) { toast('No file loaded', 'error'); return; }
+  setSyncStatus('saving');
+  try {
+    const token = await getToken();
+    const ws = XLSX.utils.json_to_sheet(allData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Sales');
+    const wbOut = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbOut], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+    const res = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/content`, {
+      method: 'PUT',
+      headers: {
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      },
+      body: blob
+    });
+
+    if (!res.ok) throw new Error('Upload failed: ' + res.status);
+    unsavedChanges = false;
+    setSyncStatus('synced');
+    toast('Saved to OneDrive ✓', 'success');
+  } catch(e) {
+    setSyncStatus('error');
+    toast('Save failed: ' + e.message, 'error');
+  }
+}
+
+// ── TABLE ──────────────────────────────────────────────
+function renderTable() {
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('data-table').style.display = 'table';
+  filteredData = [...allData];
+
+  // Head
+  document.getElementById('tbl-head').innerHTML =
+    '<tr>' + headers.map(h => `<th onclick="sortBy('${h}')">${h} ↕</th>`).join('') + '</tr>';
+
+  buildBody();
+  document.getElementById('rec-count').textContent = `${filteredData.length} records`;
+}
+
+function buildBody() {
+  document.getElementById('tbl-body').innerHTML = filteredData.map((row, i) => {
+    const cells = headers.map(h => `<td title="${row[h]}">${fmtCell(h, row[h])}</td>`).join('');
+    return `<tr onclick="selectRow(${i})" class="${i===selectedRowIdx?'selected':''}">${cells}</tr>`;
+  }).join('');
+}
+
+function fmtCell(h, v) {
+  const hl = h.toLowerCase(), vs = String(v ?? '');
+  if (hl.includes('status') || hl.includes('stage')) {
+    const vl = vs.toLowerCase();
+    if (vl.includes('won')) return `<span class="badge badge-won">${vs}</span>`;
+    if (vl.includes('lost')) return `<span class="badge badge-lost">${vs}</span>`;
+    if (vl.includes('prospect') || vl.includes('lead')) return `<span class="badge badge-prospect">${vs}</span>`;
+    return `<span class="badge badge-open">${vs}</span>`;
+  }
+  if ((hl.includes('amount')||hl.includes('value')||hl.includes('revenue')||hl.includes('price')) && !isNaN(v) && v!=='') {
+    return '$' + Number(v).toLocaleString();
+  }
+  return vs;
+}
+
+function filterTable() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  filteredData = allData.filter(r => headers.some(h => String(r[h]).toLowerCase().includes(q)));
+  buildBody();
+  document.getElementById('rec-count').textContent = `${filteredData.length} records`;
+}
+
+let sortDir = {};
+function sortBy(col) {
+  sortDir[col] = !sortDir[col];
+  filteredData.sort((a,b) => {
+    const av = a[col], bv = b[col];
+    if (!isNaN(av) && !isNaN(bv)) return sortDir[col] ? av-bv : bv-av;
+    return sortDir[col] ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+  });
+  buildBody();
+}
+
+function selectRow(idx) {
+  selectedRowIdx = idx;
+  buildBody();
+  editRowIdx = allData.indexOf(filteredData[idx]);
+  populateEditForm(filteredData[idx]);
+}
+
+// ── FORMS ──────────────────────────────────────────────
+function buildForms() {
+  document.getElementById('add-fields').innerHTML = headers.map(h => `
+    <div class="form-group">
+      <label>${h}</label>
+      <input type="text" id="add-${sid(h)}" placeholder="${h}">
+    </div>`).join('');
+}
+
+function populateEditForm(row) {
+  document.getElementById('edit-hint').style.display = 'none';
+  document.getElementById('edit-actions').style.display = 'flex';
+  document.getElementById('edit-fields').innerHTML = headers.map(h => `
+    <div class="form-group">
+      <label>${h}</label>
+      <input type="text" id="edit-${sid(h)}" value="${row[h] ?? ''}">
+    </div>`).join('');
+  switchTab('edit');
+}
+
+function addRecord() {
+  const row = {};
+  headers.forEach(h => { row[h] = document.getElementById('add-' + sid(h))?.value ?? ''; });
+  allData.push(row);
+  renderTable();
+  markUnsaved();
+  syncToOneDrive();
+  toast('Record added & saved!', 'success');
+  switchTab('view');
+}
+
+function saveEdit() {
+  if (editRowIdx < 0) return;
+  headers.forEach(h => { allData[editRowIdx][h] = document.getElementById('edit-' + sid(h))?.value ?? ''; });
+  renderTable();
+  markUnsaved();
+  syncToOneDrive();
+  toast('Record updated & saved!', 'success');
+  switchTab('view');
+}
+
+function cancelEdit() { editRowIdx = -1; selectedRowIdx = -1; switchTab('view'); }
+function sid(s) { return s.replace(/[^a-zA-Z0-9]/g,'_'); }
+
+// ── TABS ───────────────────────────────────────────────
+function switchTab(name) {
+  const names = ['view','add','edit','reports'];
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', names[i]===name));
+  document.querySelectorAll('.tab-pane').forEach((p,i) => p.classList.toggle('active', names[i]===name));
+}
+
+// ── REPORTS ────────────────────────────────────────────
+async function genReport(type) {
+  if (!allData.length) { toast('No data loaded', 'error'); return; }
+  if (!ANTHROPIC_KEY) { toast('Add your Anthropic API key in the code', 'error'); return; }
+
+  const prompts = {
+    summary: 'Generate a comprehensive sales summary. Include total revenue, deal count, win rate, average deal size, and key insights.',
+    top: 'Who are the top performing sales reps or accounts? Rank them with numbers and highlight what sets them apart.',
+    pipeline: 'Analyse the open sales pipeline. Estimate likely revenue, identify at-risk deals, and highlight opportunities.',
+    trends: 'What trends do you see in this sales data? What is growing, declining, or needs attention?'
+  };
+
+  document.getElementById('report-placeholder').style.display = 'none';
+  const body = document.getElementById('report-body');
+  body.style.display = 'block';
+  body.textContent = 'Generating report...';
+
+  try {
+    const snap = dataSnapshot();
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `You are a sales analyst. Analyse this data:\n\n${snap}`,
+        messages: [{ role: 'user', content: prompts[type] }]
+      })
+    });
+    const d = await res.json();
+    body.textContent = d.content?.find(b=>b.type==='text')?.text || 'No report generated.';
+  } catch(e) {
+    body.textContent = 'Error: ' + e.message;
+  }
+}
+
+// ── CHAT ───────────────────────────────────────────────
+async function sendChat() {
+  const inp = document.getElementById('chat-input');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  if (!ANTHROPIC_KEY) { toast('Add your Anthropic API key in the code to use chat', 'error'); return; }
+  inp.value = '';
+
+  addMsg('user', msg);
+  const thinking = addThinking();
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `You are a sales data analyst. The user's sales database contains:\n\n${dataSnapshot()}\n\nAnswer questions concisely. Format numbers nicely. Be direct and helpful.`,
+        messages: [{ role: 'user', content: msg }]
+      })
+    });
+    const d = await res.json();
+    thinking.remove();
+    if (d.error) { addMsg('system', 'Error: ' + d.error.message); return; }
+    addMsg('assistant', d.content?.find(b=>b.type==='text')?.text || 'No response.');
+  } catch(e) {
+    thinking.remove();
+    addMsg('system', 'Network error. Check your API key.');
+  }
+}
+
+function dataSnapshot() {
+  const preview = allData.slice(0, 150);
+  const rows = preview.map(r => headers.map(h=>r[h]).join(' | ')).join('\n');
+  return `Columns: ${headers.join(', ')}\nTotal: ${allData.length} records\n\n${headers.join(' | ')}\n${rows}`;
+}
+
+function addMsg(role, text) {
+  const c = document.getElementById('chat-msgs');
+  const d = document.createElement('div');
+  d.className = `msg ${role}`;
+  d.innerHTML = `<div class="msg-who">${role==='user'?'You':role==='assistant'?'Claude':'Info'}</div><div class="msg-body">${text}</div>`;
+  c.appendChild(d);
+  c.scrollTop = c.scrollHeight;
+  return d;
+}
+
+function addThinking() {
+  const c = document.getElementById('chat-msgs');
+  const d = document.createElement('div');
+  d.className = 'msg assistant';
+  d.innerHTML = `<div class="msg-who">Claude</div><div class="typing"><span></span><span></span><span></span></div>`;
+  c.appendChild(d);
+  c.scrollTop = c.scrollHeight;
+  return d;
+}
+
+function clearChat() {
+  document.getElementById('chat-msgs').innerHTML = '<div class="msg system"><div class="msg-body">Chat cleared. Ask me anything about your data.</div></div>';
+}
+
+function handleKey(e) { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); } }
+function useSug(btn) { document.getElementById('chat-input').value = btn.textContent; sendChat(); }
+
+// ── MOBILE ─────────────────────────────────────────────
+function toggleMobileChat() {
+  document.getElementById('chat-panel').classList.toggle('mobile-open');
+}
+
+// ── SYNC STATUS ────────────────────────────────────────
+function setSyncStatus(state) {
+  const badge = document.getElementById('sync-status');
+  const text = document.getElementById('sync-text');
+  badge.className = 'sync-badge' + (state==='saving'?' saving':state==='error'?' error':'');
+  text.textContent = state==='saving'?'Saving to OneDrive...':state==='error'?'Save failed':'Synced with OneDrive';
+}
+
+function markUnsaved() {
+  unsavedChanges = true;
+  setSyncStatus('saving');
+}
+
+// ── LOADING ────────────────────────────────────────────
+function showLoading(msg) {
+  document.getElementById('loading-msg').textContent = msg || 'Loading...';
+  document.getElementById('loading').classList.add('show');
+}
+function hideLoading() {
+  document.getElementById('loading').classList.remove('show');
+}
+
+// ── TOAST ──────────────────────────────────────────────
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  setTimeout(() => el.className = '', 3000);
+}
+
+// ── INIT ───────────────────────────────────────────────
+(async () => {
+  try {
+    const pca = await getMsal();
+    // handleRedirectPromise catches the response when Microsoft redirects back
+    const response = await pca.handleRedirectPromise();
+    if (response && response.account) {
+      // Just came back from Microsoft login
+      await afterSignIn(response.account);
+    } else {
+      // Check if already signed in from a previous session
+      const accounts = pca.getAllAccounts();
+      if (accounts.length) {
+        await afterSignIn(accounts[0]);
+      }
+    }
+  } catch(e) {
+    console.error('Init error:', e);
+    toast('Login error: ' + e.message, 'error');
+  }
+})();
+</script>
+</body>
+</html>
