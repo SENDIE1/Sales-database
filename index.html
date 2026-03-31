@@ -816,7 +816,7 @@ const ANTHROPIC_KEY = () => sessionStorage.getItem('anthropic_key') || '';
 const msalConfig = {
   auth: {
     clientId: CLIENT_ID,
-    authority: 'https://login.microsoftonline.com/consumers',
+    authority: 'https://login.microsoftonline.com/common',
     redirectUri: REDIRECT_URI,
   },
   cache: { cacheLocation: 'sessionStorage' }
