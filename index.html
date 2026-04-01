@@ -580,10 +580,9 @@ function openModal(idx) {
   const row = filteredData[idx];
   const lotNum = row['Lot #'] || row['Lot#'] || '—';
   document.getElementById('modal-title').textContent = 'Lot ' + lotNum;
-  const priority = ['Lot #','Property Address','Stage','Sales Condition ','$VAL ','Channel Partner','Sales Channel','Product Line','Channel Market','Exchanged Date','Settled Date','CfS Settled Price ($)','Vendors Agency','Vendors Agency Agent'];
   let html = '';
-  priority.forEach(k => {
-    const v = row[k]; if (v === undefined || v === '' || v === null) return;
+  headers.forEach(k => {
+    const v = row[k]; if (v === undefined || v === '' || v === null || String(v).trim() === '' || String(v) === 'NaN') return;
     const display = (k.includes('$') || k.includes('Price')) && !isNaN(v) && v !== '' ? '$' + Number(v).toLocaleString() : String(v);
     html += `<div class="detail-row"><span class="detail-label">${k.trim()}</span><span class="detail-val">${display}</span></div>`;
   });
