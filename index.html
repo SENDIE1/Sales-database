@@ -1540,14 +1540,16 @@ function checkKeyBanner() {
 async function sendChat() {
   const inp = document.getElementById('chat-input');
   const msg = inp.value.trim(); if (!msg) return;
-  if (!ANTHROPIC_KEY()) { toast('API key missing — re-enter it on the sign-in screen', 'error'); return; }
+  const key = ANTHROPIC_KEY();
+  if (!key) { toast('API key missing — re-enter it on the sign-in screen', 'error'); return; }
+  // Debug: show first 20 chars of key being used
+  toast('Using key: ' + key.slice(0,20) + '...', 'success');
   inp.value = ''; addMsg('user', msg);
   const thinking = addThinking();
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 1000, system: `You are a property sales analyst assistant for a mobile app. Database: ${allData.length} lots.\n\n${dataSnapshot()}\n\nIMPORTANT FORMATTING RULES:\n- Never use markdown tables or pipe characters\n- Never use ** for bold\n- Use plain conversational text\n- For lists, just use simple line breaks\n- Keep answers concise and easy to read on a phone screen\n- When listing lots, format as: Lot 2001 — Exchanged — $980,000\n- Use plain numbers and short sentences`, messages: [{ role: 'user', content: msg }] })
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },\n\n${dataSnapshot()}\n\nIMPORTANT FORMATTING RULES:\n- Never use markdown tables or pipe characters\n- Never use ** for bold\n- Use plain conversational text\n- For lists, just use simple line breaks\n- Keep answers concise and easy to read on a phone screen\n- When listing lots, format as: Lot 2001 — Exchanged — $980,000\n- Use plain numbers and short sentences`, messages: [{ role: 'user', content: msg }] })
     });
     const d = await res.json(); thinking.remove();
     if (d.error) { addMsg('system', 'Error: ' + d.error.message); return; }
