@@ -535,8 +535,12 @@ async function syncToOneDrive() {
       }
     }
     setSyncStatus('synced');
-    toast('Saved to OneDrive ✓', 'success');
-  } catch(e) { setSyncStatus('error'); toast('Save failed: ' + e.message, 'error'); }
+    toastLong('✓ Saved to OneDrive successfully', 'success');
+  } catch(e) {
+    setSyncStatus('error');
+    toastLong('✗ NOT saved to OneDrive: ' + e.message, 'error');
+    throw e;
+  }
 }
 
 function populateDropdowns() {
@@ -712,15 +716,27 @@ function buildAddForm() {
   document.getElementById('add-fields').innerHTML = headers.map(h => `<div class="form-group"><label>${h}</label><input type="text" id="add-${sid(h)}" placeholder="${h}"></div>`).join('');
 }
 
-function addRecord() {
+async function addRecord() {
   const row = {}; headers.forEach(h => { row[h] = document.getElementById('add-'+sid(h))?.value ?? ''; });
-  allData.push(row); applyFilters(); updateStats(); syncToOneDrive(); showScreen('data'); toast('Record added ✓', 'success');
+  allData.push(row); applyFilters(); updateStats();
+  showScreen('data');
+  try {
+    await syncToOneDrive();
+  } catch(e) {
+    toast('Save failed: ' + e.message, 'error');
+  }
 }
 
-function saveEdit() {
+async function saveEdit() {
   if (editRowIdx < 0) return;
   headers.forEach(h => { allData[editRowIdx][h] = document.getElementById('edit-'+sid(h))?.value ?? ''; });
-  applyFilters(); updateStats(); syncToOneDrive(); showScreen('data'); toast('Record updated ✓', 'success');
+  applyFilters(); updateStats();
+  showScreen('data');
+  try {
+    await syncToOneDrive();
+  } catch(e) {
+    toast('Save failed: ' + e.message, 'error');
+  }
 }
 
 function showAddRecord() { buildAddForm(); showScreen('add'); }
@@ -846,6 +862,7 @@ function setSyncStatus(state) {
 function showLoading(msg) { document.getElementById('loading-msg').textContent = msg||'Loading...'; document.getElementById('loading').classList.add('show'); }
 function hideLoading() { document.getElementById('loading').classList.remove('show'); }
 function toast(msg, type='') { const el = document.getElementById('toast'); el.textContent = msg; el.className = `show ${type}`; setTimeout(() => el.className = '', 3000); }
+function toastLong(msg, type='') { const el = document.getElementById('toast'); el.textContent = msg; el.className = `show ${type}`; setTimeout(() => el.className = '', 6000); }
 
 window.addEventListener('popstate', function(e) {
   const modal = document.getElementById('modal-overlay');
