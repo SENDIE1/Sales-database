@@ -509,36 +509,83 @@ async function refreshFromOneDrive() {
   catch(e) { hideLoading(); toast('Refresh failed: ' + e.message, 'error'); }
 }
 
+let originalFileBuffer = null;
+
 async function syncToOneDrive() {
   if (!fileId) return;
   setSyncStatus('saving');
   try {
     const token = await getToken();
-    const ws = XLSX.utils.json_to_sheet(allData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Sales');
-    const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+    // Step 1: Download the original file fresh to preserve formatting
+    showLoading('Preserving file format...');
+    const dlRes = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/content`, {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (!dlRes.ok) throw new Error('Could not download original file: ' + dlRes.status);
+    const originalBuf = await dlRes.arrayBuffer();
+
+    // Step 2: Read original workbook preserving styles
+    const wb = XLSX.read(originalBuf, { type: 'array', cellStyles: true, cellDates: true });
+    const sheetName = wb.SheetNames[0];
+    const ws = wb.Sheets[sheetName];
+
+    // Step 3: Get existing headers from row 1
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    const existingHeaders = [];
+    for (let c = range.s.c; c <= range.e.c; c++) {
+      const cell = ws[XLSX.utils.encode_cell({r: 0, c: c})];
+      existingHeaders.push(cell ? String(cell.v) : '');
+    }
+
+    // Step 4: Update only data rows, preserving all cell styles
+    allData.forEach((row, rowIdx) => {
+      existingHeaders.forEach((h, colIdx) => {
+        if (!h) return;
+        const cellAddr = XLSX.utils.encode_cell({ r: rowIdx + 1, c: colIdx });
+        const existingCell = ws[cellAddr] || {};
+        const newVal = row[h];
+        if (newVal !== undefined && newVal !== null && String(newVal) !== '') {
+          ws[cellAddr] = Object.assign({}, existingCell, { v: newVal, w: String(newVal) });
+        }
+      });
+    });
+
+    // Step 5: Write back preserving styles
+    const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array', cellStyles: true });
     const blob = new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const res = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/content`, { method: 'PUT', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }, body: blob });
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error('Upload error:', res.status, errText);
-      // If 401, token expired — try once more with fresh token
-      if (res.status === 401) {
+
+    // Step 6: Upload
+    hideLoading();
+    const uploadRes = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/content`, {
+      method: 'PUT',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
+      body: blob
+    });
+
+    if (!uploadRes.ok) {
+      const errText = await uploadRes.text();
+      if (uploadRes.status === 401) {
         const pca = await getMsal();
         const accounts = pca.getAllAccounts();
         const fresh = await pca.acquireTokenSilent({ scopes: SCOPES, account: accounts[0], forceRefresh: true });
-        const res2 = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/content`, { method: 'PUT', headers: { Authorization: 'Bearer ' + fresh.accessToken, 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }, body: blob });
+        const res2 = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/content`, {
+          method: 'PUT',
+          headers: { Authorization: 'Bearer ' + fresh.accessToken, 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
+          body: blob
+        });
         if (!res2.ok) throw new Error('Upload failed after token refresh: ' + res2.status);
       } else {
-        throw new Error('Upload failed: ' + res.status + ' — ' + errText.slice(0, 100));
+        throw new Error('Upload failed: ' + uploadRes.status + ' — ' + errText.slice(0, 100));
       }
     }
+
     setSyncStatus('synced');
-    toastLong('✓ Saved to OneDrive successfully', 'success');
+    toastLong('✓ Saved to OneDrive', 'success');
   } catch(e) {
+    hideLoading();
     setSyncStatus('error');
-    toastLong('✗ NOT saved to OneDrive: ' + e.message, 'error');
+    toastLong('✗ Not saved: ' + e.message, 'error');
     throw e;
   }
 }
@@ -862,7 +909,7 @@ function setSyncStatus(state) {
 function showLoading(msg) { document.getElementById('loading-msg').textContent = msg||'Loading...'; document.getElementById('loading').classList.add('show'); }
 function hideLoading() { document.getElementById('loading').classList.remove('show'); }
 function toast(msg, type='') { const el = document.getElementById('toast'); el.textContent = msg; el.className = `show ${type}`; setTimeout(() => el.className = '', 3000); }
-function toastLong(msg, type='') { const el = document.getElementById('toast'); el.textContent = msg; el.className = `show ${type}`; setTimeout(() => el.className = '', 6000); }
+function toastLong(msg, type='') { const el = document.getElementById('toast'); el.textContent = msg; el.className = 'show ' + type; setTimeout(function(){ el.className = ''; }, 5000); }
 
 window.addEventListener('popstate', function(e) {
   const modal = document.getElementById('modal-overlay');
