@@ -668,7 +668,7 @@ async function afterSignIn(account) {
     history.pushState({ app: true }, '');
     document.getElementById('app-wrapper').style.height = '100dvh';
     addMsg('system', `Connected! Loaded ${allData.length} records from OneDrive. Ask me anything about your sales data.`);
-    if (isDesktop()) showDesktopUI();
+    if (isDesktop()) { initDesktop(); deskAddMsg('system', `Connected! Loaded ${allData.length} records from OneDrive. Ask me anything about your sales data.`); }
     hideLoading();
   } catch(e) { hideLoading(); toast('Error: ' + e.message, 'error'); }
 }
@@ -1350,11 +1350,7 @@ function editFromDesktop() {
   populateEditForm(allData[editRowIdx]);
 }
 
-function showDesktopUI() {
-  document.getElementById('desktop-topnav').style.display = 'flex';
-  document.getElementById('desktop-filters').style.display = 'flex';
-  document.getElementById('desktop-table-wrap').style.display = 'block';
-}
+
 
 function showScreen(name) {
   // On desktop, show/hide table wrap based on screen
@@ -1847,12 +1843,7 @@ function setSyncStatus(state) {
   if (dtext) dtext.textContent = state==='saving'?'Saving...':state==='error'?'Error':'Synced';
 }
 
-// ── OVERRIDE afterSignIn to init desktop ──
-const _origAfterSignIn = afterSignIn;
-afterSignIn = async function(account) {
-  await _origAfterSignIn(account);
-  if (isDesktop()) initDesktop();
-};
+
 
 window.addEventListener('resize', () => {
   if (isDesktop() && allData.length) initDesktop();
