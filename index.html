@@ -660,17 +660,26 @@ async function afterSignIn(account) {
   try {
     const me = await graphGet('https://graph.microsoft.com/v1.0/me');
     const initials = (me.displayName||'U').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-    document.getElementById('user-avatar').textContent = initials;
-    document.getElementById('user-name').textContent = me.displayName?.split(' ')[0] || '';
+    const av = document.getElementById('user-avatar'); if (av) av.textContent = initials;
+    const un = document.getElementById('user-name'); if (un) un.textContent = me.displayName?.split(' ')[0] || '';
     await loadFileFromOneDrive();
-    document.getElementById('screen-login').style.display = 'none';
-    document.getElementById('app-wrapper').style.display = 'flex';
+    const login = document.getElementById('screen-login'); if (login) login.style.display = 'none';
+    const app = document.getElementById('app-wrapper');
+    if (app) { app.style.display = 'flex'; app.style.height = '100dvh'; }
     history.pushState({ app: true }, '');
-    document.getElementById('app-wrapper').style.height = '100dvh';
-    addMsg('system', `Connected! Loaded ${allData.length} records from OneDrive. Ask me anything about your sales data.`);
-    if (isDesktop()) { initDesktop(); deskAddMsg('system', `Connected! Loaded ${allData.length} records from OneDrive. Ask me anything about your sales data.`); }
+    const msg = `Connected! Loaded ${allData.length} records from OneDrive.`;
+    if (isDesktop()) {
+      initDesktop();
+      deskAddMsg('system', msg);
+    } else {
+      addMsg('system', msg);
+    }
     hideLoading();
-  } catch(e) { hideLoading(); toast('Error: ' + e.message, 'error'); }
+  } catch(e) {
+    console.error('afterSignIn error:', e);
+    hideLoading();
+    toast('Error: ' + e.message, 'error');
+  }
 }
 
 async function signOut() { const pca = await getMsal(); await pca.logoutRedirect(); }
