@@ -918,6 +918,18 @@ async function loadFileFromOneDrive() {
   try {
     const token = await getToken();
 
+    // Step 0: Try direct path first (fastest)
+    showLoading('Locating file...');
+    try {
+      const direct = await graphGet("https://graph.microsoft.com/v1.0/me/drive/root:/Sales%20DB/Sales%20DB%20-%20Claude.xlsx");
+      console.log('Direct path result:', JSON.stringify(direct));
+      if (direct && direct.id) {
+        fileId = direct.id;
+        await downloadAndLoad(token, fileId, direct.parentReference?.driveId);
+        return;
+      }
+    } catch(e) { console.log('Direct path failed:', e.message); }
+
     // Step 1: List all drives accessible to this user
     showLoading('Finding available drives...');
     const drivesRes = await graphGet('https://graph.microsoft.com/v1.0/me/drives');
@@ -934,8 +946,8 @@ async function loadFileFromOneDrive() {
       showLoading(`Searching drive ${driveId || 'default'}...`);
       try {
         const searchUrl = driveId
-          ? `https://graph.microsoft.com/v1.0/drives/${driveId}/search(q='Sales DB')`
-          : `https://graph.microsoft.com/v1.0/me/drive/search(q='Sales DB')`;
+          ? `https://graph.microsoft.com/v1.0/drives/${driveId}/search(q='Sales DB - Claude')`
+          : `https://graph.microsoft.com/v1.0/me/drive/search(q='Sales DB - Claude')`;
         const r = await graphGet(searchUrl);
         console.log(`Drive ${driveId} search:`, JSON.stringify(r));
         const file = (r.value||[]).find(f => f.name === FILE_NAME);
