@@ -121,10 +121,10 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', sans-seri
 .modal-title { font-size: 18px; font-weight: 700; color: var(--ink); }
 .modal-close { font-size: 28px; color: var(--ink); cursor: pointer; background: none; border: none; line-height: 1; padding: 4px; }
 .modal-body { padding: 16px; overflow-y: auto; flex: 1; }
-.detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); gap: 12px; }
+.detail-row { display: flex; justify-content: space-between; padding: 11px 16px; border-bottom: 0.5px solid var(--border); gap: 12px; background: var(--surface); }
 .detail-row:last-child { border-bottom: none; }
-.detail-label { font-size: 11px; color: var(--muted); flex-shrink: 0; max-width: 45%; }
-.detail-val { font-size: 12px; color: var(--ink); text-align: right; word-break: break-word; }
+.detail-label { font-size: 12px; color: var(--muted); flex-shrink: 0; width: 45%; }
+.detail-val { font-size: 13px; color: var(--ink); text-align: right; word-break: break-word; }
 .modal-actions { display: flex; gap: 10px; padding: 16px; border-top: 1px solid var(--border); flex-shrink: 0; background: var(--surface); }
 .modal-btn { flex: 1; padding: 12px; border-radius: 4px; font-family: 'Aptos', sans-serif; font-size: 12px; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--ink); }
 .modal-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
@@ -275,6 +275,20 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', sans-seri
       </div>
     </div>
 
+    <!-- DETAIL -->
+    <div id="screen-detail" class="screen">
+      <div class="sub-header">
+        <button class="back-btn" onclick="showScreen('data')">← Back</button>
+        <span class="sub-title" id="detail-title">Lot detail</span>
+        <button class="back-btn" style="color:var(--accent)" onclick="editFromDetail()">Edit</button>
+      </div>
+      <div class="lot-list" id="detail-body" style="overflow-y:auto;flex:1;"></div>
+      <div class="form-actions">
+        <button class="btn" onclick="showScreen('data')">Close</button>
+        <button class="btn primary" onclick="editFromDetail()">Edit record</button>
+      </div>
+    </div>
+
     <!-- ADD -->
     <div id="screen-add" class="screen">
       <div class="sub-header">
@@ -381,21 +395,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', sans-seri
   </nav>
 </div>
 
-<!-- MODAL -->
-<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-header">
-      <div class="modal-title" id="modal-title">Lot detail</div>
-      <button class="modal-close" onclick="closeModalDirect()">×</button>
-    </div>
-    <div class="modal-body" id="modal-body"></div>
-    <div class="modal-actions">
-      <button class="modal-btn" onclick="closeModalDirect()">Close</button>
-      <button class="modal-btn primary" onclick="editFromModal()">Edit record</button>
-    </div>
-  </div>
-</div>
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.10.0/lib/msal-browser.min.js"></script>
@@ -743,23 +743,23 @@ function openModal(idx) {
   modalRowIdx = allData.indexOf(filteredData[idx]);
   const row = filteredData[idx];
   const lotNum = row['Lot #'] || row['Lot#'] || '—';
-  document.getElementById('modal-title').textContent = 'Lot ' + lotNum;
-  let html = '';
+  document.getElementById('detail-title').textContent = 'Lot ' + lotNum;
+  let body = '';
   headers.forEach(k => {
     const v = row[k];
     const vs = String(v ?? '').trim();
     if (vs === '' || vs === 'NaN' || vs === 'undefined' || vs === 'null') return;
     const display = (k.includes('$') || k.toLowerCase().includes('price')) && !isNaN(v) && vs !== '' ? '$' + Number(v).toLocaleString() : vs;
-    html += `<div class="detail-row"><span class="detail-label">${k.trim()}</span><span class="detail-val">${display}</span></div>`;
+    body += `<div class="detail-row"><span class="detail-label">${k.trim()}</span><span class="detail-val">${display}</span></div>`;
   });
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-overlay').classList.add('open');
-  history.pushState({ modal: true }, '');
+  document.getElementById('detail-body').innerHTML = body;
+  showScreen('detail');
+  history.pushState({ app: true }, '');
 }
 
-function closeModal(e) { if (e.target === document.getElementById('modal-overlay')) closeModalDirect(); }
-function closeModalDirect() { document.getElementById('modal-overlay').classList.remove('open'); }
-function editFromModal() { closeModalDirect(); editRowIdx = modalRowIdx; populateEditForm(allData[editRowIdx]); }
+function closeModal(e) {}
+function closeModalDirect() { showScreen('data'); }
+function editFromDetail() { closeModalDirect(); editRowIdx = modalRowIdx; populateEditForm(allData[editRowIdx]); }
 
 function populateEditForm(row) {
   document.getElementById('edit-fields').innerHTML = headers.map(h => {
@@ -978,9 +978,9 @@ function toast(msg, type='') { const el = document.getElementById('toast'); el.t
 function toastLong(msg, type='') { const el = document.getElementById('toast'); el.textContent = msg; el.className = 'show ' + type; setTimeout(function(){ el.className = ''; }, 5000); }
 
 window.addEventListener('popstate', function(e) {
-  const modal = document.getElementById('modal-overlay');
-  if (modal.classList.contains('open')) {
-    modal.classList.remove('open');
+  const detail = document.getElementById('screen-detail');
+  if (detail.classList.contains('active')) {
+    showScreen('data');
     history.pushState({ app: true }, '');
     return;
   }
