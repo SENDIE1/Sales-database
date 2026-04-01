@@ -809,7 +809,7 @@
 // ── CONFIG ─────────────────────────────────────────────
 const CLIENT_ID = 'cd53b987-59ab-4b81-9bfb-178cfa8ee5b2';
 const REDIRECT_URI = 'https://SENDIE1.github.io/Sales-database/';
-const FILE_NAME = 'sales DB - Claude.xlsx';
+const FILE_NAME = 'Sales DB - Claude.xlsx';
 const SCOPES = ['Files.ReadWrite', 'User.Read'];
 const ANTHROPIC_KEY = () => sessionStorage.getItem('anthropic_key') || '';
 
@@ -920,7 +920,7 @@ async function loadFileFromOneDrive() {
 
     // Try direct path first
     showLoading('Locating file on OneDrive...');
-    const FILE_PATH = "Sasha%20Cross's%20files%20-%20Sales%20%26%20Marketing/01_Sales/018%20-%20Sales%20DB/Sales%20DB%20-%20Claude.xlsx";
+    const FILE_PATH = "Sales%20%26%20Marketing/01_Sales/018%20-%20Sales%20DB/Sales%20DB%20-%20Claude.xlsx";
     
     try {
       const r1 = await graphGet(`https://graph.microsoft.com/v1.0/me/drive/root:/${FILE_PATH}`);
@@ -936,7 +936,7 @@ async function loadFileFromOneDrive() {
     // Try search
     showLoading('Searching OneDrive...');
     try {
-      const r2 = await graphGet(`https://graph.microsoft.com/v1.0/me/drive/search(q='Sales DB - Claude')`);
+      const r2 = await graphGet(`https://graph.microsoft.com/v1.0/me/drive/search(q='Sales DB - Claude.xlsx')`);
       console.log('Search result:', JSON.stringify(r2));
       const file = (r2.value||[]).find(f => (f.name||'').toLowerCase() === FILE_NAME.toLowerCase());
       if (file) {
