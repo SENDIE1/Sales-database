@@ -403,7 +403,7 @@ async function testApiKey() {
 
 function saveApiKey() {
   const key = document.getElementById('api-key-field').value.replace(/\s+/g, '').trim();
-  if (!key.startsWith('sk-ant-')) { toast('Invalid key — should start with sk-ant-', 'error'); return; }
+  if (!key.startsWith('sk-')) { toast('Invalid key — should start with sk-', 'error'); return; }
   localStorage.setItem('anthropic_key', key);
   toast('API key saved ✓', 'success');
   document.getElementById('api-key-field').value = '••••••••••••••••';
