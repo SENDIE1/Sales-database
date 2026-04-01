@@ -1267,6 +1267,84 @@ function colClass(h) {
   return '';
 }
 
+
+
+function getHeaderColour(h) {
+  const yellow = ['Project Name','Lot ID','Property Address','Stage','Lot #','Sales Condition ','Pending S/A Date','Pending S/A Days','Pending S/A Agency','*LEADS Name','CfS Type','Property Type','Product Line','Product Type','Lot Area (m²)','Lot Frontage (Width) (m)'];
+  const dark = ['StockList','Notes'];
+  const green = ['Channel Market','Sales Channel','Channel Partner','Swap to/from Channel Partner'];
+  const orange = ['Allocation Date','Allocation Days','Allocation Period (days)','Allocation Days / Allocation Expiry Date'];
+  const red = ['$VAL ','$BASE','$LIST ','$CHECK$                   $BASE-$VAL','$CHECK$ $LIST-$BASE','Land Tax Per lot Value','Land Tax $Uplift / $Shortfall'];
+  const pink = ['March Campaign','OFFER Rebate','SETTLE Rebate','H&L $House (S/S)','$H&L Total (S/S)','H&L $House (D/S)','$H&L Total (D/S)','Notes.1'];
+  const blue = ['Sales Advice Received Date','Sales Advice Sent To Legal Date','Contract Issued Date','Days From CfS Issued','CfS Issued Price','Proposed Exchanged Date','Exchanged Date','CfS Exchanged Price ($)','Proposed Settled Date','Settled Date','Settled Month','Settled Year','CfS Settled Price ($)','Rebate','Deposit%','Cooling Off Date','FIRB Approval','March Campaign.1','Comments'];
+  const peach = ['Vendors Agency','Vendors Agency Agent',"Agent's Mobile","Agent's Email"];
+  const purple = ["(1) Purchaser's Name","(1) Purchaser's Email","(1) Purchaser's Mobile","(2) Purchaser's Name","(2) Purchaser's Email","(2) Purchaser's Mobile","Purchaser's Suburb","Purchaser's Postcode","Purchaser's Solicitor (P'Sol)","Purchaser's Solicitor Phone",'Type Of Purchaser','Special Condilions/Variations'];
+  const lgreen = ['2026 Report','Comments.1'];
+  if (yellow.includes(h)) return '#FFD700';
+  if (dark.includes(h)) return '#404040';
+  if (green.includes(h)) return '#70AD47';
+  if (orange.includes(h)) return '#F4B942';
+  if (red.includes(h)) return '#FF0000';
+  if (pink.includes(h)) return '#FF99CC';
+  if (blue.includes(h)) return '#9DC3E6';
+  if (peach.includes(h)) return '#F2DCDB';
+  if (purple.includes(h)) return '#CCC0DA';
+  if (lgreen.includes(h)) return '#E2EFDA';
+  return '#e8e3d8';
+}
+function getHeaderTextColour(bg) {
+  return (bg === '#404040' || bg === '#FF0000') ? '#ffffff' : '#1a1408';
+}
+
+
+function fmtDate(v) {
+  if (!v || String(v).trim() === '' || String(v) === 'NaN' || String(v) === 'undefined') return '';
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let d;
+  if (typeof v === 'number' && v > 40000) {
+    // Excel serial date
+    d = new Date(Math.round((v - 25569) * 86400 * 1000));
+  } else {
+    d = new Date(v);
+  }
+  if (isNaN(d.getTime())) return String(v);
+  return String(d.getDate()).padStart(2,'0') + '-' + months[d.getMonth()] + '-' + d.getFullYear();
+}
+
+function fmtPhone(v) {
+  if (!v || String(v).trim() === '' || String(v) === 'NaN') return '';
+  let num = String(v).replace(/\.0$/, '').replace(/[^0-9+]/g, '');
+  if (!num) return String(v);
+  if (!num.startsWith('0') && !num.startsWith('+')) num = '0' + num;
+  if (num.startsWith('+')) {
+    const digits = num.slice(1);
+    if (digits.startsWith('61') && digits.length === 11) return '+61 ' + digits.slice(2,5) + ' ' + digits.slice(5,8) + ' ' + digits.slice(8);
+    if (digits.startsWith('1') && digits.length === 11) return '+1 ' + digits.slice(1,4) + ' ' + digits.slice(4,7) + ' ' + digits.slice(7);
+    if (digits.startsWith('44') && digits.length === 12) return '+44 ' + digits.slice(2,6) + ' ' + digits.slice(6);
+    return '+' + digits;
+  }
+  if (num.length === 10) {
+    if (['02','03','07','08'].some(p => num.startsWith(p))) return num.slice(0,2) + ' ' + num.slice(2,6) + ' ' + num.slice(6);
+    return num.slice(0,4) + ' ' + num.slice(4,7) + ' ' + num.slice(7);
+  }
+  return num;
+}
+
+const DATE_COLS = new Set(['Pending S/A Date','Allocation Date','Allocation Days / Allocation Expiry Date','Sales Advice Received Date','Sales Advice Sent To Legal Date','Contract Issued Date','Proposed Exchanged Date','Exchanged Date','Proposed Settled Date','Settled Date','Cooling Off Date']);
+const PHONE_COLS = new Set(["Agent's Mobile","Agent's Email".replace('Email','Mobile'),"(1) Purchaser's Mobile","(2) Purchaser's Mobile","Purchaser's Solicitor Phone"]);
+
+
+const CURRENCY_COLS = new Set(['$VAL ','$BASE','$LIST ','$CHECK$                   $BASE-$VAL','$CHECK$ $LIST-$BASE','Land Tax Per lot Value','Land Tax $Uplift / $Shortfall','OFFER Rebate','SETTLE Rebate','H&L $House (S/S)','$H&L Total (S/S)','H&L $House (D/S)','$H&L Total (D/S)','CfS Issued Price','CfS Exchanged Price ($)','CfS Settled Price ($)','Rebate']);
+
+function formatCellValue(h, v) {
+  const vs = String(v ?? '');
+  if (vs === '' || vs === 'NaN' || vs === 'undefined' || vs === 'null') return '';
+  if (DATE_COLS.has(h)) return fmtDate(v);
+  if (PHONE_COLS.has(h) || h.toLowerCase().includes('mobile') || h.toLowerCase().includes('phone')) return fmtPhone(v);
+  if ((CURRENCY_COLS.has(h) || h.includes('$') || h.toLowerCase().includes('price')) && !isNaN(v) && vs !== '' && vs !== '0') return '$' + Number(v).toLocaleString();
+  return vs;
+}
+
 function renderDesktopTable() {
   if (!filteredData.length) {
     document.getElementById('dt-body').innerHTML = '<tr><td colspan="' + headers.length + '" style="text-align:center;padding:40px;color:var(--muted)">No records match your filters.</td></tr>';
@@ -1571,28 +1649,106 @@ let currentCfCol = null;
 let allCfValues = [];
 let dtSelectedIdx = -1;
 
+
+
+function getHeaderColour(h) {
+  const yellow = ['Project Name','Lot ID','Property Address','Stage','Lot #','Sales Condition ','Pending S/A Date','Pending S/A Days','Pending S/A Agency','*LEADS Name','CfS Type','Property Type','Product Line','Product Type','Lot Area (m²)','Lot Frontage (Width) (m)'];
+  const dark = ['StockList','Notes'];
+  const green = ['Channel Market','Sales Channel','Channel Partner','Swap to/from Channel Partner'];
+  const orange = ['Allocation Date','Allocation Days','Allocation Period (days)','Allocation Days / Allocation Expiry Date'];
+  const red = ['$VAL ','$BASE','$LIST ','$CHECK$                   $BASE-$VAL','$CHECK$ $LIST-$BASE','Land Tax Per lot Value','Land Tax $Uplift / $Shortfall'];
+  const pink = ['March Campaign','OFFER Rebate','SETTLE Rebate','H&L $House (S/S)','$H&L Total (S/S)','H&L $House (D/S)','$H&L Total (D/S)','Notes.1'];
+  const blue = ['Sales Advice Received Date','Sales Advice Sent To Legal Date','Contract Issued Date','Days From CfS Issued','CfS Issued Price','Proposed Exchanged Date','Exchanged Date','CfS Exchanged Price ($)','Proposed Settled Date','Settled Date','Settled Month','Settled Year','CfS Settled Price ($)','Rebate','Deposit%','Cooling Off Date','FIRB Approval','March Campaign.1','Comments'];
+  const peach = ['Vendors Agency','Vendors Agency Agent',"Agent's Mobile","Agent's Email"];
+  const purple = ["(1) Purchaser's Name","(1) Purchaser's Email","(1) Purchaser's Mobile","(2) Purchaser's Name","(2) Purchaser's Email","(2) Purchaser's Mobile","Purchaser's Suburb","Purchaser's Postcode","Purchaser's Solicitor (P'Sol)","Purchaser's Solicitor Phone",'Type Of Purchaser','Special Condilions/Variations'];
+  const lgreen = ['2026 Report','Comments.1'];
+  if (yellow.includes(h)) return '#FFD700';
+  if (dark.includes(h)) return '#404040';
+  if (green.includes(h)) return '#70AD47';
+  if (orange.includes(h)) return '#F4B942';
+  if (red.includes(h)) return '#FF0000';
+  if (pink.includes(h)) return '#FF99CC';
+  if (blue.includes(h)) return '#9DC3E6';
+  if (peach.includes(h)) return '#F2DCDB';
+  if (purple.includes(h)) return '#CCC0DA';
+  if (lgreen.includes(h)) return '#E2EFDA';
+  return '#e8e3d8';
+}
+function getHeaderTextColour(bg) {
+  return (bg === '#404040' || bg === '#FF0000') ? '#ffffff' : '#1a1408';
+}
+
+
+function fmtDate(v) {
+  if (!v || String(v).trim() === '' || String(v) === 'NaN' || String(v) === 'undefined') return '';
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let d;
+  if (typeof v === 'number' && v > 40000) {
+    // Excel serial date
+    d = new Date(Math.round((v - 25569) * 86400 * 1000));
+  } else {
+    d = new Date(v);
+  }
+  if (isNaN(d.getTime())) return String(v);
+  return String(d.getDate()).padStart(2,'0') + '-' + months[d.getMonth()] + '-' + d.getFullYear();
+}
+
+function fmtPhone(v) {
+  if (!v || String(v).trim() === '' || String(v) === 'NaN') return '';
+  let num = String(v).replace(/\.0$/, '').replace(/[^0-9+]/g, '');
+  if (!num) return String(v);
+  if (!num.startsWith('0') && !num.startsWith('+')) num = '0' + num;
+  if (num.startsWith('+')) {
+    const digits = num.slice(1);
+    if (digits.startsWith('61') && digits.length === 11) return '+61 ' + digits.slice(2,5) + ' ' + digits.slice(5,8) + ' ' + digits.slice(8);
+    if (digits.startsWith('1') && digits.length === 11) return '+1 ' + digits.slice(1,4) + ' ' + digits.slice(4,7) + ' ' + digits.slice(7);
+    if (digits.startsWith('44') && digits.length === 12) return '+44 ' + digits.slice(2,6) + ' ' + digits.slice(6);
+    return '+' + digits;
+  }
+  if (num.length === 10) {
+    if (['02','03','07','08'].some(p => num.startsWith(p))) return num.slice(0,2) + ' ' + num.slice(2,6) + ' ' + num.slice(6);
+    return num.slice(0,4) + ' ' + num.slice(4,7) + ' ' + num.slice(7);
+  }
+  return num;
+}
+
+
+
+
+function formatCellValue(h, v) {
+  const vs = String(v ?? '');
+  if (vs === '' || vs === 'NaN' || vs === 'undefined' || vs === 'null') return '';
+  if (DATE_COLS.has(h)) return fmtDate(v);
+  if (PHONE_COLS.has(h) || h.toLowerCase().includes('mobile') || h.toLowerCase().includes('phone')) return fmtPhone(v);
+  if ((CURRENCY_COLS.has(h) || h.includes('$') || h.toLowerCase().includes('price')) && !isNaN(v) && vs !== '' && vs !== '0') return '$' + Number(v).toLocaleString();
+  return vs;
+}
+
 function renderDesktopTable() {
   if (!filteredData.length) {
     document.getElementById('dt-body').innerHTML = '<tr><td colspan="' + headers.length + '" style="text-align:center;padding:40px;color:var(--muted)">No records match your filters.</td></tr>';
     document.getElementById('dt-rec-count').textContent = '0 of ' + allData.length + ' records';
     return;
   }
-  document.getElementById('dt-head').innerHTML = '<tr>' + headers.map((h,i) =>
-    `<th data-col="${h}" class="${deskActiveColFilters[h] ? 'filtered' : ''}" onclick="openCfPopup(event,'${h.replace(/'/g,"\'")}')" title="Click to filter: ${h.trim()}">${h.trim()} &#9660;</th>`
-  ).join('') + '</tr>';
+  document.getElementById('dt-head').innerHTML = '<tr>' + headers.map((h,i) => {
+    const bg = getHeaderColour(h);
+    const tc = getHeaderTextColour(bg);
+    const filtered = deskActiveColFilters[h] ? ' filtered' : '';
+    return `<th data-col="${h}" class="${filtered}" style="background:${bg};color:${tc}" onclick="openCfPopup(event,'${h.replace(/'/g,"\'")}')" title="Click to filter: ${h.trim()}">${h.trim()} &#9660;</th>`;
+  }).join('') + '</tr>';
 
   document.getElementById('dt-body').innerHTML = filteredData.map((row, i) => {
     const cond = String(row['Sales Condition ']||row['Sales Condition']||'');
     const cells = headers.map((h, hi) => {
       const v = row[h]; const vs = String(v ?? '');
-      let display = vs || '&#8212;';
       let cls = hi === 0 ? 'td-lot' : '';
+      let display;
       if (h === 'Sales Condition ' || h === 'Sales Condition') {
         display = `<span class="badge ${badgeClass(cond)}">${cond}</span>`;
         cls += ' td-badge';
-      } else if ((h.includes('$') || h.toLowerCase().includes('price')) && !isNaN(v) && vs !== '' && vs !== 'NaN') {
-        display = '$' + Number(v).toLocaleString();
-        cls += ' td-val';
+      } else {
+        display = formatCellValue(h, v) || '&#8212;';
+        if ((h.includes('$') || h.toLowerCase().includes('price')) && !isNaN(v) && vs !== '' && vs !== 'NaN') cls += ' td-val';
       }
       return `<td class="${cls.trim()}" title="${vs}">${display}</td>`;
     }).join('');
