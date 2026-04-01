@@ -535,7 +535,15 @@ async function syncToOneDrive() {
     const token = await getToken();
 
     // Use Excel Graph API to update only changed cells — preserves all formatting
-    const baseUrl = `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/workbook/worksheets/Sheet1/`;
+    // Get actual sheet name
+    const sheetsRes = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/workbook/worksheets`, {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    const sheetsData = await sheetsRes.json();
+    console.log('Sheets:', JSON.stringify(sheetsData));
+    const sheetName = sheetsData.value?.[0]?.name || 'Sheet1';
+    const encodedSheet = encodeURIComponent(sheetName);
+    const baseUrl = `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/workbook/worksheets/${encodedSheet}/`;
 
     // Build list of cell updates
     const updates = [];
