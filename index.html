@@ -374,7 +374,7 @@ const CLIENT_ID = 'cd53b987-59ab-4b81-9bfb-178cfa8ee5b2';
 const REDIRECT_URI = 'https://SENDIE1.github.io/Sales-database/';
 const FILE_NAME = 'Sales DB - Claude.xlsx';
 const SCOPES = ['Files.ReadWrite', 'User.Read'];
-const ANTHROPIC_KEY = () => sessionStorage.getItem('anthropic_key') || '';
+const ANTHROPIC_KEY = () => localStorage.getItem('anthropic_key') || '';
 const msalConfig = { auth: { clientId: CLIENT_ID, authority: 'https://login.microsoftonline.com/ab54a23e-1458-4baf-a2f6-9b8164f032d1', redirectUri: REDIRECT_URI }, cache: { cacheLocation: 'sessionStorage' } };
 let msalInstance = null;
 async function getMsal() { if (!msalInstance) msalInstance = await msal.PublicClientApplication.createPublicClientApplication(msalConfig); return msalInstance; }
@@ -385,7 +385,7 @@ const FILTER_MAP = { 'f-stage':'Stage', 'f-condition':'Sales Condition ', 'f-cha
 function saveApiKey() {
   const key = document.getElementById('api-key-field').value.trim();
   if (!key.startsWith('sk-ant-')) { toast('Invalid key — should start with sk-ant-', 'error'); return; }
-  sessionStorage.setItem('anthropic_key', key);
+  localStorage.setItem('anthropic_key', key);
   toast('API key saved ✓', 'success');
   document.getElementById('api-key-field').value = '••••••••••••••••';
 }
@@ -701,7 +701,7 @@ function hideLoading() { document.getElementById('loading').classList.remove('sh
 function toast(msg, type='') { const el = document.getElementById('toast'); el.textContent = msg; el.className = `show ${type}`; setTimeout(() => el.className = '', 3000); }
 
 (async () => {
-  const saved = sessionStorage.getItem('anthropic_key');
+  const saved = localStorage.getItem('anthropic_key');
   if (saved) { const f = document.getElementById('api-key-field'); if (f) f.value = '••••••••••••••••'; }
   try {
     const pca = await getMsal();
