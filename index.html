@@ -206,17 +206,50 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', sans-seri
 
   /* Spreadsheet table */
   .lot-list { display: none; }
-  #desktop-table-wrap { display: block; overflow: auto; flex: 1; }
-  table.dt { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; }
+  #desktop-table-wrap { display: block; overflow: auto; flex: 1; background: var(--surface); }
+  table.dt { border-collapse: collapse; font-size: 12px; white-space: nowrap; table-layout: fixed; }
   table.dt thead { position: sticky; top: 0; z-index: 5; }
-  table.dt th { background: var(--surface2); padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 500; color: var(--muted); border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); cursor: pointer; user-select: none; letter-spacing: 0.3px; }
-  table.dt th:hover { color: var(--ink); background: var(--border); }
-  table.dt td { padding: 8px 12px; border-bottom: 1px solid #ede8dc; border-right: 1px solid #ede8dc; color: var(--ink); max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
-  table.dt tr:hover td { background: var(--accent-light); cursor: pointer; }
+  table.dt th {
+    background: #e8e3d8;
+    padding: 6px 10px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink);
+    border: 1px solid #c8c0b0;
+    cursor: pointer;
+    user-select: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 100px;
+  }
+  table.dt th:hover { background: #d8d3c8; }
+  table.dt th.col-lot { min-width: 60px; width: 60px; position: sticky; left: 0; z-index: 6; background: #e8e3d8; }
+  table.dt th.col-cond { min-width: 120px; width: 120px; }
+  table.dt th.col-addr { min-width: 200px; width: 200px; }
+  table.dt th.col-narrow { min-width: 70px; width: 70px; }
+  table.dt th.col-wide { min-width: 150px; width: 150px; }
+  table.dt th.col-val { min-width: 100px; width: 100px; text-align: right; }
+  table.dt td {
+    padding: 5px 10px;
+    border: 1px solid #e0dbd0;
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    height: 28px;
+    max-width: 0;
+  }
+  table.dt td.td-val { text-align: right; }
+  table.dt td.td-lot { font-weight: 600; position: sticky; left: 0; background: var(--surface); z-index: 2; border-right: 2px solid #c8c0b0; }
+  table.dt tr:hover td { background: #f0f7f3; cursor: pointer; }
+  table.dt tr:hover td.td-lot { background: #e8f4ed; }
   table.dt tr.dt-selected td { background: #dff0e8; }
-  table.dt td:first-child { font-weight: 500; position: sticky; left: 0; background: var(--surface); z-index: 2; border-right: 2px solid var(--border); }
-  table.dt tr:hover td:first-child { background: var(--accent-light); }
-  table.dt tr.dt-selected td:first-child { background: #dff0e8; }
+  table.dt tr.dt-selected td.td-lot { background: #c8e8d4; }
+  table.dt tr:nth-child(even) td { background: #faf8f4; }
+  table.dt tr:nth-child(even):hover td { background: #f0f7f3; }
+  table.dt tr:nth-child(even) td.td-lot { background: #f5f0e8; }
 
   /* Desktop filter bar */
   .desktop-filters { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--border); flex-wrap: wrap; flex-shrink: 0; }
@@ -969,16 +1002,41 @@ function sid(s) { return s.replace(/[^a-zA-Z0-9]/g,'_'); }
 
 function isDesktop() { return window.innerWidth >= 768; }
 
+function colClass(h) {
+  const hl = h.toLowerCase().trim();
+  if (h === 'Lot #') return 'col-lot';
+  if (hl.includes('condition') || hl.includes('status')) return 'col-cond';
+  if (hl.includes('address')) return 'col-addr';
+  if (hl.includes('$') || hl.includes('price') || hl.includes('value')) return 'col-val';
+  if (hl.includes('date') || hl.includes('days') || hl.includes('stage') || hl.length < 8) return 'col-narrow';
+  if (hl.includes('name') || hl.includes('partner') || hl.includes('agency') || hl.includes('email')) return 'col-wide';
+  return '';
+}
+
 function renderDesktopTable() {
-  if (!filteredData.length) { document.getElementById('dt-body').innerHTML = '<tr><td colspan="' + headers.length + '" style="text-align:center;padding:40px;color:var(--muted)">No records match your filters.</td></tr>'; return; }
-  document.getElementById('dt-head').innerHTML = '<tr>' + headers.map(h => `<th onclick="sortBy('${h}')">${h.trim()} ↕</th>`).join('') + '</tr>';
+  if (!filteredData.length) {
+    document.getElementById('dt-body').innerHTML = '<tr><td colspan="' + headers.length + '" style="text-align:center;padding:40px;color:var(--muted)">No records match your filters.</td></tr>';
+    return;
+  }
+  document.getElementById('dt-head').innerHTML = '<tr>' + headers.map(h =>
+    `<th class="${colClass(h)}" onclick="sortBy('${h}')" title="${h.trim()}">${h.trim()} ↕</th>`
+  ).join('') + '</tr>';
+
   document.getElementById('dt-body').innerHTML = filteredData.map((row, i) => {
     const cond = String(row['Sales Condition ']||row['Sales Condition']||'');
-    const cells = headers.map((h, ci) => {
-      let v = String(row[h] ?? '');
-      if (h === 'Sales Condition ' || h === 'Sales Condition') v = `<span class="badge ${badgeClass(cond)}">${cond}</span>`;
-      else if ((h.includes('$') || h.toLowerCase().includes('price')) && !isNaN(row[h]) && row[h] !== '') v = '$' + Number(row[h]).toLocaleString();
-      return `<td title="${String(row[h]||'')}">${v}</td>`;
+    const cells = headers.map(h => {
+      const v = row[h];
+      const vs = String(v ?? '');
+      let display = vs;
+      let cls = '';
+      if (h === 'Lot #') cls = 'td-lot';
+      if (h === 'Sales Condition ' || h === 'Sales Condition') {
+        display = `<span class="badge ${badgeClass(cond)}">${cond}</span>`;
+      } else if ((h.includes('$') || h.toLowerCase().includes('price')) && !isNaN(v) && vs !== '' && vs !== 'NaN') {
+        display = '$' + Number(v).toLocaleString();
+        cls += ' td-val';
+      }
+      return `<td class="${cls}" title="${vs}">${display}</td>`;
     }).join('');
     return `<tr onclick="openDesktopPanel(${i})" id="dtr-${i}">${cells}</tr>`;
   }).join('');
