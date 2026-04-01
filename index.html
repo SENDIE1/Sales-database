@@ -636,6 +636,44 @@
   }
   .empty-state .es-icon { font-size: 32px; opacity: 0.4; }
   .empty-state p { font-size: 12px; line-height: 1.6; }
+
+  .filter-bar {
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    padding: 10px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .filter-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .filter-dropdowns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .filter-select {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    background: var(--bg);
+    color: var(--ink);
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    max-width: 160px;
+  }
+  .filter-select:focus { border-color: var(--accent); }
+  .filter-select.active { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
 </style>
 </head>
 <body>
@@ -711,9 +749,35 @@
 
       <!-- VIEW -->
       <div class="tab-pane active" id="pane-view">
-        <div class="table-toolbar">
-          <input type="text" class="search-box" placeholder="Search..." id="search-input" oninput="filterTable()">
-          <span class="rec-count" id="rec-count">— records</span>
+        <div class="filter-bar">
+          <div class="filter-row">
+            <input type="text" class="search-box" placeholder="Search (comma separated, e.g. Sapphire, Exchanged)..." id="search-input" oninput="filterTable()">
+            <span class="rec-count" id="rec-count">— records</span>
+            <button class="btn btn-sm" onclick="clearFilters()">✕ Clear</button>
+          </div>
+          <div class="filter-row filter-dropdowns" id="filter-dropdowns">
+            <select class="filter-select" id="filter-stage" onchange="filterTable()">
+              <option value="">All Stages</option>
+            </select>
+            <select class="filter-select" id="filter-condition" onchange="filterTable()">
+              <option value="">All Conditions</option>
+            </select>
+            <select class="filter-select" id="filter-channel" onchange="filterTable()">
+              <option value="">All Channels</option>
+            </select>
+            <select class="filter-select" id="filter-partner" onchange="filterTable()">
+              <option value="">All Partners</option>
+            </select>
+            <select class="filter-select" id="filter-productline" onchange="filterTable()">
+              <option value="">All Product Lines</option>
+            </select>
+            <select class="filter-select" id="filter-market" onchange="filterTable()">
+              <option value="">All Markets</option>
+            </select>
+            <select class="filter-select" id="filter-year" onchange="filterTable()">
+              <option value="">All Years</option>
+            </select>
+          </div>
         </div>
         <div class="table-wrap">
           <div class="empty-state" id="empty-state">
@@ -999,6 +1063,7 @@ async function downloadAndLoad(token, itemId, driveId) {
   filteredData = [...allData];
 
   renderTable();
+  populateDropdowns();
   buildForms();
   setSyncStatus('synced');
 }
@@ -1081,11 +1146,81 @@ function fmtCell(h, v) {
   return vs;
 }
 
+function populateDropdowns() {
+  const dropdowns = [
+    { id: 'filter-stage', col: 'Stage' },
+    { id: 'filter-condition', col: 'Sales Condition ' },
+    { id: 'filter-channel', col: 'Sales Channel' },
+    { id: 'filter-partner', col: 'Channel Partner' },
+    { id: 'filter-productline', col: 'Product Line' },
+    { id: 'filter-market', col: 'Channel Market' },
+    { id: 'filter-year', col: 'Settled Year' },
+  ];
+
+  dropdowns.forEach(({ id, col }) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const first = el.options[0];
+    el.innerHTML = '';
+    el.appendChild(first);
+    const vals = [...new Set(allData.map(r => r[col]).filter(v => v !== null && v !== undefined && String(v).trim() !== '' && String(v).trim() !== 'NaN'))].sort();
+    vals.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = String(v).trim();
+      opt.textContent = String(v).trim();
+      el.appendChild(opt);
+    });
+  });
+}
+
 function filterTable() {
-  const q = document.getElementById('search-input').value.toLowerCase();
-  filteredData = allData.filter(r => headers.some(h => String(r[h]).toLowerCase().includes(q)));
+  // Search terms (comma separated)
+  const rawQ = document.getElementById('search-input').value;
+  const terms = rawQ.split(',').map(t => t.trim().toLowerCase()).filter(t => t);
+
+  // Dropdown values
+  const stage = document.getElementById('filter-stage')?.value || '';
+  const condition = document.getElementById('filter-condition')?.value || '';
+  const channel = document.getElementById('filter-channel')?.value || '';
+  const partner = document.getElementById('filter-partner')?.value || '';
+  const productline = document.getElementById('filter-productline')?.value || '';
+  const market = document.getElementById('filter-market')?.value || '';
+  const year = document.getElementById('filter-year')?.value || '';
+
+  // Highlight active dropdowns
+  ['filter-stage','filter-condition','filter-channel','filter-partner','filter-productline','filter-market','filter-year'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('active', el.value !== '');
+  });
+
+  filteredData = allData.filter(row => {
+    // Search: ALL terms must match somewhere in the row
+    if (terms.length) {
+      const rowText = headers.map(h => String(row[h] ?? '')).join(' ').toLowerCase();
+      if (!terms.every(t => rowText.includes(t))) return false;
+    }
+    // Dropdowns: exact match
+    if (stage && String(row['Stage'] ?? '').trim() !== stage) return false;
+    if (condition && String(row['Sales Condition '] ?? '').trim() !== condition) return false;
+    if (channel && String(row['Sales Channel'] ?? '').trim() !== channel) return false;
+    if (partner && String(row['Channel Partner'] ?? '').trim() !== partner) return false;
+    if (productline && String(row['Product Line'] ?? '').trim() !== productline) return false;
+    if (market && String(row['Channel Market'] ?? '').trim() !== market) return false;
+    if (year && String(row['Settled Year'] ?? '').trim() !== year) return false;
+    return true;
+  });
+
   buildBody();
-  document.getElementById('rec-count').textContent = `${filteredData.length} records`;
+  document.getElementById('rec-count').textContent = `${filteredData.length} of ${allData.length} records`;
+}
+
+function clearFilters() {
+  document.getElementById('search-input').value = '';
+  ['filter-stage','filter-condition','filter-channel','filter-partner','filter-productline','filter-market','filter-year'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value = ''; el.classList.remove('active'); }
+  });
+  filterTable();
 }
 
 let sortDir = {};
