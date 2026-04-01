@@ -1813,13 +1813,15 @@ function deskEditRow(idx) {
     const groupCols = group.cols.filter(c => headers.includes(c));
     if (!groupCols.length) return;
     // Section header row spanning full width
-    editHtml += `<tr><td colspan="2" style="padding:7px 16px;background:${group.colour};color:${group.textColour};font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid rgba(0,0,0,0.1);position:sticky;top:0;z-index:2">${group.label}</td></tr>`;
+
     groupCols.forEach(h => {
       const val = String(row[h] ?? '').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const bg = group.colour;
       const tc = group.textColour;
-      editHtml += `<tr id="d-row-${sid(h)}" onclick="deskStartEdit('${sid(h)}','${val}')" style="cursor:pointer" onmouseover="this.style.background='var(--accent-light)'" onmouseout="this.style.background=''">
-        <td style="padding:9px 16px;border-bottom:0.5px solid var(--border);border-left:4px solid ${bg};width:40%;font-size:12px;color:var(--muted);background:var(--surface);user-select:none">${h.trim()}</td>
+      const labelBg = bg;
+      const labelTc = group.textColour;
+      editHtml += `<tr id="d-row-${sid(h)}" onclick="deskStartEdit('${sid(h)}','${val}')" style="cursor:pointer">
+        <td style="padding:9px 16px;border-bottom:0.5px solid rgba(0,0,0,0.1);width:40%;font-size:12px;font-weight:500;background:${labelBg};color:${labelTc};user-select:none">${h.trim()}</td>
         <td style="padding:9px 16px;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--ink);background:var(--surface)" id="d-disp-${sid(h)}">${val || '<span style="color:var(--muted);font-style:italic">&#8212;</span>'}</td>
       </tr>`;
     });
@@ -1827,11 +1829,11 @@ function deskEditRow(idx) {
   // Ungrouped
   const ungrouped = headers.filter(h => !groupedCols.includes(h));
   if (ungrouped.length) {
-    editHtml += `<tr><td colspan="2" style="padding:7px 16px;background:#e8e3d8;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border)">Other</td></tr>`;
+
     ungrouped.forEach(h => {
       const val = String(row[h] ?? '').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      editHtml += `<tr id="d-row-${sid(h)}" onclick="deskStartEdit('${sid(h)}','${val}')" style="cursor:pointer" onmouseover="this.style.background='var(--accent-light)'" onmouseout="this.style.background=''">
-        <td style="padding:9px 16px;border-bottom:0.5px solid var(--border);border-left:4px solid #e8e3d8;width:40%;font-size:12px;color:var(--muted);background:var(--surface)">${h.trim()}</td>
+      editHtml += `<tr id="d-row-${sid(h)}" onclick="deskStartEdit('${sid(h)}','${val}')" style="cursor:pointer">
+        <td style="padding:9px 16px;border-bottom:0.5px solid rgba(0,0,0,0.1);width:40%;font-size:12px;font-weight:500;background:#e8e3d8;color:#1a1408;user-select:none">${h.trim()}</td>
         <td style="padding:9px 16px;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--ink);background:var(--surface)" id="d-disp-${sid(h)}">${val || '<span style="color:var(--muted);font-style:italic">&#8212;</span>'}</td>
       </tr>`;
     });
@@ -1855,13 +1857,15 @@ function deskEditFromPanel() {
     const groupCols = group.cols.filter(c => headers.includes(c));
     if (!groupCols.length) return;
     // Section header row spanning full width
-    editHtml += `<tr><td colspan="2" style="padding:7px 16px;background:${group.colour};color:${group.textColour};font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid rgba(0,0,0,0.1);position:sticky;top:0;z-index:2">${group.label}</td></tr>`;
+
     groupCols.forEach(h => {
       const val = String(row[h] ?? '').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const bg = group.colour;
       const tc = group.textColour;
-      editHtml += `<tr id="d-row-${sid(h)}" onclick="deskStartEdit('${sid(h)}','${val}')" style="cursor:pointer" onmouseover="this.style.background='var(--accent-light)'" onmouseout="this.style.background=''">
-        <td style="padding:9px 16px;border-bottom:0.5px solid var(--border);border-left:4px solid ${bg};width:40%;font-size:12px;color:var(--muted);background:var(--surface);user-select:none">${h.trim()}</td>
+      const labelBg = bg;
+      const labelTc = group.textColour;
+      editHtml += `<tr id="d-row-${sid(h)}" onclick="deskStartEdit('${sid(h)}','${val}')" style="cursor:pointer">
+        <td style="padding:9px 16px;border-bottom:0.5px solid rgba(0,0,0,0.1);width:40%;font-size:12px;font-weight:500;background:${labelBg};color:${labelTc};user-select:none">${h.trim()}</td>
         <td style="padding:9px 16px;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--ink);background:var(--surface)" id="d-disp-${sid(h)}">${val || '<span style="color:var(--muted);font-style:italic">&#8212;</span>'}</td>
       </tr>`;
     });
@@ -1869,11 +1873,11 @@ function deskEditFromPanel() {
   // Ungrouped
   const ungrouped = headers.filter(h => !groupedCols.includes(h));
   if (ungrouped.length) {
-    editHtml += `<tr><td colspan="2" style="padding:7px 16px;background:#e8e3d8;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border)">Other</td></tr>`;
+
     ungrouped.forEach(h => {
       const val = String(row[h] ?? '').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      editHtml += `<tr id="d-row-${sid(h)}" onclick="deskStartEdit('${sid(h)}','${val}')" style="cursor:pointer" onmouseover="this.style.background='var(--accent-light)'" onmouseout="this.style.background=''">
-        <td style="padding:9px 16px;border-bottom:0.5px solid var(--border);border-left:4px solid #e8e3d8;width:40%;font-size:12px;color:var(--muted);background:var(--surface)">${h.trim()}</td>
+      editHtml += `<tr id="d-row-${sid(h)}" onclick="deskStartEdit('${sid(h)}','${val}')" style="cursor:pointer">
+        <td style="padding:9px 16px;border-bottom:0.5px solid rgba(0,0,0,0.1);width:40%;font-size:12px;font-weight:500;background:#e8e3d8;color:#1a1408;user-select:none">${h.trim()}</td>
         <td style="padding:9px 16px;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--ink);background:var(--surface)" id="d-disp-${sid(h)}">${val || '<span style="color:var(--muted);font-style:italic">&#8212;</span>'}</td>
       </tr>`;
     });
