@@ -1734,7 +1734,7 @@ function renderDesktopTable() {
       }
       return `<td class="${cls.trim()}" title="${vs}">${display}</td>`;
     }).join('');
-    return `<tr onclick="deskSelectRow(${i})" ondblclick="openDtPanel(${i})" id="dtr-${i}" class="${i===dtSelectedIdx?'dt-sel':''}">${cells}</tr>`;
+    return `<tr onclick="deskSelectRow(${i})" ondblclick="deskEditRow(${i})" id="dtr-${i}" class="${i===dtSelectedIdx?'dt-sel':''}">${cells}</tr>`;
   }).join('');
 
   document.getElementById('dt-rec-count').textContent = filteredData.length + ' of ' + allData.length + ' records';
@@ -1763,6 +1763,25 @@ function closeDtPanel() {
   document.getElementById('dt-panel').classList.remove('open');
   dtSelectedIdx = -1;
   document.querySelectorAll('#dt-body tr').forEach(r => r.classList.remove('dt-sel'));
+}
+
+function deskEditRow(idx) {
+  dtSelectedIdx = idx;
+  modalRowIdx = allData.indexOf(filteredData[idx]);
+  editRowIdx = modalRowIdx;
+  const row = allData[editRowIdx];
+  const lotNum = row['Lot #'] || row['Lot#'] || '';
+  document.getElementById('d-edit-title').textContent = 'Lot ' + lotNum;
+  document.getElementById('d-edit-fields').innerHTML = headers.map(h => {
+    const val = String(row[h] ?? '').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return `<div class="edit-row" id="d-row-${sid(h)}" onclick="deskStartEdit('${sid(h)}','${val}')">
+      <span class="edit-row-label">${h.trim()}</span>
+      <span class="edit-row-val${val ? '' : ' empty'}" id="d-disp-${sid(h)}">${val || '&#8212;'}</span>
+    </div>`;
+  }).join('');
+  formDirty = false;
+  closeDtPanel();
+  deskShowScreen('edit');
 }
 
 function deskEditFromPanel() {
