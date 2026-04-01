@@ -94,10 +94,10 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', sans-seri
 .lot-extras { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
 .lot-extra { font-size: 10px; color: var(--muted); background: var(--surface2); border: 1px solid var(--border); padding: 2px 7px; border-radius: 3px; white-space: nowrap; }
 .badge { display: inline-block; padding: 2px 7px; border-radius: 3px; font-size: 10px; font-weight: 500; }
-.badge-exc { background: var(--accent-light); color: var(--accent); }
-.badge-set { background: #eaf3de; color: #3b6d11; }
-.badge-dep { background: var(--gold-light); color: var(--gold); }
-.badge-on { background: #e8f0fd; color: #1a3a8b; }
+.badge-exc { background: #fff0e0; color: #c45f00; }
+.badge-set { background: #fde8e8; color: #a01a1a; }
+.badge-dep { background: #e8f0fd; color: #1a3a8b; }
+.badge-on { background: #e8f4ed; color: #1a6b3a; }
 .badge-pen { background: #eeedfe; color: #534ab7; }
 .badge-oth { background: var(--surface2); color: var(--muted); }
 .empty-state { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 12px; padding: 40px; text-align: center; }
@@ -586,7 +586,13 @@ function renderLotList() {
   if (!filteredData.length) { list.innerHTML = '<div class="empty-state">No records match your filters.</div>'; return; }
   list.innerHTML = filteredData.map((row, i) => {
     const lotNum = row['Lot #'] || row['Lot#'] || '—';
-    const val = row['$VAL '] || row['$VAL'] || '';
+    const cond_lower = String(row['Sales Condition '] || row['Sales Condition'] || '').toLowerCase();
+    let val = '';
+    if (cond_lower.includes('on sale') || cond_lower.includes('pending')) val = row['$LIST '] || row['$LIST'] || '';
+    else if (cond_lower.includes('deposit')) val = row['CfS Issued Price'] || '';
+    else if (cond_lower.includes('exchanged')) val = row['CfS Exchanged Price ($)'] || '';
+    else if (cond_lower.includes('settled')) val = row['CfS Settled Price ($)'] || '';
+    else val = row['$VAL '] || row['$VAL'] || '';
     const valFmt = val && !isNaN(val) ? '$' + Number(val).toLocaleString() : (val || '—');
     const cond = String(row['Sales Condition '] || row['Sales Condition'] || '');
     const partner = row['Channel Partner'] || '';
