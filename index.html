@@ -319,12 +319,12 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
     <div class="api-key-section">
       <label>Anthropic API Key</label>
       <div class="api-key-row">
-        <input type="text" id="api-key-field" placeholder="sk-ant-..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
-        <button onclick="saveApiKey()">Save</button>
+        <input type="text" id="api-key-field" placeholder="sk-ant-..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" onkeydown="if(event.key==='Enter'){event.preventDefault();saveApiKey();}">
+        <button type="button" onclick="saveApiKey()">Save</button>
       </div>
       <div class="api-note">Stored in your browser only. Required for Chat and Reports.</div>
     </div>
-    <button class="test-btn" onclick="testApiKey()">Test API key</button>
+    <button type="button" class="test-btn" onclick="testApiKey()">Test API key</button>
     <div id="api-test-result"></div>
   </div>
 </div>
@@ -332,7 +332,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
 <!-- APP -->
 <div id="app-wrapper" style="display:none">
   <div class="app-header">
-    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.7</span></div>
+    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.9</span></div>
     <div class="header-right">
       <div class="user-pill">
         <div class="user-avatar" id="user-avatar">?</div>
@@ -657,14 +657,15 @@ async function testApiKey() {
 
 function saveApiKey() {
   const key = document.getElementById('api-key-field').value.replace(/\s+/g, '').trim();
+  const result = document.getElementById('api-test-result');
   // Reject placeholder bullets or anything that isn't a real key
   if (!key || key.includes('•') || !key.startsWith('sk-')) {
-    toast('Please enter a valid API key (starts with sk-)', 'error');
+    if (result) { result.textContent = '✗ Invalid key — must start with sk-'; result.style.color = 'var(--danger)'; }
     return;
   }
   localStorage.setItem('anthropic_key', key);
-  toast('API key saved ✓', 'success');
   document.getElementById('api-key-field').value = '••••••••••••••••';
+  if (result) { result.textContent = '✓ API key saved!'; result.style.color = 'var(--accent)'; }
 }
 
 async function signIn() {
