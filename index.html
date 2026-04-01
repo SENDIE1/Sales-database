@@ -1567,21 +1567,31 @@ function toast(msg, type='') { const el = document.getElementById('toast'); el.t
 function toastLong(msg, type='') { const el = document.getElementById('toast'); el.textContent = msg; el.className = 'show ' + type; setTimeout(function(){ el.className = ''; }, 5000); }
 
 window.addEventListener('popstate', function(e) {
+  // Desktop edit screen
+  const deskEdit = document.getElementById('dscreen-edit');
+  if (deskEdit && deskEdit.classList.contains('active')) {
+    history.pushState({ app: true }, '');
+    if (formDirty) {
+      if (confirm('You have unsaved changes. Save before leaving?')) { deskSaveEdit(); }
+      else { formDirty = false; deskShowScreen('data'); }
+    } else {
+      deskShowScreen('data');
+    }
+    return;
+  }
+  // Mobile detail screen
   const detail = document.getElementById('screen-detail');
-  if (detail.classList.contains('active')) {
+  if (detail && detail.classList.contains('active')) {
     showScreen('data');
     history.pushState({ app: true }, '');
     return;
   }
+  // Mobile edit screen
   const editScreen = document.getElementById('screen-edit');
-  if (editScreen.classList.contains('active') && formDirty) {
+  if (editScreen && editScreen.classList.contains('active') && formDirty) {
     history.pushState({ app: true }, '');
-    if (confirm('You have unsaved changes. Save before leaving?')) {
-      saveEdit();
-    } else {
-      formDirty = false;
-      showScreen('data');
-    }
+    if (confirm('You have unsaved changes. Save before leaving?')) { saveEdit(); }
+    else { formDirty = false; showScreen('data'); }
     return;
   }
   history.pushState({ app: true }, '');
@@ -1608,8 +1618,34 @@ window.addEventListener('resize', function() {
 function isDesktop() { return window.innerWidth >= 768; }
 
 function deskShowScreen(name) {
+  const content = document.getElementById('desktop-content');
+  const editScreen = document.getElementById('dscreen-edit');
+  const nav = document.getElementById('desktop-nav');
+
+  if (name === 'edit') {
+    // Full page takeover - hide everything except edit screen
+    content.style.display = 'none';
+    nav.style.display = 'none';
+    editScreen.style.display = 'flex';
+    editScreen.style.position = 'fixed';
+    editScreen.style.inset = '52px 0 0 0';
+    editScreen.style.zIndex = '50';
+    editScreen.style.background = 'var(--bg)';
+    editScreen.classList.add('active');
+    return;
+  }
+
+  // Restore normal layout
+  content.style.display = 'flex';
+  nav.style.display = 'flex';
+  editScreen.style.display = 'none';
+  editScreen.style.position = '';
+  editScreen.style.inset = '';
+  editScreen.style.zIndex = '';
+  editScreen.classList.remove('active');
+
   document.querySelectorAll('.desktop-screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('dscreen-' + name).classList.add('active');
+  document.getElementById('dscreen-' + name)?.classList.add('active');
   ['data','chat','reports'].forEach(n => {
     document.getElementById('dnav-' + n)?.classList.toggle('active', n === name);
   });
@@ -1845,6 +1881,7 @@ function deskEditRow(idx) {
   formDirty = false;
   closeDtPanel();
   deskShowScreen('edit');
+  history.pushState({ deskEdit: true }, '');
 }
 
 function deskEditFromPanel() {
