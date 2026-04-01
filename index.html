@@ -917,79 +917,65 @@ async function graphGet(url) {
 async function loadFileFromOneDrive() {
   try {
     const token = await getToken();
-    let file = null;
-    let driveId = null;
 
-    // Try 1: search my drive
+    // Try direct path first
+    showLoading('Locating file on OneDrive...');
+    const FILE_PATH = "Sasha%20Cross's%20files%20-%20Sales%20%26%20Marketing/01_Sales/018%20-%20Sales%20DB/Sales%20DB%20-%20Claude.xlsx";
+    
+    try {
+      const r1 = await graphGet(`https://graph.microsoft.com/v1.0/me/drive/root:/${FILE_PATH}`);
+      console.log('Path lookup:', JSON.stringify(r1));
+      if (r1 && r1.id) {
+        fileId = r1.id;
+        const driveId = r1.parentReference?.driveId;
+        await downloadAndLoad(token, fileId, driveId);
+        return;
+      }
+    } catch(e) { console.log('Path lookup failed:', e.message); }
+
+    // Try search
     showLoading('Searching OneDrive...');
     try {
-      const r1 = await graphGet(`https://graph.microsoft.com/v1.0/me/drive/search(q='${encodeURIComponent(FILE_NAME)}')`);
-      console.log('Drive search:', JSON.stringify(r1));
-      file = (r1.value||[]).find(f=>f.name===FILE_NAME||(f.name||'').toLowerCase()===FILE_NAME.toLowerCase());
-      if (file) driveId = file.parentReference?.driveId;
-    } catch(e) { console.log('Drive search failed:', e.message); }
+      const r2 = await graphGet(`https://graph.microsoft.com/v1.0/me/drive/search(q='Sales DB - Claude')`);
+      console.log('Search result:', JSON.stringify(r2));
+      const file = (r2.value||[]).find(f => (f.name||'').toLowerCase() === FILE_NAME.toLowerCase());
+      if (file) {
+        fileId = file.id;
+        await downloadAndLoad(token, fileId, file.parentReference?.driveId);
+        return;
+      }
+    } catch(e) { console.log('Search failed:', e.message); }
 
-    // Try 2: list root children
-    if (!file) {
-      try {
-        const r2 = await graphGet('https://graph.microsoft.com/v1.0/me/drive/root/children');
-        console.log('Root children:', JSON.stringify(r2));
-        file = (r2.value||[]).find(f=>f.name===FILE_NAME||(f.name||'').toLowerCase()===FILE_NAME.toLowerCase());
-        if (file) driveId = file.parentReference?.driveId;
-      } catch(e) { console.log('Root children failed:', e.message); }
-    }
-
-    // Try 3: SharePoint sites
-    if (!file) {
-      showLoading('Searching SharePoint...');
-      try {
-        const sites = await graphGet('https://graph.microsoft.com/v1.0/sites?search=*');
-        console.log('Sites:', JSON.stringify(sites));
-        for (const site of (sites.value||[])) {
-          try {
-            const drives = await graphGet(`https://graph.microsoft.com/v1.0/sites/${site.id}/drives`);
-            for (const drive of (drives.value||[])) {
-              const sr = await graphGet(`https://graph.microsoft.com/v1.0/drives/${drive.id}/search(q='${encodeURIComponent(FILE_NAME)}')`);
-              file = (sr.value||[]).find(f=>f.name===FILE_NAME);
-              if (file) { driveId = drive.id; break; }
-            }
-          } catch(e) {}
-          if (file) break;
-        }
-      } catch(e) { console.log('SharePoint search failed:', e.message); }
-    }
-
-    if (!file) throw new Error(`"${FILE_NAME}" not found. Check console for details.`);
-
-    fileId = file.id;
-    console.log('Found file! ID:', fileId, 'DriveID:', driveId);
-
-    // Download
-    showLoading('Downloading...');
-    const downloadUrl = driveId
-      ? `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${fileId}/content`
-      : `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/content`;
-
-    const contentRes = await fetch(downloadUrl, { headers: { Authorization: 'Bearer ' + token } });
-    if (!contentRes.ok) throw new Error(`Download failed: ${contentRes.status}`);
-
-    const arrayBuffer = await contentRes.arrayBuffer();
-    const wb = XLSX.read(arrayBuffer, { type: 'array' });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
-
-    if (!json.length) throw new Error('File is empty');
-    headers = Object.keys(json[0]);
-    allData = json;
-    filteredData = [...allData];
-
-    renderTable();
-    buildForms();
-    setSyncStatus('synced');
+    throw new Error(`Could not locate "${FILE_NAME}". Check console for details.`);
   } catch(err) {
     console.error('Error:', err);
     throw err;
   }
+}
+
+async function downloadAndLoad(token, itemId, driveId) {
+  showLoading('Downloading file...');
+  const downloadUrl = driveId
+    ? `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/content`
+    : `https://graph.microsoft.com/v1.0/me/drive/items/${itemId}/content`;
+
+  console.log('Downloading from:', downloadUrl);
+  const contentRes = await fetch(downloadUrl, { headers: { Authorization: 'Bearer ' + token } });
+  if (!contentRes.ok) throw new Error(`Download failed: ${contentRes.status}`);
+
+  const arrayBuffer = await contentRes.arrayBuffer();
+  const wb = XLSX.read(arrayBuffer, { type: 'array' });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+  if (!json.length) throw new Error('File is empty');
+  headers = Object.keys(json[0]);
+  allData = json;
+  filteredData = [...allData];
+
+  renderTable();
+  buildForms();
+  setSyncStatus('synced');
 }
 
 async function refreshFromOneDrive() {
