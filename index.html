@@ -1822,7 +1822,7 @@ function deskEditRow(idx) {
       const labelTc = group.textColour;
       const fmtDisp = deskFormatDisplay(h, String(row[h] ?? ''));
       editHtml += `<tr id="d-row-${sid(h)}" onclick="deskStartEdit('${sid(h)}','${val}')" style="cursor:pointer">
-        <td style="padding:9px 16px;border-bottom:0.5px solid rgba(0,0,0,0.1);white-space:nowrap;font-size:12px;font-weight:500;background:${labelBg};color:${labelTc};user-select:none">${h.trim()}</td>
+        <td style="padding:9px 16px;border-bottom:0.5px solid rgba(0,0,0,0.1);white-space:nowrap;width:1%;font-size:12px;font-weight:500;background:${labelBg};color:${labelTc};user-select:none">${h.trim()}</td>
         <td style="padding:9px 16px;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--ink);background:var(--surface)" id="d-disp-${sid(h)}">${fmtDisp}</td>
       </tr>`;
     });
@@ -1835,7 +1835,7 @@ function deskEditRow(idx) {
       const val = String(row[h] ?? '').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const fmtDispU = deskFormatDisplay(h, String(row[h] ?? ''));
       editHtml += `<tr id="d-row-${sid(h)}" onclick="deskStartEdit('${sid(h)}','${val}')" style="cursor:pointer">
-        <td style="padding:9px 16px;border-bottom:0.5px solid rgba(0,0,0,0.1);white-space:nowrap;font-size:12px;font-weight:500;background:#e8e3d8;color:#1a1408;user-select:none">${h.trim()}</td>
+        <td style="padding:9px 16px;border-bottom:0.5px solid rgba(0,0,0,0.1);white-space:nowrap;width:1%;font-size:12px;font-weight:500;background:#e8e3d8;color:#1a1408;user-select:none">${h.trim()}</td>
         <td style="padding:9px 16px;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--ink);background:var(--surface)" id="d-disp-${sid(h)}">${fmtDispU}</td>
       </tr>`;
     });
@@ -1868,7 +1868,7 @@ function deskEditFromPanel() {
       const labelTc = group.textColour;
       const fmtDisp = deskFormatDisplay(h, String(row[h] ?? ''));
       editHtml += `<tr id="d-row-${sid(h)}" onclick="deskStartEdit('${sid(h)}','${val}')" style="cursor:pointer">
-        <td style="padding:9px 16px;border-bottom:0.5px solid rgba(0,0,0,0.1);white-space:nowrap;font-size:12px;font-weight:500;background:${labelBg};color:${labelTc};user-select:none">${h.trim()}</td>
+        <td style="padding:9px 16px;border-bottom:0.5px solid rgba(0,0,0,0.1);white-space:nowrap;width:1%;font-size:12px;font-weight:500;background:${labelBg};color:${labelTc};user-select:none">${h.trim()}</td>
         <td style="padding:9px 16px;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--ink);background:var(--surface)" id="d-disp-${sid(h)}">${fmtDisp}</td>
       </tr>`;
     });
@@ -1881,7 +1881,7 @@ function deskEditFromPanel() {
       const val = String(row[h] ?? '').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const fmtDispU = deskFormatDisplay(h, String(row[h] ?? ''));
       editHtml += `<tr id="d-row-${sid(h)}" onclick="deskStartEdit('${sid(h)}','${val}')" style="cursor:pointer">
-        <td style="padding:9px 16px;border-bottom:0.5px solid rgba(0,0,0,0.1);white-space:nowrap;font-size:12px;font-weight:500;background:#e8e3d8;color:#1a1408;user-select:none">${h.trim()}</td>
+        <td style="padding:9px 16px;border-bottom:0.5px solid rgba(0,0,0,0.1);white-space:nowrap;width:1%;font-size:12px;font-weight:500;background:#e8e3d8;color:#1a1408;user-select:none">${h.trim()}</td>
         <td style="padding:9px 16px;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--ink);background:var(--surface)" id="d-disp-${sid(h)}">${fmtDispU}</td>
       </tr>`;
     });
