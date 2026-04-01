@@ -105,7 +105,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', sans-seri
 .lot-partner { font-size: 10px; color: var(--muted); margin-left: auto; }
 .lot-extras { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
 .lot-extra { font-size: 10px; color: var(--muted); background: var(--surface2); border: 1px solid var(--border); padding: 2px 7px; border-radius: 3px; white-space: nowrap; }
-.badge { display: inline-block; padding: 2px 7px; border-radius: 3px; font-size: 10px; font-weight: 500; }
+.badge { display: inline-block; padding: 2px 7px; border-radius: 3px; font-size: 10px; font-weight: 500; background: #f0ebe0; color: #8a7d65; }
 .badge-exc { background: #fff0e0; color: #c45f00; }
 .badge-set { background: #fde8e8; color: #a01a1a; }
 .badge-dep { background: #e8f0fd; color: #1a3a8b; }
@@ -876,12 +876,13 @@ function renderLotList() {
 }
 
 function badgeClass(cond) {
-  const c = String(cond).toLowerCase();
-  if (c.includes('exchanged')) return 'badge-exc';
-  if (c.includes('settled')) return 'badge-set';
+  const c = String(cond || '').toLowerCase().trim();
+  if (c.includes('exchange')) return 'badge-exc';
+  if (c.includes('settle') || c.includes('settled') || c === '5. settled') return 'badge-set';
   if (c.includes('deposit')) return 'badge-dep';
-  if (c.includes('on sale')) return 'badge-on';
-  if (c.includes('pending')) return 'badge-pen';
+  if (c.includes('on sale') || c === '1. on sale') return 'badge-on';
+  if (c.includes('pending') || c.includes('sa')) return 'badge-pen';
+  if (c.includes('withheld') || c.includes('unreleased') || c.includes('avantaus')) return 'badge-oth';
   return 'badge-oth';
 }
 
