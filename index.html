@@ -435,21 +435,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
         </div>
       </div>
 
-      <!-- DESKTOP EDIT SCREEN -->
-      <div class="desktop-screen" id="dscreen-edit">
-        <div class="desktop-edit">
-          <div class="desktop-edit-header">
-            <button class="back-btn" onclick="deskCancelEditCheck()">&#8592; Back</button>
-            <span class="sub-title" id="d-edit-title">Edit record</span>
-            <div style="width:60px"></div>
-          </div>
-          <div class="desktop-edit-body" id="d-edit-fields"></div>
-          <div class="desktop-edit-actions">
-            <button class="btn" onclick="deskCancelEditCheck()">Cancel</button>
-            <button class="btn primary" onclick="deskSaveEdit()">Save & Sync</button>
-          </div>
-        </div>
-      </div>
+
 
     </div>
 
@@ -592,6 +578,22 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
     <div class="nav-item" id="nav-reports" onclick="showScreen('reports')"><span class="nav-label">Reports</span></div>
   </nav>
 
+</div>
+
+<!-- DESKTOP EDIT SCREEN (fixed overlay, outside content so hiding content doesn't affect it) -->
+<div id="dscreen-edit" style="display:none;position:fixed;inset:0;z-index:80;background:var(--bg);flex-direction:column;overflow:hidden">
+  <div class="desktop-edit" style="display:flex;flex-direction:column;height:100%">
+    <div class="desktop-edit-header">
+      <button class="back-btn" onclick="deskCancelEditCheck()">&#8592; Back</button>
+      <span class="sub-title" id="d-edit-title">Edit record</span>
+      <div style="width:60px"></div>
+    </div>
+    <div class="desktop-edit-body" id="d-edit-fields" style="flex:1;overflow-y:auto"></div>
+    <div class="desktop-edit-actions">
+      <button class="btn" onclick="deskCancelEditCheck()">Cancel</button>
+      <button class="btn primary" onclick="deskSaveEdit()">Save & Sync</button>
+    </div>
+  </div>
 </div>
 
 <!-- COLUMN FILTER POPUP -->
@@ -1569,7 +1571,7 @@ function toastLong(msg, type='') { const el = document.getElementById('toast'); 
 window.addEventListener('popstate', function(e) {
   // Desktop edit screen
   const deskEdit = document.getElementById('dscreen-edit');
-  if (deskEdit && deskEdit.classList.contains('active')) {
+  if (deskEdit && deskEdit.style.display === 'flex') {
     history.pushState({ app: true }, '');
     if (formDirty) {
       if (confirm('You have unsaved changes. Save before leaving?')) { deskSaveEdit(); }
@@ -1618,31 +1620,15 @@ window.addEventListener('resize', function() {
 function isDesktop() { return window.innerWidth >= 768; }
 
 function deskShowScreen(name) {
-  const content = document.getElementById('desktop-content');
   const editScreen = document.getElementById('dscreen-edit');
-  const nav = document.getElementById('desktop-nav');
 
   if (name === 'edit') {
-    // Full page takeover - hide everything except edit screen
-    content.style.display = 'none';
-    nav.style.display = 'none';
     editScreen.style.display = 'flex';
-    editScreen.style.position = 'fixed';
-    editScreen.style.inset = '52px 0 0 0';
-    editScreen.style.zIndex = '50';
-    editScreen.style.background = 'var(--bg)';
-    editScreen.classList.add('active');
     return;
   }
 
-  // Restore normal layout
-  content.style.display = 'flex';
-  nav.style.display = 'flex';
+  // Hide edit overlay
   editScreen.style.display = 'none';
-  editScreen.style.position = '';
-  editScreen.style.inset = '';
-  editScreen.style.zIndex = '';
-  editScreen.classList.remove('active');
 
   document.querySelectorAll('.desktop-screen').forEach(s => s.classList.remove('active'));
   document.getElementById('dscreen-' + name)?.classList.add('active');
