@@ -1269,31 +1269,11 @@ function colClass(h) {
 
 
 
-function getHeaderColour(h) {
-  const yellow = ['Project Name','Lot ID','Property Address','Stage','Lot #','Sales Condition ','Pending S/A Date','Pending S/A Days','Pending S/A Agency','*LEADS Name','CfS Type','Property Type','Product Line','Product Type','Lot Area (m²)','Lot Frontage (Width) (m)'];
-  const dark = ['StockList','Notes'];
-  const green = ['Channel Market','Sales Channel','Channel Partner','Swap to/from Channel Partner'];
-  const orange = ['Allocation Date','Allocation Days','Allocation Period (days)','Allocation Days / Allocation Expiry Date'];
-  const red = ['$VAL ','$BASE','$LIST ','$CHECK$                   $BASE-$VAL','$CHECK$ $LIST-$BASE','Land Tax Per lot Value','Land Tax $Uplift / $Shortfall'];
-  const pink = ['March Campaign','OFFER Rebate','SETTLE Rebate','H&L $House (S/S)','$H&L Total (S/S)','H&L $House (D/S)','$H&L Total (D/S)','Notes.1'];
-  const blue = ['Sales Advice Received Date','Sales Advice Sent To Legal Date','Contract Issued Date','Days From CfS Issued','CfS Issued Price','Proposed Exchanged Date','Exchanged Date','CfS Exchanged Price ($)','Proposed Settled Date','Settled Date','Settled Month','Settled Year','CfS Settled Price ($)','Rebate','Deposit%','Cooling Off Date','FIRB Approval','March Campaign.1','Comments'];
-  const peach = ['Vendors Agency','Vendors Agency Agent',"Agent's Mobile","Agent's Email"];
-  const purple = ["(1) Purchaser's Name","(1) Purchaser's Email","(1) Purchaser's Mobile","(2) Purchaser's Name","(2) Purchaser's Email","(2) Purchaser's Mobile","Purchaser's Suburb","Purchaser's Postcode","Purchaser's Solicitor (P'Sol)","Purchaser's Solicitor Phone",'Type Of Purchaser','Special Condilions/Variations'];
-  const lgreen = ['2026 Report','Comments.1'];
-  if (yellow.includes(h)) return '#FFD700';
-  if (dark.includes(h)) return '#404040';
-  if (green.includes(h)) return '#70AD47';
-  if (orange.includes(h)) return '#F4B942';
-  if (red.includes(h)) return '#FF0000';
-  if (pink.includes(h)) return '#FF99CC';
-  if (blue.includes(h)) return '#9DC3E6';
-  if (peach.includes(h)) return '#F2DCDB';
-  if (purple.includes(h)) return '#CCC0DA';
-  if (lgreen.includes(h)) return '#E2EFDA';
-  return '#e8e3d8';
-}
-function getHeaderTextColour(bg) {
-  return (bg === '#404040' || bg === '#FF0000') ? '#ffffff' : '#1a1408';
+function getHeaderTextColour(bg, h) {
+  if (h === 'Land Tax Per lot Value') return '#FF0000';
+  if (DARK_HEADER_BG.has(bg)) return '#ffffff';
+  if (bg === '#FFFF00' || bg === '#CCFF66' || bg === '#C0E6F5') return '#000000';
+  return '#000000';
 }
 
 
@@ -1344,6 +1324,7 @@ function formatCellValue(h, v) {
   if ((CURRENCY_COLS.has(h) || h.includes('$') || h.toLowerCase().includes('price')) && !isNaN(v) && vs !== '' && vs !== '0') return '$' + Number(v).toLocaleString();
   return vs;
 }
+
 
 function renderDesktopTable() {
   if (!filteredData.length) {
@@ -1652,30 +1633,30 @@ let dtSelectedIdx = -1;
 
 
 function getHeaderColour(h) {
-  const yellow = ['Project Name','Lot ID','Property Address','Stage','Lot #','Sales Condition ','Pending S/A Date','Pending S/A Days','Pending S/A Agency','*LEADS Name','CfS Type','Property Type','Product Line','Product Type','Lot Area (m²)','Lot Frontage (Width) (m)'];
-  const dark = ['StockList','Notes'];
-  const green = ['Channel Market','Sales Channel','Channel Partner','Swap to/from Channel Partner'];
-  const orange = ['Allocation Date','Allocation Days','Allocation Period (days)','Allocation Days / Allocation Expiry Date'];
-  const red = ['$VAL ','$BASE','$LIST ','$CHECK$                   $BASE-$VAL','$CHECK$ $LIST-$BASE','Land Tax Per lot Value','Land Tax $Uplift / $Shortfall'];
-  const pink = ['March Campaign','OFFER Rebate','SETTLE Rebate','H&L $House (S/S)','$H&L Total (S/S)','H&L $House (D/S)','$H&L Total (D/S)','Notes.1'];
-  const blue = ['Sales Advice Received Date','Sales Advice Sent To Legal Date','Contract Issued Date','Days From CfS Issued','CfS Issued Price','Proposed Exchanged Date','Exchanged Date','CfS Exchanged Price ($)','Proposed Settled Date','Settled Date','Settled Month','Settled Year','CfS Settled Price ($)','Rebate','Deposit%','Cooling Off Date','FIRB Approval','March Campaign.1','Comments'];
-  const peach = ['Vendors Agency','Vendors Agency Agent',"Agent's Mobile","Agent's Email"];
-  const purple = ["(1) Purchaser's Name","(1) Purchaser's Email","(1) Purchaser's Mobile","(2) Purchaser's Name","(2) Purchaser's Email","(2) Purchaser's Mobile","Purchaser's Suburb","Purchaser's Postcode","Purchaser's Solicitor (P'Sol)","Purchaser's Solicitor Phone",'Type Of Purchaser','Special Condilions/Variations'];
-  const lgreen = ['2026 Report','Comments.1'];
-  if (yellow.includes(h)) return '#FFD700';
-  if (dark.includes(h)) return '#404040';
-  if (green.includes(h)) return '#70AD47';
-  if (orange.includes(h)) return '#F4B942';
-  if (red.includes(h)) return '#FF0000';
-  if (pink.includes(h)) return '#FF99CC';
-  if (blue.includes(h)) return '#9DC3E6';
-  if (peach.includes(h)) return '#F2DCDB';
-  if (purple.includes(h)) return '#CCC0DA';
-  if (lgreen.includes(h)) return '#E2EFDA';
+  const lightblue = ['Project Name','Lot ID','Property Address','Stage','Lot #','CfS Type','Product Line','Product Type','Lot Area (m²)','Lot Frontage (Width) (m)'];
+  const yellow = ['Sales Condition ','Pending S/A Date','Pending S/A Days','Pending S/A Agency','$VAL ','$BASE','$LIST ','Notes.1','March Campaign','OFFER Rebate','SETTLE Rebate','Type Of Purchaser','Special Condilions/Variations','2026 Report','Comments.1'];
+  const darkgrey = ['*LEADS Name'];
+  const peachL = ['Property Type'];
+  const purple = ['StockList','Notes'];
+  const hotpink = ['$CHECK$                   $BASE-$VAL','$CHECK$ $LIST-$BASE'];
+  const landtax = ['Land Tax Per lot Value','Land Tax $Uplift / $Shortfall'];
+  const peach = ['Sales Advice Received Date','Sales Advice Sent To Legal Date','Contract Issued Date','Days From CfS Issued','CfS Issued Price','Proposed Exchanged Date','Exchanged Date','CfS Exchanged Price ($)','Proposed Settled Date','Settled Date','Settled Month','Settled Year','CfS Settled Price ($)','Rebate','Deposit%','Cooling Off Date','FIRB Approval','March Campaign.1','Comments'];
+  const pink = ["(1) Purchaser's Name","(1) Purchaser's Email","(1) Purchaser's Mobile","(2) Purchaser's Name","(2) Purchaser's Email","(2) Purchaser's Mobile","Purchaser's Suburb","Purchaser's Postcode","Purchaser's Solicitor (P'Sol)","Purchaser's Solicitor Phone"];
+  if (lightblue.includes(h)) return '#BDD7EE';
+  if (yellow.includes(h)) return '#FFFF00';
+  if (darkgrey.includes(h)) return '#404040';
+  if (peachL.includes(h)) return '#FCE4D6';
+  if (purple.includes(h)) return '#7030A0';
+  if (hotpink.includes(h)) return '#FF0066';
+  if (landtax.includes(h)) return '#FFFFFF';
+  if (peach.includes(h)) return '#FCE4D6';
+  if (pink.includes(h)) return '#FCE4D6';
   return '#e8e3d8';
 }
-function getHeaderTextColour(bg) {
-  return (bg === '#404040' || bg === '#FF0000') ? '#ffffff' : '#1a1408';
+function getHeaderTextColour(bg, h) {
+  if (bg === '#404040' || bg === '#7030A0' || bg === '#FF0066') return '#ffffff';
+  if (h === 'Land Tax Per lot Value' || h === 'Land Tax $Uplift / $Shortfall') return '#FF0000';
+  return '#1a1408';
 }
 
 
@@ -1724,6 +1705,7 @@ function formatCellValue(h, v) {
   return vs;
 }
 
+
 function renderDesktopTable() {
   if (!filteredData.length) {
     document.getElementById('dt-body').innerHTML = '<tr><td colspan="' + headers.length + '" style="text-align:center;padding:40px;color:var(--muted)">No records match your filters.</td></tr>';
@@ -1732,7 +1714,7 @@ function renderDesktopTable() {
   }
   document.getElementById('dt-head').innerHTML = '<tr>' + headers.map((h,i) => {
     const bg = getHeaderColour(h);
-    const tc = getHeaderTextColour(bg);
+    const tc = getHeaderTextColour(bg, h);
     const filtered = deskActiveColFilters[h] ? ' filtered' : '';
     return `<th data-col="${h}" class="${filtered}" style="background:${bg};color:${tc}" onclick="openCfPopup(event,'${h.replace(/'/g,"\'")}')" title="Click to filter: ${h.trim()}">${h.trim()} &#9660;</th>`;
   }).join('') + '</tr>';
