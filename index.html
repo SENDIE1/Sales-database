@@ -311,7 +311,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
   <div class="login-card">
     <div class="login-icon">&#128202;</div>
     <div class="login-title">Sales DB</div>
-    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.14</div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.15</div>
     <div class="login-sub">Sign in with your Microsoft account to access your OneDrive sales data.</div>
     <button class="ms-btn" onclick="signIn()">
       <div class="ms-logo"><div></div><div></div><div></div><div></div></div>
@@ -335,7 +335,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
 <!-- APP -->
 <div id="app-wrapper" style="display:none">
   <div class="app-header">
-    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.14</span></div>
+    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.15</span></div>
     <div class="header-right">
       <div class="user-pill">
         <div class="user-avatar" id="user-avatar">?</div>
@@ -642,7 +642,7 @@ const msalConfig = { auth: { clientId: CLIENT_ID, authority: 'https://login.micr
 let msalInstance = null;
 async function getMsal() { if (!msalInstance) msalInstance = await msal.PublicClientApplication.createPublicClientApplication(msalConfig); return msalInstance; }
 
-let allData = [], headers = [], filteredData = [], fileId = null, editRowIdx = -1, modalRowIdx = -1, filterDrawerOpen = false;
+let allData = [], headers = [], filteredData = [], fileId = null, fileDriveId = null, editRowIdx = -1, modalRowIdx = -1, filterDrawerOpen = false;
 const FILTER_MAP = { 'f-stage':'Stage', 'f-condition':'Sales Condition ', 'f-channel':'Sales Channel', 'f-partner':'Channel Partner', 'f-productline':'Product Line', 'f-market':'Channel Market', 'f-year':'Settled Year' };
 
 async function testApiKey() {
@@ -768,10 +768,12 @@ async function loadFileFromOneDrive() {
   const token = await getToken();
   let itemId = null, driveId = null;
   showLoading('Locating file...');
+  // 1. Try own OneDrive by path
   try {
     const r = await graphGet('https://graph.microsoft.com/v1.0/me/drive/root:/Sales%20DB/Sales%20DB%20-%20Claude.xlsx');
     if (r?.id) { itemId = r.id; driveId = r.parentReference?.driveId; }
   } catch(e) {}
+  // 2. Try own OneDrive search
   if (!itemId) {
     try {
       const r = await graphGet(`https://graph.microsoft.com/v1.0/me/drive/search(q='Sales DB - Claude.xlsx')`);
@@ -779,10 +781,28 @@ async function loadFileFromOneDrive() {
       if (f) { itemId = f.id; driveId = f.parentReference?.driveId; }
     } catch(e) {}
   }
-  if (!itemId) throw new Error(`Could not find "${FILE_NAME}" in OneDrive.`);
+  // 3. Search shared files (for colleagues the file has been shared with)
+  if (!itemId) {
+    showLoading('Searching shared files...');
+    try {
+      const r = await graphGet(`https://graph.microsoft.com/v1.0/me/drive/sharedWithMe`);
+      const f = (r.value||[]).find(f => f.name === FILE_NAME);
+      if (f) { itemId = f.id; driveId = f.remoteItem?.parentReference?.driveId || f.parentReference?.driveId; }
+    } catch(e) {}
+  }
+  // 4. Broader search across all drives including shared
+  if (!itemId) {
+    try {
+      const r = await graphGet(`https://graph.microsoft.com/v1.0/search/query`);
+    } catch(e) {}
+  }
+  if (!itemId) throw new Error(`Could not find "${FILE_NAME}" in your OneDrive or shared files. Ensure the file has been shared with your account.`);
   fileId = itemId;
+  fileDriveId = driveId;
   showLoading('Downloading...');
-  const url = driveId ? `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/content` : `https://graph.microsoft.com/v1.0/me/drive/items/${itemId}/content`;
+  const url = driveId
+    ? `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/content`
+    : `https://graph.microsoft.com/v1.0/me/drive/items/${itemId}/content`;
   const res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
   if (!res.ok) throw new Error(`Download failed: ${res.status}`);
   const buf = await res.arrayBuffer();
@@ -824,14 +844,17 @@ async function syncToOneDrive() {
 
     // Use Excel Graph API to update only changed cells — preserves all formatting
     // Get actual sheet name
-    const sheetsRes = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/workbook/worksheets`, {
+    const driveBase = fileDriveId
+      ? `https://graph.microsoft.com/v1.0/drives/${fileDriveId}/items/${fileId}`
+      : `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}`;
+    const sheetsRes = await fetch(`${driveBase}/workbook/worksheets`, {
       headers: { Authorization: 'Bearer ' + token }
     });
     const sheetsData = await sheetsRes.json();
     console.log('Sheets:', JSON.stringify(sheetsData));
     const sheetName = sheetsData.value?.[0]?.name || 'Sheet1';
     const encodedSheet = encodeURIComponent(sheetName);
-    const baseUrl = `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/workbook/worksheets/${encodedSheet}/`;
+    const baseUrl = `${driveBase}/workbook/worksheets/${encodedSheet}/`;
 
     // Build list of cell updates
     const updates = [];
