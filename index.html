@@ -311,7 +311,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
   <div class="login-card">
     <div class="login-icon">&#128202;</div>
     <div class="login-title">Sales DB</div>
-    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.15</div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.16</div>
     <div class="login-sub">Sign in with your Microsoft account to access your OneDrive sales data.</div>
     <button class="ms-btn" onclick="signIn()">
       <div class="ms-logo"><div></div><div></div><div></div><div></div></div>
@@ -335,7 +335,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
 <!-- APP -->
 <div id="app-wrapper" style="display:none">
   <div class="app-header">
-    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.15</span></div>
+    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.16</span></div>
     <div class="header-right">
       <div class="user-pill">
         <div class="user-avatar" id="user-avatar">?</div>
@@ -787,16 +787,25 @@ async function loadFileFromOneDrive() {
     try {
       const r = await graphGet(`https://graph.microsoft.com/v1.0/me/drive/sharedWithMe`);
       const f = (r.value||[]).find(f => f.name === FILE_NAME);
-      if (f) { itemId = f.id; driveId = f.remoteItem?.parentReference?.driveId || f.parentReference?.driveId; }
+      if (f) {
+        // For shared items the real ID and driveId live inside remoteItem
+        itemId = f.remoteItem?.id || f.id;
+        driveId = f.remoteItem?.parentReference?.driveId || f.parentReference?.driveId;
+      }
     } catch(e) {}
   }
-  // 4. Broader search across all drives including shared
+  // 4. Try searching shared with broader name match
   if (!itemId) {
     try {
-      const r = await graphGet(`https://graph.microsoft.com/v1.0/search/query`);
+      const r = await graphGet(`https://graph.microsoft.com/v1.0/me/drive/sharedWithMe`);
+      const f = (r.value||[]).find(f => (f.name||'').toLowerCase().includes('sales db'));
+      if (f) {
+        itemId = f.remoteItem?.id || f.id;
+        driveId = f.remoteItem?.parentReference?.driveId || f.parentReference?.driveId;
+      }
     } catch(e) {}
   }
-  if (!itemId) throw new Error(`Could not find "${FILE_NAME}" in your OneDrive or shared files. Ensure the file has been shared with your account.`);
+  if (!itemId) throw new Error(`Could not find "${FILE_NAME}".\n\nChecked:\n• Your OneDrive (path & search)\n• Files shared with you\n\nAsk the file owner to share it with your Microsoft account.`);
   fileId = itemId;
   fileDriveId = driveId;
   showLoading('Downloading...');
