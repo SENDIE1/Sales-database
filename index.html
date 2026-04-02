@@ -311,7 +311,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
   <div class="login-card">
     <div class="login-icon">&#128202;</div>
     <div class="login-title">Sales DB</div>
-    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.12</div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.14</div>
     <div class="login-sub">Sign in with your Microsoft account to access your OneDrive sales data.</div>
     <button class="ms-btn" onclick="signIn()">
       <div class="ms-logo"><div></div><div></div><div></div><div></div></div>
@@ -322,6 +322,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
       <div class="api-key-row">
         <input type="text" id="api-key-field" placeholder="sk-ant-..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" onkeydown="if(event.key==='Enter'){event.preventDefault();saveApiKey();}">
         <button type="button" onclick="saveApiKey()">Save</button>
+        <button type="button" onclick="clearApiKey()" style="background:#dc2626">Clear</button>
       </div>
       <div class="api-note">Stored in your browser only. Required for Chat and Reports.</div>
       <div id="api-key-status" style="font-size:12px;margin-top:8px;min-height:18px"></div>
@@ -334,7 +335,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
 <!-- APP -->
 <div id="app-wrapper" style="display:none">
   <div class="app-header">
-    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.12</span></div>
+    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.14</span></div>
     <div class="header-right">
       <div class="user-pill">
         <div class="user-avatar" id="user-avatar">?</div>
@@ -627,9 +628,14 @@ const REDIRECT_URI = 'https://SENDIE1.github.io/Sales-database/';
 const FILE_NAME = 'Sales DB - Claude.xlsx';
 const SCOPES = ['Files.ReadWrite', 'User.Read'];
 const ANTHROPIC_KEY = () => {
-  const k = localStorage.getItem('anthropic_key') || '';
-  // Return empty string if it looks like the bullet placeholder or isn't a real key
+  let k = localStorage.getItem('anthropic_key') || '';
   if (!k.startsWith('sk-')) return '';
+  // Auto-fix doubled key e.g. sk-ant-sk-ant-...
+  const secondIdx = k.indexOf('sk-', 3);
+  if (secondIdx !== -1) {
+    k = k.slice(secondIdx);
+    localStorage.setItem('anthropic_key', k); // fix it in storage too
+  }
   return k;
 };
 const msalConfig = { auth: { clientId: CLIENT_ID, authority: 'https://login.microsoftonline.com/ab54a23e-1458-4baf-a2f6-9b8164f032d1', redirectUri: REDIRECT_URI }, cache: { cacheLocation: 'sessionStorage' } };
@@ -657,10 +663,18 @@ async function testApiKey() {
   } catch(e) { result.textContent = 'Error: ' + e.message; result.style.color = 'var(--danger)'; }
 }
 
+function clearApiKey() {
+  localStorage.removeItem('anthropic_key');
+  document.getElementById('api-key-field').value = '';
+  const status = document.getElementById('api-key-status');
+  status.textContent = 'Key cleared — paste your key and click Save';
+  status.style.color = '#92400e';
+}
+
 function saveApiKey() {
   const input = document.getElementById('api-key-field');
   const status = document.getElementById('api-key-status');
-  const key = (input.value || '').replace(/\s+/g, '').trim();
+  let key = (input.value || '').replace(/\s+/g, '').trim();
 
   if (!key) {
     status.textContent = '✗ Please enter your API key';
@@ -668,7 +682,7 @@ function saveApiKey() {
     return;
   }
   if (key.includes('•')) {
-    status.textContent = '✓ Key already saved';
+    status.textContent = '✓ Key already saved — click Clear to replace it';
     status.style.color = '#16a34a';
     return;
   }
@@ -677,10 +691,23 @@ function saveApiKey() {
     status.style.color = '#dc2626';
     return;
   }
+  // Detect doubled key e.g. sk-ant-sk-ant-...
+  const secondIdx = key.indexOf('sk-', 3);
+  if (secondIdx !== -1) {
+    key = key.slice(secondIdx);
+    status.textContent = '⚠ Detected doubled key — trimmed to correct value';
+    status.style.color = '#92400e';
+  }
   localStorage.setItem('anthropic_key', key);
   input.value = '••••••••••••••••';
-  status.textContent = '✓ API key saved!';
-  status.style.color = '#16a34a';
+  if (!key.includes('sk-ant-')) {
+    // Warn but still save
+    status.textContent = '⚠ Saved — but key looks unusual, verify it\'s correct';
+    status.style.color = '#92400e';
+  } else {
+    status.textContent = '✓ API key saved!';
+    status.style.color = '#16a34a';
+  }
 }
 
 async function signIn() {
@@ -1489,15 +1516,11 @@ async function sendChat() {
   const inp = document.getElementById('chat-input');
   const msg = inp.value.trim(); if (!msg) return;
   const key = ANTHROPIC_KEY();
-  const rawStored = localStorage.getItem('anthropic_key') || '';
   if (!key) {
-    // Show what's actually stored so user can diagnose
-    addMsg('system', `No valid key found.\nStored value starts with: "${rawStored.slice(0,10)}"\nLength: ${rawStored.length}\nPlease re-enter your API key.`);
+    addMsg('system', 'API key missing or invalid. Please re-enter it on the sign-in screen.');
     return;
   }
   inp.value = ''; addMsg('user', msg);
-  // Debug line - remove once working
-  addMsg('system', `[Debug] Sending key: ${key.slice(0,15)}... (${key.length} chars)`);
   const thinking = addThinking();
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1506,7 +1529,7 @@ async function sendChat() {
       body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1000, system: `You are a property sales analyst. Database: ${allData.length} lots.\n\n${dataSnapshot()}\n\nRules: plain text only, no markdown, no bold, no tables. List lots as: Lot 42 — Exchanged — $980,000`, messages: [{ role: 'user', content: msg }] })
     });
     const d = await res.json(); thinking.remove();
-    if (d.error) { addMsg('system', `API Error: ${d.error.message}\nType: ${d.error.type}\nKey used: ${key.slice(0,15)}... (${key.length} chars)`); return; }
+    if (d.error) { addMsg('system', 'Error: ' + d.error.message); return; }
     addMsg('assistant', d.content?.find(b=>b.type==='text')?.text || 'No response.');
   } catch(e) { thinking.remove(); addMsg('system', 'Error: ' + e.message + '\n\nIf this is a CORS error, the Anthropic API does not allow direct browser calls. This is a known limitation.'); console.error('Chat error:', e); }
 }
