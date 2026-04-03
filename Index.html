@@ -1,0 +1,2654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Sales DB</title>
+<link href="https://fonts.googleapis.com/css2?family=Aptos:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & BASE ── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#f5f0e8;color:#1a1408;overflow:hidden}
+
+/* ── CSS VARIABLES ── */
+:root{
+  --bg:#f5f0e8;--surface:#fff;--surface2:#f0ebe0;--border:#ddd5c0;
+  --ink:#1a1408;--muted:#8a7d65;--accent:#1a6b3a;--accent-light:#e8f4ed;
+  --danger:#8b2020;--gold:#b8860b;--gold-light:#fdf8e8;
+  --header-h:52px;--nav-h:60px;
+}
+
+/* ── LOADING & TOAST ── */
+#loading{position:fixed;inset:0;background:rgba(245,240,232,0.95);z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+#loading.show{display:flex}
+.spinner{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading p{color:var(--muted);font-size:12px;font-style:italic}
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--ink);color:var(--bg);padding:10px 20px;border-radius:8px;font-size:13px;font-weight:500;z-index:300;transition:transform 0.3s,opacity 0.3s;pointer-events:none;max-width:85%;text-align:center;opacity:0}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.success{background:var(--accent)}
+#toast.error{background:var(--danger)}
+
+/* ── APP HEADER ── */
+.app-header{height:var(--header-h);background:#1a1408;display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0}
+.header-logo{font-size:20px;font-style:italic;color:#90d4a8}
+.header-logo strong{font-style:normal}
+.header-version{font-size:10px;color:#6a8f7a;margin-left:6px}
+.header-right{display:flex;align-items:center;gap:10px}
+.user-pill{display:flex;align-items:center;gap:6px}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;color:white;font-weight:500}
+.user-name{font-size:11px;color:#c8bfa8}
+.header-btn{background:transparent;border:1px solid rgba(255,255,255,0.2);color:#c8bfa8;font-size:11px;padding:5px 10px;border-radius:4px;cursor:pointer;font-family:"Aptos",sans-serif}
+
+/* ── LOGIN ── */
+#screen-login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg);z-index:150}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px 24px;width:100%;max-width:380px;text-align:center}
+.login-icon{width:56px;height:56px;background:var(--accent-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:24px}
+.login-title{font-size:24px;font-weight:700;margin-bottom:8px}
+.login-sub{color:var(--muted);font-size:12px;line-height:1.6;margin-bottom:24px}
+.ms-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px;background:#0078d4;color:white;border:none;border-radius:4px;font-family:"Aptos",sans-serif;font-size:13px;cursor:pointer}
+.ms-logo{display:grid;grid-template-columns:1fr 1fr;gap:2px;width:16px;height:16px;flex-shrink:0}
+.ms-logo div{border-radius:1px}
+.ms-logo div:nth-child(1){background:#f25022}.ms-logo div:nth-child(2){background:#7fba00}
+.ms-logo div:nth-child(3){background:#00a4ef}.ms-logo div:nth-child(4){background:#ffb900}
+.api-key-section{margin-top:20px;text-align:left}
+.api-key-section label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px}
+.api-key-row{display:flex;gap:8px}
+.api-key-row input{flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:4px;font-family:"Aptos",sans-serif;font-size:12px;background:var(--bg);color:var(--ink);outline:none}
+.api-key-row button{padding:9px 14px;background:var(--accent);color:white;border:none;border-radius:4px;font-family:"Aptos",sans-serif;font-size:12px;cursor:pointer}
+.api-note{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.5}
+.test-btn{margin-top:10px;width:100%;padding:9px;background:transparent;border:1px solid var(--border);border-radius:4px;font-family:"Aptos",sans-serif;font-size:12px;cursor:pointer;color:var(--muted)}
+#api-test-result{font-size:11px;margin-top:6px;min-height:16px}
+
+/* ── APP WRAPPER ── */
+#app-wrapper{display:none;flex-direction:column;height:100vh}
+
+/* ── PHONE LAYOUT (default) ── */
+.phone-screens{flex:1;overflow:hidden;position:relative}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden}
+.screen.active{display:flex}
+.bottom-nav{height:var(--nav-h);background:var(--surface);border-top:1px solid var(--border);display:flex;flex-shrink:0;box-shadow:0 env(safe-area-inset-bottom,0px) 0 env(safe-area-inset-bottom,0px) var(--surface)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding-bottom:4px;border-top:2px solid transparent;transition:all 0.15s}
+.nav-item.active{border-top-color:var(--accent)}
+.nav-item.active .nav-label{color:var(--accent)}
+.nav-label{font-size:12px;font-weight:500;color:var(--muted)}
+
+/* ── DESKTOP LAYOUT ── */
+@media(min-width:768px){
+  html,body{overflow:hidden}
+  .bottom-nav{display:none}
+  #app-wrapper{display:grid !important;grid-template-rows:var(--header-h) auto 1fr;grid-template-columns:1fr;height:100vh;overflow:hidden}
+  .phone-screens{display:none}
+
+  /* Desktop top nav */
+  .desktop-nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:40px;flex-shrink:0}
+  .desktop-navbtn{padding:0 16px;height:40px;border:none;background:none;font-family:"Aptos",sans-serif;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s}
+  .desktop-navbtn:hover{color:var(--ink)}
+  .desktop-navbtn.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:500}
+  .desktop-nav-right{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:11px;color:var(--muted)}
+  .sync-pill{display:flex;align-items:center;gap:5px}
+  .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+  .sync-dot.saving{background:var(--gold);animation:pulse 1s infinite}
+  .sync-dot.error{background:var(--danger)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .refresh-btn{padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:none;font-family:"Aptos",sans-serif;font-size:11px;cursor:pointer;color:var(--muted)}
+  .refresh-btn:hover{color:var(--accent);border-color:var(--accent)}
+
+  /* Desktop content area */
+  .desktop-content{display:flex;flex-direction:row;overflow:hidden;height:100%}
+  .desktop-main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+  /* Desktop screens */
+  .desktop-screen{display:none;flex-direction:column;height:100%;overflow:hidden}
+  .desktop-screen.active{display:flex}
+
+  /* ── SPREADSHEET ── */
+  .dt-toolbar{display:flex;align-items:center;gap:8px;padding:6px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+  .dt-rec-count{font-size:11px;color:var(--muted);margin-left:auto}
+  .dt-clear-btn{padding:4px 10px;border:1px solid var(--border);border-radius:3px;background:none;font-family:"Aptos",sans-serif;font-size:11px;cursor:pointer;color:var(--muted)}
+  .dt-clear-btn:hover{color:var(--danger);border-color:var(--danger)}
+  .dt-wrap{flex:1;overflow:auto;background:white;min-height:0}
+  table.dt{border-collapse:collapse;font-size:12px;white-space:nowrap;width:max-content}
+  table.dt thead{position:sticky;top:0;z-index:5}
+  table.dt th{background:#e8e3d8;padding:0 12px;height:30px;line-height:30px;text-align:left;font-size:11px;font-weight:600;color:#1a1408;border:1px solid #c8c0b0;cursor:pointer;user-select:none;white-space:nowrap;min-width:80px}
+  table.dt th:hover{background:#d8d3c8}
+  table.dt th.filtered{background:#d4e8d4;color:var(--accent)}
+  table.dt td{padding:0 12px;height:26px;line-height:26px;border:1px solid #e0dbd0;color:#1a1408;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;background:white;vertical-align:middle}
+  table.dt tr:nth-child(even) td{background:#faf8f4}
+  table.dt tr:hover td{background:#e8f4ed !important;cursor:pointer}
+  table.dt tr.dt-sel td{background:#dff0e8 !important}
+  table.dt td.td-lot{font-weight:600;position:sticky;left:0;background:white !important;z-index:2;border-right:2px solid #c8c0b0;min-width:60px}
+  table.dt tr:nth-child(even) td.td-lot{background:#faf8f4 !important}
+  table.dt tr:hover td.td-lot{background:#e8f4ed !important}
+  table.dt tr.dt-sel td.td-lot{background:#dff0e8 !important}
+  table.dt td.td-val{text-align:right}
+  table.dt td.td-badge{overflow:visible}
+
+  /* ── COLUMN FILTER POPUP ── */
+  .cf-popup{position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:100;min-width:200px;max-height:300px;display:flex;flex-direction:column;overflow:hidden}
+  .cf-header{padding:8px 12px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--ink);display:flex;align-items:center;justify-content:space-between;background:var(--surface2);flex-shrink:0}
+  .cf-search{margin:8px;padding:5px 10px;border:1px solid var(--border);border-radius:4px;font-family:"Aptos",sans-serif;font-size:12px;outline:none;width:calc(100% - 16px);flex-shrink:0}
+  .cf-search:focus{border-color:var(--accent)}
+  .cf-list{overflow-y:auto;flex:1}
+  .cf-item{display:flex;align-items:center;gap:8px;padding:5px 12px;cursor:pointer;font-size:12px;color:var(--ink)}
+  .cf-item:hover{background:var(--accent-light)}
+  .cf-item input{cursor:pointer;accent-color:var(--accent)}
+  .cf-actions{padding:8px;border-top:1px solid var(--border);display:flex;gap:6px;flex-shrink:0}
+  .cf-actions button{flex:1;padding:6px;border-radius:4px;font-family:"Aptos",sans-serif;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--ink)}
+  .cf-actions button.primary{background:var(--accent);color:white;border-color:var(--accent)}
+
+  /* ── DESKTOP SIDE PANEL ── */
+  .dt-panel{width:360px;flex-shrink:0;border-left:1px solid var(--border);display:none;flex-direction:column;background:var(--surface);overflow:hidden}
+  .dt-panel.open{display:flex}
+  .dt-panel-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  .dt-panel-title{font-size:15px;font-weight:600;color:var(--ink)}
+  .dt-panel-close{background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer}
+  .dt-panel-body{flex:1;overflow-y:auto}
+  .dt-panel-actions{display:flex;gap:10px;padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0}
+
+  /* ── DESKTOP CHAT ── */
+  .desktop-chat{display:flex;flex-direction:column;height:100%;overflow:hidden}
+  .desktop-chat-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  .desktop-chat-title{font-size:15px;font-weight:500;color:var(--ink)}
+
+  /* ── DESKTOP REPORTS ── */
+  .desktop-reports{overflow-y:auto;padding:20px;height:100%}
+  .desktop-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+  .desktop-stat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+  .desktop-stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+  .desktop-stat-val{font-size:24px;font-weight:600;color:var(--ink)}
+  .desktop-report-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .desktop-report-btn{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all 0.15s}
+  .desktop-report-btn:hover{background:var(--accent-light);border-color:var(--accent)}
+  .desktop-report-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+  .desktop-report-info .report-title{font-size:13px;font-weight:500;margin-bottom:2px}
+  .desktop-report-info .report-sub{font-size:11px;color:var(--muted)}
+  .desktop-report-output{margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;font-size:13px;line-height:1.8;white-space:pre-wrap;display:none}
+
+  /* ── DESKTOP EDIT ── */
+  .desktop-edit{display:flex;flex-direction:column;height:100%;overflow:hidden;min-height:0}
+  .desktop-edit-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--surface)}
+  .desktop-edit-body{flex:1;overflow-y:auto;padding:0;min-height:0}
+  .desktop-edit-actions{display:flex;gap:10px;padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0;background:var(--surface);position:sticky;bottom:0;z-index:5}
+}
+
+/* ── SHARED PHONE STYLES (show on mobile only) ── */
+@media(max-width:767px){
+  .desktop-nav,.desktop-content,.desktop-screen,.cf-popup,.dt-panel{display:none !important}
+}
+
+/* ── PHONE DATA SCREEN ── */
+#screen-data{background:var(--bg)}
+.filter-header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.search-input{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:20px;font-family:"Aptos",sans-serif;font-size:12px;background:var(--surface2);color:var(--ink);outline:none}
+.filter-toggle-btn{display:flex;align-items:center;gap:5px;padding:8px 12px;border:1px solid var(--border);border-radius:20px;background:var(--surface);color:var(--ink);font-size:12px;font-family:"Aptos",sans-serif;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.filter-toggle-btn.has-filters{background:var(--accent-light);border-color:var(--accent);color:var(--accent)}
+.filter-count-badge{background:var(--accent);color:white;border-radius:50%;width:16px;height:16px;font-size:9px;display:flex;align-items:center;justify-content:center}
+.filter-drawer{background:var(--surface2);border-bottom:1px solid var(--border);padding:10px 14px;display:none;flex-direction:column;gap:8px;flex-shrink:0}
+.filter-drawer.open{display:flex}
+.filter-drawer-row{display:flex;gap:8px;flex-wrap:wrap}
+.filter-select{padding:7px 10px;border:1px solid var(--border);border-radius:4px;font-family:"Aptos",sans-serif;font-size:11px;background:var(--surface);color:var(--ink);outline:none;flex:1;min-width:130px}
+.filter-select.active{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
+.filter-clear-btn{padding:7px 12px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--muted);font-size:11px;font-family:"Aptos",sans-serif;cursor:pointer;white-space:nowrap}
+.active-pills{display:flex;flex-wrap:wrap;gap:6px;padding:6px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.active-pills:empty{display:none}
+.pill{display:flex;align-items:center;gap:4px;background:var(--accent-light);color:var(--accent);border-radius:99px;padding:3px 8px 3px 10px;font-size:11px}
+.pill-x{cursor:pointer;font-size:13px;line-height:1;color:var(--accent)}
+.rec-bar{padding:6px 10px 6px 14px;font-size:11px;color:var(--muted);background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;overflow:hidden}
+.sync-bar{display:flex;align-items:center;gap:6px;padding:5px 14px;background:var(--surface);border-bottom:1px solid var(--border);font-size:10px;flex-shrink:0}
+.sync-bar .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.sync-bar.saving .sync-dot{background:var(--gold);animation:pulse 1s infinite}
+.sync-bar.error .sync-dot{background:var(--danger)}
+.sync-text{font-size:10px;color:var(--muted)}
+.lot-list{flex:1;overflow-y:auto}
+.lot-card{background:var(--surface);padding:13px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;cursor:pointer}
+.lot-card:active{background:var(--surface2)}
+.lot-num-box{width:44px;height:44px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--ink);flex-shrink:0;text-align:center;line-height:1.2}
+.lot-info{flex:1;min-width:0}
+.lot-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
+.lot-value{font-size:13px;font-weight:500;color:var(--ink);flex-shrink:0}
+.lot-bottom{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.lot-partner{font-size:10px;color:var(--muted);margin-left:auto}
+.lot-extras{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.lot-extra{font-size:10px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:2px 7px;border-radius:3px;white-space:nowrap}
+.empty-state{flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;padding:40px;text-align:center}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:500;background:#f0ebe0;color:#8a7d65}
+.badge-exc{background:#fff0e0;color:#c45f00}
+.badge-set{background:#fde8e8;color:#a01a1a}
+.badge-dep{background:#e8f0fd;color:#1a3a8b}
+.badge-on{background:#e8f4ed;color:#1a6b3a}
+.badge-pen{background:#eeedfe;color:#534ab7}
+.badge-oth{background:#f0ebe0;color:#8a7d65}
+
+/* ── QUICK FILTER PILLS ── */
+.qf-btn{padding:3px 9px;border-radius:99px;font-size:10px;font-weight:500;cursor:pointer;border:1.5px solid transparent;white-space:nowrap;font-family:"Aptos",sans-serif;transition:all 0.15s;flex-shrink:0;opacity:0.5}
+.qf-btn.qf-pen{background:#eeedfe;color:#534ab7;border-color:#534ab7}
+.qf-btn.qf-dep{background:#e8f0fd;color:#1a3a8b;border-color:#1a3a8b}
+.qf-btn.qf-exc{background:#fff0e0;color:#c45f00;border-color:#c45f00}
+.qf-btn.qf-set{background:#fde8e8;color:#a01a1a;border-color:#a01a1a}
+.qf-btn.qf-active{opacity:1}
+
+/* ── DETAIL VIEW ── */
+.detail-row{display:flex;justify-content:space-between;padding:11px 16px;border-bottom:0.5px solid var(--border);gap:12px;background:var(--surface)}
+.detail-label{font-size:12px;color:var(--muted);flex-shrink:0;width:45%}
+.detail-val{font-size:13px;color:var(--ink);text-align:right;word-break:break-word}
+
+/* ── EDIT ROWS ── */
+.edit-row{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:0.5px solid var(--border);gap:12px;cursor:pointer;background:var(--surface)}
+.edit-row:active{background:var(--surface2)}
+.edit-row-label{font-size:11px;color:var(--muted);flex-shrink:0;width:40%}
+.edit-row-val{font-size:13px;color:var(--ink);text-align:right;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.edit-row-val.empty{color:var(--muted);font-style:italic}
+.edit-row input{font-size:13px;color:var(--ink);border:none;outline:none;text-align:right;flex:1;background:transparent;font-family:"Aptos",sans-serif;width:100%}
+.edit-row.editing{background:var(--accent-light)}
+.edit-row.editing .edit-row-label{color:var(--accent)}
+
+/* ── FORM STYLES ── */
+.form-screen{flex:1;overflow-y:auto;padding:16px;padding-bottom:0}
+.form-group{margin-bottom:14px}
+.form-group label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px}
+.form-group input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:4px;font-family:"Aptos",sans-serif;font-size:13px;background:var(--bg);color:var(--ink);outline:none}
+.form-group input:focus{border-color:var(--accent)}
+.form-actions{display:flex;gap:10px;padding:12px 16px;border-top:1px solid var(--border);background:var(--surface);position:sticky;bottom:0;flex-shrink:0}
+.btn{padding:12px 20px;border-radius:4px;font-family:"Aptos",sans-serif;font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--ink);flex:1}
+.btn.primary{background:var(--accent);color:white;border-color:var(--accent)}
+.sub-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:var(--header-h);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.back-btn{background:none;border:none;color:var(--accent);font-size:13px;font-family:"Aptos",sans-serif;cursor:pointer}
+.sub-title{font-size:16px;font-weight:500}
+
+/* ── CHAT ── */
+.chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.msg{display:flex;flex-direction:column;gap:3px;animation:fadeUp 0.2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.msg-who{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.msg-body{padding:10px 13px;border-radius:8px;font-size:13px;line-height:1.6;white-space:pre-wrap}
+.msg.user{align-items:flex-end}
+.msg.user .msg-body{background:var(--accent);color:white;border-radius:12px 12px 3px 12px;max-width:88%}
+.msg.assistant .msg-body{background:var(--surface);border:1px solid var(--border);border-radius:3px 12px 12px 12px}
+.msg.system .msg-body{background:transparent;border:1px dashed var(--border);color:var(--muted);font-size:12px;font-style:italic;border-radius:8px}
+.typing{display:flex;gap:4px;align-items:center;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:3px 12px 12px 12px;width:fit-content}
+.typing span{width:5px;height:5px;border-radius:50%;background:var(--muted);animation:blink 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.3}40%{opacity:1}}
+.suggestions{display:flex;gap:6px;flex-wrap:wrap;padding:8px 14px 0}
+.sug-btn{background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:5px 10px;border-radius:12px;font-size:11px;cursor:pointer;font-family:"Aptos",sans-serif}
+.chat-input-area{padding:10px 14px 14px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.chat-input-row{display:flex;gap:8px;margin-top:8px}
+.chat-textarea{flex:1;padding:10px 13px;border:1px solid var(--border);border-radius:20px;font-family:"Aptos",sans-serif;font-size:13px;background:var(--surface2);color:var(--ink);outline:none;resize:none;height:42px}
+.chat-send{width:42px;height:42px;border-radius:50%;background:var(--accent);color:white;border:none;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ── REPORTS (phone) ── */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px}
+.stat-label{font-size:10px;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px}
+.stat-val{font-size:22px;font-weight:600;color:var(--ink)}
+.section-title{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:4px 16px 8px}
+.report-btn-card{margin:0 14px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;display:flex;align-items:center;gap:14px;cursor:pointer}
+.report-btn-card:active{background:var(--surface2)}
+.report-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.report-info .report-title{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:2px}
+.report-info .report-sub{font-size:11px;color:var(--muted)}
+.report-output-area{margin:0 14px 20px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:13px;line-height:1.8;white-space:pre-wrap;color:var(--ink);display:none}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(26,20,8,0.5);z-index:100;display:none;align-items:flex-end}
+.modal-overlay.open{display:flex}
+.modal-sheet{background:var(--surface);border-radius:16px 16px 0 0;width:100%;min-height:300px;max-height:calc(100dvh - 100px);display:flex;flex-direction:column;overflow:hidden}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:10px auto 6px;flex-shrink:0}
+.modal-btn{flex:1;padding:12px;border-radius:4px;font-family:"Aptos",sans-serif;font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--ink)}
+.modal-btn.primary{background:var(--accent);color:white;border-color:var(--accent)}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="spinner"></div><p id="loading-msg">Loading...</p></div>
+<div id="toast"></div>
+
+<!-- LOGIN -->
+<div id="screen-login">
+  <div class="login-card">
+    <div class="login-icon">&#128202;</div>
+    <div class="login-title">Sales DB</div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.18</div>
+    <div class="login-sub">Sign in with your Microsoft account to access your OneDrive sales data.</div>
+    <button class="ms-btn" onclick="signIn()">
+      <div class="ms-logo"><div></div><div></div><div></div><div></div></div>
+      Sign in with Microsoft
+    </button>
+    <div class="api-key-section">
+      <label>Anthropic API Key</label>
+      <div class="api-key-row">
+        <input type="text" id="api-key-field" placeholder="sk-ant-..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" onkeydown="if(event.key==='Enter'){event.preventDefault();saveApiKey();}">
+        <button type="button" onclick="saveApiKey()">Save</button>
+        <button type="button" onclick="clearApiKey()" style="background:#dc2626">Clear</button>
+      </div>
+      <div class="api-note">Stored in your browser only. Required for Chat and Reports.</div>
+      <div id="api-key-status" style="font-size:12px;margin-top:8px;min-height:18px"></div>
+    </div>
+    <button type="button" class="test-btn" onclick="testApiKey()">Test API key</button>
+    <div id="api-test-result"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-wrapper" style="display:none">
+  <div class="app-header">
+    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.18</span></div>
+    <div class="header-right">
+      <div class="user-pill">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <span class="user-name" id="user-name"></span>
+      </div>
+      <button class="header-btn" onclick="signOut()">Sign out</button>
+    </div>
+  </div>
+
+  <!-- DESKTOP TOP NAV -->
+  <div class="desktop-nav" id="desktop-nav">
+    <button class="desktop-navbtn active" id="dnav-data" onclick="deskShowScreen('data')">Data</button>
+    <button class="desktop-navbtn" id="dnav-chat" onclick="deskShowScreen('chat');checkKeyBanner()">Ask Claude</button>
+    <button class="desktop-navbtn" id="dnav-reports" onclick="deskShowScreen('reports')">Reports</button>
+    <div class="desktop-nav-right">
+      <div class="sync-pill">
+        <div class="sync-dot" id="d-sync-dot"></div>
+        <span id="d-sync-text">Synced</span>
+      </div>
+      <button class="refresh-btn" onclick="refreshFromOneDrive()">&#8635; Refresh</button>
+    </div>
+  </div>
+
+  <!-- DESKTOP CONTENT -->
+  <div class="desktop-content" id="desktop-content">
+
+    <!-- DESKTOP MAIN -->
+    <div class="desktop-main" id="desktop-main">
+
+      <!-- DESKTOP DATA SCREEN -->
+      <div class="desktop-screen active" id="dscreen-data">
+        <div class="dt-toolbar">
+          <span style="font-size:11px;color:var(--muted)" id="dt-active-filters"></span>
+          <span class="dt-rec-count" id="dt-rec-count">— records</span>
+          <button class="dt-clear-btn" onclick="clearAllColFilters()">&#10005; Clear filters</button>
+          <button onclick="openScanPdf()" style="margin-left:auto;padding:5px 14px;background:var(--accent);color:#fff;border:none;border-radius:4px;font-family:Aptos,sans-serif;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px">&#128196; Scan PDF</button>
+        </div>
+        <div class="dt-wrap" id="dt-wrap">
+          <table class="dt" id="dt">
+            <thead id="dt-head"></thead>
+            <tbody id="dt-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- DESKTOP CHAT SCREEN -->
+      <div class="desktop-screen" id="dscreen-chat">
+        <div class="desktop-chat">
+          <div class="desktop-chat-header">
+            <div class="desktop-chat-title">Ask Claude</div>
+            <button onclick="clearChat()" style="font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:Aptos,sans-serif">Clear</button>
+          </div>
+          <div class="chat-msgs" id="dchat-msgs">
+            <div class="msg system"><div class="msg-body">Sign in to start asking questions about your sales data.</div></div>
+          </div>
+          <div class="chat-input-area">
+            <div class="suggestions">
+              <button class="sug-btn" onclick="deskUseSug(this)">Total revenue?</button>
+              <button class="sug-btn" onclick="deskUseSug(this)">Top channel partners?</button>
+              <button class="sug-btn" onclick="deskUseSug(this)">Open pipeline value?</button>
+              <button class="sug-btn" onclick="deskUseSug(this)">Settled this year?</button>
+            </div>
+            <div class="chat-input-row">
+              <textarea class="chat-textarea" id="dchat-input" placeholder="Ask about your data..." onkeydown="deskHandleKey(event)"></textarea>
+              <button class="chat-send" onclick="deskSendChat()">&#8594;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DESKTOP REPORTS SCREEN -->
+      <div class="desktop-screen" id="dscreen-reports">
+        <div class="desktop-reports">
+          <div class="desktop-stats">
+            <div class="desktop-stat"><div class="desktop-stat-label">Total lots</div><div class="desktop-stat-val" id="d-stat-total">&#8212;</div></div>
+            <div class="desktop-stat"><div class="desktop-stat-label">Settled</div><div class="desktop-stat-val" id="d-stat-settled">&#8212;</div></div>
+            <div class="desktop-stat"><div class="desktop-stat-label">Exchanged</div><div class="desktop-stat-val" id="d-stat-exchanged">&#8212;</div></div>
+            <div class="desktop-stat"><div class="desktop-stat-label">Settled value</div><div class="desktop-stat-val" id="d-stat-value">&#8212;</div></div>
+          </div>
+          <div class="desktop-report-grid">
+            <div class="desktop-report-btn" onclick="deskGenReport('summary')">
+              <div class="desktop-report-icon" style="background:#e8f4ed">&#128202;</div>
+              <div class="desktop-report-info"><div class="report-title">Sales summary</div><div class="report-sub">Revenue, counts, key insights</div></div>
+            </div>
+            <div class="desktop-report-btn" onclick="deskGenReport('pipeline')">
+              <div class="desktop-report-icon" style="background:#eeedfe">&#128270;</div>
+              <div class="desktop-report-info"><div class="report-title">Pipeline forecast</div><div class="report-sub">Open deals & risk assessment</div></div>
+            </div>
+            <div class="desktop-report-btn" onclick="deskGenReport('channel')">
+              <div class="desktop-report-icon" style="background:#faeeda">&#127942;</div>
+              <div class="desktop-report-info"><div class="report-title">Channel performance</div><div class="report-sub">By partner & channel</div></div>
+            </div>
+            <div class="desktop-report-btn" onclick="deskGenReport('monthly')">
+              <div class="desktop-report-icon" style="background:#eaf3de">&#128200;</div>
+              <div class="desktop-report-info"><div class="report-title">Monthly revenue</div><div class="report-sub">Settled by month & year</div></div>
+            </div>
+          </div>
+          <div class="desktop-report-output" id="d-report-output"></div>
+        </div>
+      </div>
+
+
+
+    </div>
+
+    <!-- DESKTOP SIDE PANEL -->
+    <div class="dt-panel" id="dt-panel">
+      <div class="dt-panel-header">
+        <div class="dt-panel-title" id="dt-panel-title">Lot detail</div>
+        <button class="dt-panel-close" onclick="closeDtPanel()">&#215;</button>
+      </div>
+      <div class="dt-panel-body" id="dt-panel-body"></div>
+      <div class="dt-panel-actions">
+        <button class="btn" onclick="closeDtPanel()">Close</button>
+        <button class="btn primary" onclick="deskEditFromPanel()">Edit record</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PHONE SCREENS -->
+  <div class="phone-screens">
+
+    <!-- PHONE DATA -->
+    <div id="screen-data" class="screen active">
+      <div class="filter-header">
+        <input type="text" class="search-input" id="search-input" placeholder="Search (e.g. Realtisan, 2B)..." oninput="applyFilters()">
+        <button class="filter-toggle-btn" id="filter-toggle-btn" onclick="toggleFilterDrawer()">
+          Filters <span id="filter-count-badge" class="filter-count-badge" style="display:none">0</span>
+        </button>
+        <button onclick="openScanPdf()" style="padding:8px 12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:Aptos,sans-serif;font-size:12px;cursor:pointer;white-space:nowrap">&#128196; Scan PDF</button>
+      </div>
+      <div class="filter-drawer" id="filter-drawer">
+        <div class="filter-drawer-row">
+          <select class="filter-select" id="f-stage" onchange="applyFilters()"><option value="">All stages</option></select>
+          <select class="filter-select" id="f-condition" onchange="applyFilters()"><option value="">All conditions</option></select>
+          <select class="filter-select" id="f-channel" onchange="applyFilters()"><option value="">All channels</option></select>
+          <select class="filter-select" id="f-partner" onchange="applyFilters()"><option value="">All partners</option></select>
+        </div>
+        <div class="filter-drawer-row">
+          <select class="filter-select" id="f-productline" onchange="applyFilters()"><option value="">All product lines</option></select>
+          <select class="filter-select" id="f-market" onchange="applyFilters()"><option value="">All markets</option></select>
+          <select class="filter-select" id="f-year" onchange="applyFilters()"><option value="">All years</option></select>
+          <button class="filter-clear-btn" onclick="clearFilters()">&#10005; Clear</button>
+        </div>
+      </div>
+      <div class="active-pills" id="active-pills"></div>
+      <div class="sync-bar" id="sync-bar">
+        <div class="sync-dot" id="sync-dot"></div>
+        <span class="sync-text" id="sync-text">Synced with OneDrive</span>
+        <span style="margin-left:auto"><button style="font-size:11px;color:var(--accent);background:none;border:none;cursor:pointer;font-family:Aptos,sans-serif" onclick="refreshFromOneDrive()">&#8635; Refresh</button></span>
+      </div>
+      <div class="rec-bar">
+        <span id="rec-count">&#8212; records</span>
+        <div style="display:flex;gap:5px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0;max-width:70%">
+          <button class="qf-btn qf-pen" id="qf-pending" onclick="toggleQuickFilter(this,'2. Pending SA')">Pending SA</button>
+          <button class="qf-btn qf-dep" id="qf-deposit" onclick="toggleQuickFilter(this,'3. Deposit')">Deposit</button>
+          <button class="qf-btn qf-exc" id="qf-exchange" onclick="toggleQuickFilter(this,'4. Exchanged')">Exchanged</button>
+          <button class="qf-btn qf-set" id="qf-settled" onclick="toggleQuickFilter(this,'5. Settled')">Settled</button>
+        </div>
+      </div>
+      <div class="lot-list" id="lot-list">
+        <div class="empty-state">Your sales data will appear here after signing in.</div>
+      </div>
+    </div>
+
+    <!-- PHONE DETAIL -->
+    <div id="screen-detail" class="screen">
+      <div class="sub-header">
+        <button class="back-btn" onclick="showScreen('data')">&#8592; Back</button>
+        <span class="sub-title" id="detail-title">Lot detail</span>
+        <button class="back-btn" style="color:var(--accent)" onclick="editFromDetail()">Edit</button>
+      </div>
+      <div class="lot-list" id="detail-body" style="overflow-y:auto;flex:1;"></div>
+      <div class="form-actions">
+        <button class="btn" onclick="showScreen('data')">Close</button>
+        <button class="btn primary" onclick="editFromDetail()">Edit record</button>
+      </div>
+    </div>
+
+    <!-- PHONE EDIT -->
+    <div id="screen-edit" class="screen">
+      <div class="sub-header">
+        <button class="back-btn" onclick="cancelEditCheck()">&#8592; Back</button>
+        <span class="sub-title">Edit record</span>
+        <div style="width:50px"></div>
+      </div>
+      <div class="form-screen">
+        <div id="edit-fields"></div>
+        <div class="form-actions">
+          <button class="btn" onclick="cancelEditCheck()">Cancel</button>
+          <button class="btn primary" onclick="saveEdit()">Save & Sync</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHONE CHAT -->
+    <div id="screen-chat" class="screen" style="background:var(--bg)">
+      <div class="sub-header">
+        <span class="sub-title">Ask Claude</span>
+        <button onclick="clearChat()" style="font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:Aptos,sans-serif">Clear</button>
+      </div>
+      <div id="chat-key-banner" style="display:none;padding:10px 16px;background:#fff8e1;border-bottom:1px solid #ffe082;font-size:12px;color:#5d4037">
+        ⚠ API key missing or invalid.
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <input id="chat-key-input" type="text" placeholder="Paste sk-ant-... key" autocorrect="off" autocapitalize="none" spellcheck="false"
+            style="flex:1;padding:6px 10px;border:1px solid #ccc;border-radius:6px;font-size:12px;font-family:Aptos,sans-serif">
+          <button onclick="saveChatKey()" style="padding:6px 12px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">Save</button>
+        </div>
+      </div>
+      <div class="chat-msgs" id="chat-msgs">
+        <div class="msg system"><div class="msg-body">Sign in to start asking questions about your sales data.</div></div>
+      </div>
+      <div class="chat-input-area">
+        <div class="suggestions">
+          <button class="sug-btn" onclick="useSug(this)">Total revenue?</button>
+          <button class="sug-btn" onclick="useSug(this)">Top channel partners?</button>
+          <button class="sug-btn" onclick="useSug(this)">Open pipeline value?</button>
+          <button class="sug-btn" onclick="useSug(this)">Settled this year?</button>
+        </div>
+        <div class="chat-input-row">
+          <textarea class="chat-textarea" id="chat-input" placeholder="Ask about your data..." onkeydown="handleKey(event)"></textarea>
+          <button class="chat-send" onclick="sendChat()">&#8594;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHONE REPORTS -->
+    <div id="screen-reports" class="screen" style="background:var(--bg);overflow-y:auto">
+      <div class="sub-header"><span class="sub-title">Reports</span></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Total lots</div><div class="stat-val" id="stat-total">&#8212;</div></div>
+        <div class="stat-card"><div class="stat-label">Settled</div><div class="stat-val" id="stat-settled">&#8212;</div></div>
+        <div class="stat-card"><div class="stat-label">Exchanged</div><div class="stat-val" id="stat-exchanged">&#8212;</div></div>
+        <div class="stat-card"><div class="stat-label">Settled value</div><div class="stat-val" id="stat-value">&#8212;</div></div>
+      </div>
+      <div class="section-title">Generate AI reports</div>
+      <div class="report-btn-card" onclick="genReport('summary')"><div class="report-icon" style="background:#e8f4ed">&#128202;</div><div class="report-info"><div class="report-title">Sales summary</div><div class="report-sub">Revenue, counts, key insights</div></div></div>
+      <div class="report-btn-card" onclick="genReport('pipeline')"><div class="report-icon" style="background:#eeedfe">&#128270;</div><div class="report-info"><div class="report-title">Pipeline forecast</div><div class="report-sub">Open deals & risk assessment</div></div></div>
+      <div class="report-btn-card" onclick="genReport('channel')"><div class="report-icon" style="background:#faeeda">&#127942;</div><div class="report-info"><div class="report-title">Channel performance</div><div class="report-sub">By partner & channel</div></div></div>
+      <div class="report-btn-card" onclick="genReport('monthly')"><div class="report-icon" style="background:#eaf3de">&#128200;</div><div class="report-info"><div class="report-title">Monthly revenue</div><div class="report-sub">Settled by month & year</div></div></div>
+      <div class="report-output-area" id="report-output"></div>
+    </div>
+
+  </div>
+
+  <!-- PHONE BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" id="nav-data" onclick="showScreen('data')"><span class="nav-label">Data</span></div>
+    <div class="nav-item" id="nav-chat" onclick="showScreen('chat');checkKeyBanner()"><span class="nav-label">Ask Claude</span></div>
+    <div class="nav-item" id="nav-reports" onclick="showScreen('reports')"><span class="nav-label">Reports</span></div>
+  </nav>
+
+</div>
+
+<!-- SCAN PDF MODAL -->
+<div id="scan-pdf-overlay" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--bg);border-radius:12px;width:100%;max-width:540px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden">
+    <!-- Header -->
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+      <div>
+        <div style="font-size:16px;font-weight:600;color:var(--ink)">&#128196; Scan Sales Advice PDF</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">Upload a PDF to auto-fill fields from the Sales Advice</div>
+      </div>
+      <button onclick="closeScanPdf()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);padding:4px">&#10005;</button>
+    </div>
+    <!-- Upload step -->
+    <div id="scan-step-upload" style="padding:24px;display:flex;flex-direction:column;align-items:center;gap:16px">
+      <label for="scan-pdf-input" style="width:100%;border:2px dashed var(--border);border-radius:8px;padding:32px 16px;text-align:center;cursor:pointer;transition:border-color 0.2s" id="scan-drop-zone">
+        <div style="font-size:32px;margin-bottom:8px">&#128196;</div>
+        <div style="font-size:14px;font-weight:500;color:var(--ink)">Tap to select PDF</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px" id="scan-file-name">No file selected</div>
+        <input type="file" id="scan-pdf-input" accept=".pdf" style="display:none" onchange="onScanFileSelected(event)">
+      </label>
+      <button onclick="runScanPdf()" id="scan-extract-btn" style="width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;opacity:0.4;pointer-events:none">Extract Fields</button>
+    </div>
+    <!-- Processing step -->
+    <div id="scan-step-processing" style="display:none;padding:40px;text-align:center">
+      <div style="font-size:32px;margin-bottom:12px">&#129302;</div>
+      <div style="font-size:14px;font-weight:500;color:var(--ink)">Reading PDF...</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">Claude is extracting the fields</div>
+    </div>
+    <!-- Review step -->
+    <div id="scan-step-review" style="display:none;flex-direction:column;overflow:hidden;flex:1">
+      <div style="padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0">
+        <div style="font-size:12px;color:var(--muted)">Matched to: <strong id="scan-matched-lot" style="color:var(--ink)">—</strong></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">Review and edit fields before saving</div>
+      </div>
+      <!-- Resc/Exch warning banner — shown only when applicable -->
+      <div id="scan-resc-banner" style="display:none;padding:10px 20px;background:#fff3cd;border-bottom:2px solid #e6a817;flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">⚠️</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#7d4e00">Rescission / Exchange Lot</div>
+            <div style="font-size:11px;color:#7d4e00;margin-top:1px">CfS Type is <strong>2.Resc / Exch</strong> — please verify all fields carefully before applying</div>
+          </div>
+        </div>
+      </div>
+      <div id="scan-fields-list" style="overflow-y:auto;flex:1;padding:12px 20px"></div>
+      <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0;background:var(--bg)">
+        <button onclick="closeScanPdf()" style="flex:1;padding:11px;background:none;border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;color:var(--muted)">Cancel</button>
+        <button onclick="confirmScanPdf()" style="flex:2;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">&#10003; Apply to Database</button>
+      </div>
+    </div>
+    <!-- Success step -->
+    <div id="scan-step-success" style="display:none;padding:40px;text-align:center">
+      <div style="font-size:48px;margin-bottom:12px">✅</div>
+      <div style="font-size:16px;font-weight:600;color:var(--ink)">Saved to OneDrive</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px" id="scan-success-msg">Fields updated successfully</div>
+      <button onclick="closeScanPdf()" style="margin-top:20px;padding:11px 32px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">Done</button>
+    </div>
+    <!-- Error step -->
+    <div id="scan-step-error" style="display:none;padding:32px;text-align:center">
+      <div style="font-size:32px;margin-bottom:12px">&#9888;&#65039;</div>
+      <div style="font-size:14px;font-weight:500;color:var(--ink)" id="scan-error-msg">Something went wrong</div>
+      <button onclick="resetScanPdf()" style="margin-top:16px;padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">Try Again</button>
+    </div>
+  </div>
+</div>
+
+<!-- DESKTOP EDIT SCREEN (fixed overlay, outside content so hiding content doesn't affect it) -->
+<div id="dscreen-edit" style="display:none;position:fixed;inset:0;z-index:80;background:var(--bg);flex-direction:column;overflow:hidden">
+  <div class="desktop-edit" style="display:flex;flex-direction:column;height:100%">
+    <div class="desktop-edit-header">
+      <button class="back-btn" onclick="deskCancelEditCheck()">&#8592; Back</button>
+      <span class="sub-title" id="d-edit-title">Edit record</span>
+      <div style="width:60px"></div>
+    </div>
+    <div class="desktop-edit-body" id="d-edit-fields" style="flex:1;overflow-y:auto"></div>
+    <div class="desktop-edit-actions">
+      <button class="btn" onclick="deskCancelEditCheck()">Cancel</button>
+      <button class="btn primary" onclick="deskSaveEdit()">Save & Sync</button>
+    </div>
+  </div>
+</div>
+
+<!-- COLUMN FILTER POPUP -->
+<div id="cf-popup" class="cf-popup" style="display:none">
+  <div class="cf-header">
+    <span id="cf-title">Filter</span>
+    <span onclick="closeCfPopup()" style="cursor:pointer;font-size:16px;color:var(--muted)">&#215;</span>
+  </div>
+  <input type="text" class="cf-search" id="cf-search" placeholder="Search..." oninput="filterCfList()">
+  <div class="cf-list" id="cf-list"></div>
+  <div class="cf-actions">
+    <button onclick="clearCfFilter()">Clear</button>
+    <button class="primary" onclick="applyCfFilter()">Apply</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.10.0/lib/msal-browser.min.js"></script>
+<script>
+
+const CLIENT_ID = 'cd53b987-59ab-4b81-9bfb-178cfa8ee5b2';
+const REDIRECT_URI = 'https://SENDIE1.github.io/Sales-database/';
+const FILE_NAME = 'Sales DB - Claude.xlsx';
+const SCOPES = ['Files.ReadWrite', 'User.Read'];
+const ANTHROPIC_KEY = () => {
+  let k = localStorage.getItem('anthropic_key') || '';
+  if (!k.startsWith('sk-')) return '';
+  // Auto-fix doubled key e.g. sk-ant-sk-ant-...
+  const secondIdx = k.indexOf('sk-', 3);
+  if (secondIdx !== -1) {
+    k = k.slice(secondIdx);
+    localStorage.setItem('anthropic_key', k); // fix it in storage too
+  }
+  return k;
+};
+const msalConfig = { auth: { clientId: CLIENT_ID, authority: 'https://login.microsoftonline.com/ab54a23e-1458-4baf-a2f6-9b8164f032d1', redirectUri: REDIRECT_URI }, cache: { cacheLocation: 'sessionStorage' } };
+let msalInstance = null;
+async function getMsal() { if (!msalInstance) msalInstance = await msal.PublicClientApplication.createPublicClientApplication(msalConfig); return msalInstance; }
+
+let allData = [], headers = [], filteredData = [], fileId = null, fileDriveId = null, editRowIdx = -1, modalRowIdx = -1, filterDrawerOpen = false;
+const FILTER_MAP = { 'f-stage':'Stage', 'f-condition':'Sales Condition ', 'f-channel':'Sales Channel', 'f-partner':'Channel Partner', 'f-productline':'Product Line', 'f-market':'Channel Market', 'f-year':'Settled Year' };
+
+async function testApiKey() {
+  const key = localStorage.getItem('anthropic_key');
+  const result = document.getElementById('api-test-result');
+  if (!key) { result.textContent = 'No key saved.'; result.style.color = 'var(--danger)'; return; }
+  result.textContent = 'Testing key: ' + key.slice(0,12) + '...';
+  result.style.color = 'var(--muted)';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 10, messages: [{ role: 'user', content: 'Hi' }] })
+    });
+    const d = await res.json();
+    if (d.error) { result.textContent = 'Error: ' + d.error.message; result.style.color = 'var(--danger)'; }
+    else { result.textContent = '✓ Key is valid and working!'; result.style.color = 'var(--accent)'; }
+  } catch(e) { result.textContent = 'Error: ' + e.message; result.style.color = 'var(--danger)'; }
+}
+
+function clearApiKey() {
+  localStorage.removeItem('anthropic_key');
+  document.getElementById('api-key-field').value = '';
+  const status = document.getElementById('api-key-status');
+  status.textContent = 'Key cleared — paste your key and click Save';
+  status.style.color = '#92400e';
+}
+
+function saveApiKey() {
+  const input = document.getElementById('api-key-field');
+  const status = document.getElementById('api-key-status');
+  let key = (input.value || '').replace(/\s+/g, '').trim();
+
+  if (!key) {
+    status.textContent = '✗ Please enter your API key';
+    status.style.color = '#dc2626';
+    return;
+  }
+  if (key.includes('•')) {
+    status.textContent = '✓ Key already saved — click Clear to replace it';
+    status.style.color = '#16a34a';
+    return;
+  }
+  if (!key.startsWith('sk-')) {
+    status.textContent = '✗ Key must start with sk-';
+    status.style.color = '#dc2626';
+    return;
+  }
+  // Detect doubled key e.g. sk-ant-sk-ant-...
+  const secondIdx = key.indexOf('sk-', 3);
+  if (secondIdx !== -1) {
+    key = key.slice(secondIdx);
+    status.textContent = '⚠ Detected doubled key — trimmed to correct value';
+    status.style.color = '#92400e';
+  }
+  localStorage.setItem('anthropic_key', key);
+  input.value = '••••••••••••••••';
+  if (!key.includes('sk-ant-')) {
+    // Warn but still save
+    status.textContent = '⚠ Saved — but key looks unusual, verify it\'s correct';
+    status.style.color = '#92400e';
+  } else {
+    status.textContent = '✓ API key saved!';
+    status.style.color = '#16a34a';
+  }
+}
+
+async function signIn() {
+  try { showLoading('Redirecting to Microsoft...'); const pca = await getMsal(); await pca.loginRedirect({ scopes: SCOPES }); }
+  catch(e) { hideLoading(); toast('Sign in failed: ' + e.message, 'error'); }
+}
+
+async function afterSignIn(account) {
+  showLoading('Loading your sales data...');
+  try {
+    const me = await graphGet('https://graph.microsoft.com/v1.0/me');
+    const initials = (me.displayName||'U').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const av = document.getElementById('user-avatar'); if (av) av.textContent = initials;
+    const un = document.getElementById('user-name'); if (un) un.textContent = me.displayName?.split(' ')[0] || '';
+    await loadFileFromOneDrive();
+    const login = document.getElementById('screen-login'); if (login) login.style.display = 'none';
+    const app = document.getElementById('app-wrapper');
+    if (app) { app.style.display = 'flex'; app.style.height = '100dvh'; }
+    history.pushState({ app: true }, '');
+    const msg = `Connected! Loaded ${allData.length} records from OneDrive.`;
+    if (isDesktop()) {
+      initDesktop();
+      deskAddMsg('system', msg);
+    } else {
+      // Explicitly force desktop elements hidden so inline styles don't bleed through
+      ['desktop-nav','desktop-content','desktop-main'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+      addMsg('system', msg);
+    }
+    hideLoading();
+  } catch(e) {
+    console.error('afterSignIn error:', e);
+    hideLoading();
+    toast('Error: ' + e.message, 'error');
+  }
+}
+
+async function signOut() { const pca = await getMsal(); await pca.logoutRedirect(); }
+
+async function getToken() {
+  const pca = await getMsal();
+  const accounts = pca.getAllAccounts();
+  if (!accounts.length) throw new Error('Not signed in');
+  const result = await pca.acquireTokenSilent({ scopes: SCOPES, account: accounts[0] });
+  return result.accessToken;
+}
+
+async function graphGet(url) {
+  const token = await getToken();
+  const res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+  if (!res.ok) throw new Error(`Graph error: ${res.status}`);
+  return res.json();
+}
+
+async function loadFileFromOneDrive() {
+  const token = await getToken();
+  let itemId = null, driveId = null;
+  showLoading('Locating file...');
+  // 1. Try own OneDrive by path
+  try {
+    const r = await graphGet('https://graph.microsoft.com/v1.0/me/drive/root:/Sales%20DB/Sales%20DB%20-%20Claude.xlsx');
+    if (r?.id) { itemId = r.id; driveId = r.parentReference?.driveId; }
+  } catch(e) {}
+  // 2. Try own OneDrive search
+  if (!itemId) {
+    try {
+      const r = await graphGet(`https://graph.microsoft.com/v1.0/me/drive/search(q='Sales DB - Claude.xlsx')`);
+      const f = (r.value||[]).find(f => f.name === FILE_NAME);
+      if (f) { itemId = f.id; driveId = f.parentReference?.driveId; }
+    } catch(e) {}
+  }
+  // 3. Search shared files (for colleagues the file has been shared with)
+  if (!itemId) {
+    showLoading('Searching shared files...');
+    try {
+      const r = await graphGet(`https://graph.microsoft.com/v1.0/me/drive/sharedWithMe`);
+      const f = (r.value||[]).find(f => f.name === FILE_NAME);
+      if (f) {
+        // For shared items the real ID and driveId live inside remoteItem
+        itemId = f.remoteItem?.id || f.id;
+        driveId = f.remoteItem?.parentReference?.driveId || f.parentReference?.driveId;
+      }
+    } catch(e) {}
+  }
+  // 4. Try searching shared with broader name match
+  if (!itemId) {
+    try {
+      const r = await graphGet(`https://graph.microsoft.com/v1.0/me/drive/sharedWithMe`);
+      const f = (r.value||[]).find(f => (f.name||'').toLowerCase().includes('sales db'));
+      if (f) {
+        itemId = f.remoteItem?.id || f.id;
+        driveId = f.remoteItem?.parentReference?.driveId || f.parentReference?.driveId;
+      }
+    } catch(e) {}
+  }
+  if (!itemId) throw new Error(`Could not find "${FILE_NAME}".\n\nChecked:\n• Your OneDrive (path & search)\n• Files shared with you\n\nAsk the file owner to share it with your Microsoft account.`);
+  fileId = itemId;
+  fileDriveId = driveId;
+  showLoading('Downloading...');
+  const url = driveId
+    ? `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/content`
+    : `https://graph.microsoft.com/v1.0/me/drive/items/${itemId}/content`;
+  const res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+  if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+  const buf = await res.arrayBuffer();
+  const wb = XLSX.read(buf, { type: 'array' });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
+  if (!json.length) throw new Error('File is empty');
+  headers = Object.keys(json[0]);
+  allData = json;
+  filteredData = [...allData];
+  populateDropdowns();
+  renderLotList();
+  if (isDesktop()) { renderDesktopTable(); }
+  buildAddForm();
+  updateStats();
+  setSyncStatus('synced');
+}
+
+async function refreshFromOneDrive() {
+  try { showLoading('Refreshing...'); await loadFileFromOneDrive(); hideLoading(); toast('Refreshed ✓', 'success'); }
+  catch(e) { hideLoading(); toast('Refresh failed: ' + e.message, 'error'); }
+}
+
+let originalFileBuffer = null;
+
+// Track which rows were edited: { rowIdx: { colName: newValue } }
+let pendingEdits = {};
+
+function markEdit(rowIdx, colName, value) {
+  if (!pendingEdits[rowIdx]) pendingEdits[rowIdx] = {};
+  pendingEdits[rowIdx][colName] = value;
+}
+
+async function syncToOneDrive() {
+  if (!fileId) return;
+  setSyncStatus('saving');
+  try {
+    const token = await getToken();
+
+    // Use Excel Graph API to update only changed cells — preserves all formatting
+    // Get actual sheet name
+    const driveBase = fileDriveId
+      ? `https://graph.microsoft.com/v1.0/drives/${fileDriveId}/items/${fileId}`
+      : `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}`;
+    const sheetsRes = await fetch(`${driveBase}/workbook/worksheets`, {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    const sheetsData = await sheetsRes.json();
+    console.log('Sheets:', JSON.stringify(sheetsData));
+    const sheetName = sheetsData.value?.[0]?.name || 'Sheet1';
+    const encodedSheet = encodeURIComponent(sheetName);
+    const baseUrl = `${driveBase}/workbook/worksheets/${encodedSheet}/`;
+
+    // Build list of cell updates
+    const updates = [];
+    for (const [rowIdx, cols] of Object.entries(pendingEdits)) {
+      const excelRow = parseInt(rowIdx) + 2; // +1 for header, +1 for 1-based
+      for (const [colName, value] of Object.entries(cols)) {
+        const colIdx = headers.indexOf(colName);
+        if (colIdx < 0) continue;
+        const colLetter = colIdxToLetter(colIdx);
+        updates.push({ address: colLetter + excelRow, value: value });
+      }
+    }
+
+    if (updates.length === 0) {
+      setSyncStatus('synced');
+      toastLong('✓ Saved to OneDrive', 'success');
+      return;
+    }
+
+    // Update each cell via Graph API
+    for (const update of updates) {
+      const res = await fetch(`${baseUrl}range(address='${update.address}')`, {
+        method: 'PATCH',
+        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values: [[update.value]] })
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Cell ${update.address} failed: ${res.status} — ${err.slice(0,100)}`);
+      }
+    }
+
+    pendingEdits = {};
+    setSyncStatus('synced');
+    toastLong('✓ Saved to OneDrive', 'success');
+  } catch(e) {
+    setSyncStatus('error');
+    toastLong('✗ Not saved: ' + e.message, 'error');
+    throw e;
+  }
+}
+
+function colIdxToLetter(idx) {
+  let letter = '';
+  idx += 1;
+  while (idx > 0) {
+    const rem = (idx - 1) % 26;
+    letter = String.fromCharCode(65 + rem) + letter;
+    idx = Math.floor((idx - 1) / 26);
+  }
+  return letter;
+}
+
+function populateDropdowns() {
+  Object.entries(FILTER_MAP).forEach(([id, col]) => {
+    ['', 'dt-'].forEach(prefix => {
+      const el = document.getElementById(prefix + id); if (!el) return;
+      const first = el.options[0]; el.innerHTML = ''; el.appendChild(first);
+      const vals = [...new Set(allData.map(r => String(r[col]||'').trim()).filter(v => v && v !== 'NaN'))].sort();
+      vals.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; el.appendChild(o); });
+    });
+  });
+}
+
+let activeQuickFilter = '';
+
+function toggleQuickFilter(btn, condition) {
+  if (activeQuickFilter === condition) {
+    activeQuickFilter = '';
+    document.querySelectorAll('.qf-btn').forEach(b => b.classList.remove('qf-active'));
+  } else {
+    activeQuickFilter = condition;
+    document.querySelectorAll('.qf-btn').forEach(b => b.classList.remove('qf-active'));
+    btn.classList.add('qf-active');
+  }
+  applyFilters();
+}
+
+function applyFilters() {
+  const terms = document.getElementById('search-input').value.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean);
+  const dropVals = {}; let activeCount = 0;
+  Object.entries(FILTER_MAP).forEach(([id, col]) => {
+    const mob = document.getElementById(id);
+    const dsk = document.getElementById('dt-' + id);
+    const active = mob || dsk;
+    // Use desktop value if on desktop, mobile otherwise
+    const val = isDesktop() ? (dsk?.value || '') : (mob?.value || '');
+    dropVals[col] = val;
+    mob?.classList.toggle('active', !!val);
+    dsk?.classList.toggle('active', !!val);
+    if (val) activeCount++;
+  });
+  filteredData = allData.filter(row => {
+    if (activeQuickFilter) {
+      const cond = String(row['Sales Condition ']||row['Sales Condition']||'').trim();
+      if (cond !== activeQuickFilter) return false;
+    }
+    if (terms.length) { const text = Object.values(row).join(' ').toLowerCase(); if (!terms.every(t => text.includes(t))) return false; }
+    return Object.entries(dropVals).every(([col, val]) => !val || String(row[col]||'').trim() === val);
+  });
+  const total = activeCount + (terms.length ? 1 : 0);
+  const badge = document.getElementById('filter-count-badge');
+  badge.style.display = total ? 'flex' : 'none'; badge.textContent = total;
+  document.getElementById('filter-toggle-btn').classList.toggle('has-filters', total > 0);
+  renderActivePills(terms, dropVals);
+  renderLotList();
+  if (isDesktop()) renderDesktopTable();
+  // sync search input between mobile and desktop
+  const dtSearch = document.getElementById('dt-search');
+  const mSearch = document.getElementById('search-input');
+  if (dtSearch && document.activeElement === dtSearch) mSearch.value = dtSearch.value;
+  if (mSearch && document.activeElement === mSearch) { if(dtSearch) dtSearch.value = mSearch.value; }
+}
+
+function renderActivePills(terms, dropVals) {
+  const c = document.getElementById('active-pills'); c.innerHTML = '';
+  terms.forEach(t => { const p = document.createElement('div'); p.className = 'pill'; p.innerHTML = `"${t}" <span class="pill-x" onclick="removeSearchTerm('${t}')">×</span>`; c.appendChild(p); });
+  Object.entries(dropVals).forEach(([col, val]) => {
+    if (!val) return;
+    const id = Object.entries(FILTER_MAP).find(([,c])=>c===col)?.[0];
+    const p = document.createElement('div'); p.className = 'pill';
+    p.innerHTML = `${val} <span class="pill-x" onclick="clearDropdown('${id}')">×</span>`; c.appendChild(p);
+  });
+}
+
+function removeSearchTerm(term) {
+  const input = document.getElementById('search-input');
+  input.value = input.value.split(',').map(t=>t.trim()).filter(t=>t.toLowerCase()!==term.toLowerCase()).join(', ');
+  applyFilters();
+}
+function clearDropdown(id) { const el = document.getElementById(id); if (el) { el.value = ''; el.classList.remove('active'); } applyFilters(); }
+function clearFilters() { document.getElementById('search-input').value = ''; const dts = document.getElementById('dt-search'); if(dts) dts.value=''; Object.keys(FILTER_MAP).forEach(id => { ['','dt-'].forEach(p => { const el = document.getElementById(p+id); if (el) { el.value = ''; el.classList.remove('active'); } }); }); applyFilters(); }
+function toggleFilterDrawer() { filterDrawerOpen = !filterDrawerOpen; document.getElementById('filter-drawer').classList.toggle('open', filterDrawerOpen); }
+
+function fmtDate(v) {
+  if (!v || String(v).trim() === '' || String(v) === 'NaN') return null;
+  const d = new Date(v);
+  if (isNaN(d)) return String(v);
+  return d.toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function conditionExtra(cond, row) {
+  const c = String(cond).toLowerCase();
+  const items = [];
+  if (c.includes('pending')) {
+    if (row['Pending S/A Date'] && String(row['Pending S/A Date']).trim() && String(row['Pending S/A Date']) !== 'NaN') items.push('S/A Date: ' + fmtDate(row['Pending S/A Date']));
+    if (row['Pending S/A Days'] && String(row['Pending S/A Days']).trim() && String(row['Pending S/A Days']) !== 'NaN') items.push('Days: ' + row['Pending S/A Days']);
+    if (row['Pending S/A Agency'] && String(row['Pending S/A Agency']).trim() && String(row['Pending S/A Agency']) !== 'NaN') items.push('Agency: ' + row['Pending S/A Agency']);
+    if (row['*LEADS Name'] && String(row['*LEADS Name']).trim() && String(row['*LEADS Name']) !== 'NaN') items.push('Lead: ' + row['*LEADS Name']);
+  } else if (c.includes('deposit')) {
+    const ci = fmtDate(row['Contract Issued Date']); if (ci) items.push('Contract: ' + ci);
+    const pe = fmtDate(row['Proposed Exchanged Date']); if (pe) items.push('Prop. Exchange: ' + pe);
+  } else if (c.includes('exchanged')) {
+    const ed = fmtDate(row['Exchanged Date']); if (ed) items.push('Exchanged: ' + ed);
+    const ps = fmtDate(row['Proposed Settled Date']); if (ps) items.push('Prop. Settle: ' + ps);
+  } else if (c.includes('settled')) {
+    const sd = fmtDate(row['Settled Date']); if (sd) items.push('Settled: ' + sd);
+  }
+  return items;
+}
+
+function renderLotList() {
+  const list = document.getElementById('lot-list');
+  document.getElementById('rec-count').textContent = `${filteredData.length} of ${allData.length} records`;
+  if (!filteredData.length) { list.innerHTML = '<div class="empty-state">No records match your filters.</div>'; return; }
+  list.innerHTML = filteredData.map((row, i) => {
+    const lotNum = row['Lot #'] || row['Lot#'] || '—';
+    const cond_lower = String(row['Sales Condition '] || row['Sales Condition'] || '').toLowerCase();
+    let val = '';
+    if (cond_lower.includes('on sale') || cond_lower.includes('pending')) val = row['$LIST '] || row['$LIST'] || '';
+    else if (cond_lower.includes('deposit')) val = row['CfS Issued Price'] || '';
+    else if (cond_lower.includes('exchanged')) val = row['CfS Exchanged Price ($)'] || '';
+    else if (cond_lower.includes('settled')) val = row['CfS Settled Price ($)'] || '';
+    else val = row['$VAL '] || row['$VAL'] || '';
+    const valFmt = val && !isNaN(val) ? '$' + Number(val).toLocaleString() : (val || '—');
+    const cond = String(row['Sales Condition '] || row['Sales Condition'] || '');
+    const partner = row['Channel Partner'] || '';
+    const extras = conditionExtra(cond, row);
+    const extraHtml = extras.length ? `<div class="lot-extras">${extras.map(e => `<span class="lot-extra">${e}</span>`).join('')}</div>` : '';
+    return `<div class="lot-card" onclick="openModal(${i})">
+      <div class="lot-num-box">Lot<br>${lotNum}</div>
+      <div class="lot-info">
+        <div class="lot-top"><span class="lot-cond"><span class="badge ${badgeClass(cond)}">${cond}</span></span><span class="lot-value">${valFmt}</span></div>
+        <div class="lot-bottom"><span class="lot-partner">${partner}</span></div>
+        ${extraHtml}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function badgeClass(cond) {
+  const c = String(cond || '').toLowerCase().trim();
+  if (c.includes('exchange')) return 'badge-exc';
+  if (c.includes('settle') || c.includes('settled') || c === '5. settled') return 'badge-set';
+  if (c.includes('deposit')) return 'badge-dep';
+  if (c.includes('on sale') || c === '1. on sale') return 'badge-on';
+  if (c.includes('pending') || c.includes('sa')) return 'badge-pen';
+  if (c.includes('withheld') || c.includes('unreleased') || c.includes('avantaus')) return 'badge-oth';
+  return 'badge-oth';
+}
+
+function updateStats() {
+  const settled = allData.filter(r => String(r['Sales Condition ']||r['Sales Condition']||'').includes('Settled')).length;
+  const exchanged = allData.filter(r => String(r['Sales Condition ']||r['Sales Condition']||'').includes('Exchanged')).length;
+  const settledVal = allData.filter(r => String(r['Sales Condition ']||r['Sales Condition']||'').includes('Settled')).reduce((s,r) => s + (Number(r['CfS Settled Price ($)'])||0), 0);
+  document.getElementById('stat-total').textContent = allData.length;
+  document.getElementById('stat-settled').textContent = settled;
+  document.getElementById('stat-exchanged').textContent = exchanged;
+  document.getElementById('stat-value').textContent = settledVal ? '$' + (settledVal/1000000).toFixed(1) + 'M' : '—';
+}
+
+function openModal(idx) {
+  modalRowIdx = allData.indexOf(filteredData[idx]);
+  const row = filteredData[idx];
+  const lotNum = row['Lot #'] || row['Lot#'] || '—';
+  document.getElementById('detail-title').textContent = 'Lot ' + lotNum;
+  let body = '';
+  headers.forEach(k => {
+    const v = row[k];
+    const vs = String(v ?? '').trim();
+    if (vs === '' || vs === 'NaN' || vs === 'undefined' || vs === 'null') return;
+    // Add separator before second purchaser
+    if (k === "(2) Purchaser's Name") {
+      body += `<div style="padding:6px 16px;background:var(--surface2);font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)">Second Purchaser</div>`;
+    }
+    // Use the same formatCellValue as desktop for consistent formatting
+    const display = formatCellValue(k, v) || vs;
+    body += `<div class="detail-row"><span class="detail-label">${k.trim()}</span><span class="detail-val">${display}</span></div>`;
+  });
+  document.getElementById('detail-body').innerHTML = body;
+  showScreen('detail');
+  history.pushState({ app: true }, '');
+}
+
+function closeModal(e) {}
+function closeModalDirect() { showScreen('data'); }
+function editFromDetail() { closeModalDirect(); editRowIdx = modalRowIdx; populateEditForm(allData[editRowIdx]); }
+
+function populateEditForm(row) {
+  document.getElementById('edit-fields').innerHTML = headers.map(h => {
+    const raw = row[h] ?? '';
+    const val = String(raw).replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    // Display uses formatCellValue (same as desktop) — raw val used for edit onclick
+    const formatted = formatCellValue(h, raw);
+    const display = formatted || val || '—';
+    return `<div class="edit-row" id="row-${sid(h)}" onclick="startEdit('${sid(h)}','${val}')">
+      <span class="edit-row-label">${h.trim()}</span>
+      <span class="edit-row-val${val ? '' : ' empty'}" id="disp-${sid(h)}">${display}</span>
+    </div>`;
+  }).join('');
+  formDirty = false;
+  showScreen('edit');
+}
+
+let formDirty = false;
+
+function startEdit(key, currentVal) {
+  const row = document.getElementById('row-' + key);
+  const disp = document.getElementById('disp-' + key);
+  if (row.classList.contains('editing')) return;
+  row.classList.add('editing');
+
+  // Check if this is a percent field
+  const headerForKey = headers.find(h => sid(h) === key);
+  const isPercent = headerForKey && (PERCENT_COLS.has(headerForKey) || headerForKey.trim() === 'Deposit%');
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  // For percent fields, convert decimal to display: 0.05 → "5"
+  let editVal;
+  if (isPercent) {
+    const rawNum = parseFloat(String(currentVal === '—' ? '' : currentVal).replace(/%/g,'').trim());
+    editVal = (!isNaN(rawNum) && currentVal !== '—') ? (rawNum > 0 && rawNum <= 1 ? String(rawNum * 100) : String(rawNum)) : '';
+  } else {
+    editVal = currentVal === '—' ? '' : currentVal;
+  }
+  input.value = editVal;
+  input.id = 'edit-' + key;
+  input.setAttribute('autocorrect','off');
+  input.setAttribute('autocapitalize','none');
+  if (isPercent) input.placeholder = 'e.g. 10';
+
+  if (isPercent) {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;align-items:center;gap:4px;width:100%';
+    const suffix = document.createElement('span');
+    suffix.textContent = '%';
+    suffix.style.cssText = 'font-size:13px;color:var(--muted);flex-shrink:0';
+    wrap.appendChild(input);
+    wrap.appendChild(suffix);
+    disp.replaceWith(wrap);
+    input.focus();
+    input.addEventListener('input', () => { formDirty = true; });
+    input.addEventListener('blur', () => {
+      row.classList.remove('editing');
+      const n = parseFloat(input.value.trim());
+      const saveVal = isNaN(n) ? '' : String(n / 100); // store as decimal e.g. 0.05
+      const newDisp = document.createElement('span');
+      newDisp.id = 'disp-' + key;
+      newDisp.className = 'edit-row-val' + (saveVal ? '' : ' empty');
+      newDisp.textContent = saveVal ? fmtPercentText(saveVal) : '—';
+      wrap.replaceWith(newDisp);
+      newDisp.parentElement.onclick = () => startEdit(key, saveVal);
+    });
+    return;
+  }
+
+  disp.replaceWith(input);
+  input.focus();
+  input.addEventListener('input', () => { formDirty = true; });
+  input.addEventListener('blur', () => {
+    row.classList.remove('editing');
+    const newDisp = document.createElement('span');
+    newDisp.id = 'disp-' + key;
+    newDisp.className = 'edit-row-val' + (input.value ? '' : ' empty');
+    newDisp.textContent = input.value || '—';
+    input.replaceWith(newDisp);
+    newDisp.parentElement.onclick = () => startEdit(key, input.value);
+  });
+}
+
+function buildAddForm() {
+  const el = document.getElementById('add-fields');
+  if (!el) return;
+  el.innerHTML = headers.map(h => `<div class="form-group"><label>${h}</label><input type="text" id="add-${sid(h)}" placeholder="${h}"></div>`).join('');
+}
+
+async function addRecord() {
+  const row = {}; headers.forEach(h => { row[h] = document.getElementById('add-'+sid(h))?.value ?? ''; });
+  allData.push(row); applyFilters(); updateStats();
+  showScreen('data');
+  try {
+    await syncToOneDrive();
+  } catch(e) {
+    toast('Save failed: ' + e.message, 'error');
+  }
+}
+
+function cancelEditCheck() {
+  if (formDirty) {
+    if (confirm('You have unsaved changes. Save before leaving?')) {
+      saveEdit();
+    } else {
+      formDirty = false;
+      showScreen('data');
+    }
+  } else {
+    showScreen('data');
+  }
+}
+
+async function saveEdit() {
+  formDirty = false;
+  if (editRowIdx < 0) return;
+  headers.forEach(h => {
+    const input = document.getElementById('edit-' + sid(h));
+    const disp = document.getElementById('disp-' + sid(h));
+    let newVal = null;
+    if (input) newVal = input.value;
+    else if (disp && disp.textContent !== '—') newVal = disp.textContent;
+    // For percent fields, store as decimal e.g. 0.05
+    if (newVal && (PERCENT_COLS.has(h) || h.trim() === 'Deposit%')) {
+      const n = parseFloat(String(newVal).replace(/%/g, '').trim());
+      newVal = isNaN(n) ? '' : String(n / 100);
+    }
+    if (newVal !== null && newVal !== allData[editRowIdx][h]) {
+      allData[editRowIdx][h] = newVal;
+      markEdit(editRowIdx, h, newVal);
+    }
+  });
+  applyFilters(); updateStats();
+  try {
+    await syncToOneDrive();
+    showScreen('data');
+    if (isDesktop()) renderDesktopTable();
+  } catch(e) {
+    // Stay on edit screen so user can retry
+  }
+}
+
+function showAddRecord() { buildAddForm(); showScreen('add'); }
+function sid(s) { return s.replace(/[^a-zA-Z0-9]/g,'_'); }
+
+
+// Column header filters
+let deskActiveColFilters = {}; // { colName: Set of selected values }
+let currentFilterCol = null;
+let allColValues = [];
+
+function openColFilter(event, colName) {
+  event.stopPropagation();
+  currentFilterCol = colName;
+  const popup = document.getElementById('col-filter-popup');
+  document.getElementById('col-filter-title').textContent = colName.trim();
+  document.getElementById('col-filter-search').value = '';
+
+  // Get all unique values for this column
+  allColValues = [...new Set(allData.map(r => String(r[colName] ?? '').trim()).filter(v => v && v !== 'NaN'))].sort();
+
+  renderColList(allColValues);
+
+  // Position popup near the header
+  const rect = event.target.getBoundingClientRect();
+  popup.style.display = 'flex';
+  popup.style.top = (rect.bottom + 2) + 'px';
+  let left = rect.left;
+  if (left + 220 > window.innerWidth) left = window.innerWidth - 230;
+  popup.style.left = left + 'px';
+
+  document.getElementById('col-filter-search').focus();
+}
+
+function renderColList(vals) {
+  const selected = deskActiveColFilters[currentFilterCol] || new Set();
+  document.getElementById('col-filter-list').innerHTML = vals.map(v =>
+    `<label class="col-filter-item">
+      <input type="checkbox" value="${v.replace(/"/g,'&quot;')}" ${selected.has(v) ? 'checked' : ''}>
+      <span>${v}</span>
+    </label>`
+  ).join('');
+}
+
+function filterColList() {
+  const q = document.getElementById('col-filter-search').value.toLowerCase();
+  const filtered = allColValues.filter(v => v.toLowerCase().includes(q));
+  renderColList(filtered);
+}
+
+function applyColFilter() {
+  const checked = [...document.getElementById('col-filter-list').querySelectorAll('input:checked')].map(i => i.value);
+  if (checked.length === 0 || checked.length === allColValues.length) {
+    delete deskActiveColFilters[currentFilterCol];
+  } else {
+    deskActiveColFilters[currentFilterCol] = new Set(checked);
+  }
+  closeColFilter();
+  applyAllFilters();
+}
+
+function clearColFilter() {
+  delete deskActiveColFilters[currentFilterCol];
+  document.getElementById('col-filter-list').querySelectorAll('input').forEach(i => i.checked = false);
+  closeColFilter();
+  applyAllFilters();
+}
+
+function closeColFilter() {
+  document.getElementById('col-filter-popup').style.display = 'none';
+  currentFilterCol = null;
+}
+
+function applyAllFilters() {
+  // Apply column filters on top of existing search/dropdown filters
+  const terms = document.getElementById('search-input')?.value.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean) || [];
+  const dropVals = {};
+  Object.entries(FILTER_MAP).forEach(([id, col]) => {
+    const mob = document.getElementById(id);
+    const dsk = document.getElementById('dt-' + id);
+    dropVals[col] = isDesktop() ? (dsk?.value || '') : (mob?.value || '');
+  });
+
+  filteredData = allData.filter(row => {
+    if (terms.length) {
+      const text = Object.values(row).join(' ').toLowerCase();
+      if (!terms.every(t => text.includes(t))) return false;
+    }
+    if (!Object.entries(dropVals).every(([col, val]) => !val || String(row[col]||'').trim() === val)) return false;
+    // Apply column filters
+    for (const [col, vals] of Object.entries(deskActiveColFilters)) {
+      if (!vals.has(String(row[col] ?? '').trim())) return false;
+    }
+    return true;
+  });
+
+  renderLotList();
+  renderDesktopTable();
+
+  // Update header styling
+  document.querySelectorAll('table.dt th').forEach(th => {
+    const col = th.dataset.col;
+    if (col && deskActiveColFilters[col]) th.classList.add('filtered');
+    else th.classList.remove('filtered');
+  });
+
+  document.getElementById('dt-rec-count').textContent = filteredData.length + ' of ' + allData.length + ' records';
+}
+
+// Close popup when clicking outside
+document.addEventListener('click', function(e) {
+  const popup = document.getElementById('col-filter-popup');
+  if (popup && !popup.contains(e.target) && currentFilterCol) closeColFilter();
+});
+
+function isDesktop() { return window.innerWidth >= 768; }
+
+function colClass(h) {
+  const hl = h.toLowerCase().trim();
+  if (h === 'Lot #') return 'col-lot';
+  if (hl.includes('condition') || hl.includes('status')) return 'col-cond';
+  if (hl.includes('address')) return 'col-addr';
+  if (hl.includes('$') || hl.includes('price') || hl.includes('value')) return 'col-val';
+  if (hl.includes('date') || hl.includes('days') || hl.includes('stage') || hl.length < 8) return 'col-narrow';
+  if (hl.includes('name') || hl.includes('partner') || hl.includes('agency') || hl.includes('email')) return 'col-wide';
+  return '';
+}
+
+
+
+function getHeaderTextColour(bg, h) {
+  if (h === 'Land Tax Per lot Value') return '#FF0000';
+  if (DARK_HEADER_BG.has(bg)) return '#ffffff';
+  if (bg === '#FFFF00' || bg === '#CCFF66' || bg === '#C0E6F5') return '#000000';
+  return '#000000';
+}
+
+
+function fmtDate(v) {
+  if (!v || String(v).trim() === '' || String(v) === 'NaN' || String(v) === 'undefined') return '';
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let d;
+  if (typeof v === 'number' && v > 40000) {
+    // Excel serial date
+    d = new Date(Math.round((v - 25569) * 86400 * 1000));
+  } else {
+    d = new Date(v);
+  }
+  if (isNaN(d.getTime())) return String(v);
+  return String(d.getDate()).padStart(2,'0') + '-' + months[d.getMonth()] + '-' + d.getFullYear();
+}
+
+function fmtPhone(v) {
+  if (!v || String(v).trim() === '' || String(v) === 'NaN') return '';
+  let num = String(v).replace(/\.0$/, '').replace(/[^0-9+]/g, '');
+  if (!num) return String(v);
+  if (!num.startsWith('0') && !num.startsWith('+')) num = '0' + num;
+  if (num.startsWith('+')) {
+    const digits = num.slice(1);
+    if (digits.startsWith('61') && digits.length === 11) return '+61 ' + digits.slice(2,5) + ' ' + digits.slice(5,8) + ' ' + digits.slice(8);
+    if (digits.startsWith('1') && digits.length === 11) return '+1 ' + digits.slice(1,4) + ' ' + digits.slice(4,7) + ' ' + digits.slice(7);
+    if (digits.startsWith('44') && digits.length === 12) return '+44 ' + digits.slice(2,6) + ' ' + digits.slice(6);
+    return '+' + digits;
+  }
+  if (num.length === 10) {
+    if (['02','03','07','08'].some(p => num.startsWith(p))) return num.slice(0,2) + ' ' + num.slice(2,6) + ' ' + num.slice(6);
+    return num.slice(0,4) + ' ' + num.slice(4,7) + ' ' + num.slice(7);
+  }
+  return num;
+}
+
+const DATE_COLS = new Set(['Pending S/A Date','Allocation Date','Allocation Days / Allocation Expiry Date','Sales Advice Received Date','Sales Advice Sent To Legal Date','Contract Issued Date','Proposed Exchanged Date','Exchanged Date','Proposed Settled Date','Settled Date','Cooling Off Date']);
+const PHONE_COLS = new Set(["Agent's Mobile","Agent's Email".replace('Email','Mobile'),"(1) Purchaser's Mobile","(2) Purchaser's Mobile","Purchaser's Solicitor Phone"]);
+
+
+const CURRENCY_COLS = new Set(['$VAL ','$BASE','$LIST ','$CHECK$                   $BASE-$VAL','$CHECK$ $LIST-$BASE','Land Tax Per lot Value','Land Tax $Uplift / $Shortfall','OFFER Rebate','SETTLE Rebate','H&L $House (S/S)','$H&L Total (S/S)','H&L $House (D/S)','$H&L Total (D/S)','CfS Issued Price','CfS Exchanged Price ($)','CfS Settled Price ($)','Rebate']);
+const PERCENT_COLS = new Set(['Deposit%']);
+const AREA_COLS = new Set(['Lot Area (m²)','Lot Area (m\u00b2)']);
+
+
+function selectDesktopRow(idx) {
+  document.querySelectorAll('#dt-body tr').forEach(r => r.classList.remove('dt-selected'));
+  document.getElementById('dtr-' + idx)?.classList.add('dt-selected');
+}
+
+function openDesktopPanel(idx) {
+  modalRowIdx = allData.indexOf(filteredData[idx]);
+  const row = filteredData[idx];
+  const lotNum = row['Lot #'] || row['Lot#'] || '—';
+  document.getElementById('dt-panel-title').textContent = 'Lot ' + lotNum;
+  let body = '';
+  headers.forEach(k => {
+    const v = row[k]; const vs = String(v ?? '').trim();
+    if (vs === '' || vs === 'NaN' || vs === 'undefined' || vs === 'null') return;
+    if (k === "(2) Purchaser's Name") {
+      body += `<div style="padding:6px 16px;background:var(--surface2);font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)">Second Purchaser</div>`;
+    }
+    let display = vs;
+    if (k.toLowerCase().includes('mobile') || k.toLowerCase().includes('phone')) {
+      let num = vs.replace('.0','').replace(/[^0-9+]/g,'');
+      if (!num.startsWith('0') && !num.startsWith('+')) num = '0' + num;
+      if (num.startsWith('+')) {
+        // International: +61 4XX XXX XXX or +1 XXX XXX XXXX etc
+        const digits = num.slice(1);
+        if (digits.startsWith('61') && digits.length === 11) {
+          display = '+61 ' + digits.slice(2,5) + ' ' + digits.slice(5,8) + ' ' + digits.slice(8);
+        } else if (digits.startsWith('1') && digits.length === 11) {
+          display = '+1 ' + digits.slice(1,4) + ' ' + digits.slice(4,7) + ' ' + digits.slice(7);
+        } else {
+          display = '+' + digits;
+        }
+      } else if (num.length === 10 && num.startsWith('0')) {
+        // Landline: 02/03/07/08 → 0X XXXX XXXX
+        if (['02','03','07','08'].some(p => num.startsWith(p))) {
+          display = num.slice(0,2) + ' ' + num.slice(2,6) + ' ' + num.slice(6);
+        } else {
+          // Mobile: 04XX → 04XX XXX XXX
+          display = num.slice(0,4) + ' ' + num.slice(4,7) + ' ' + num.slice(7);
+        }
+      } else {
+        display = num;
+      }
+    } else if ((k.includes('$') || k.toLowerCase().includes('price')) && !isNaN(v) && vs !== '') {
+      display = '$' + Number(v).toLocaleString();
+    }
+    body += `<div class="detail-row"><span class="detail-label">${k.trim()}</span><span class="detail-val">${display}</span></div>`;
+  });
+  document.getElementById('dt-panel-body').innerHTML = body;
+  document.getElementById('dt-panel').classList.add('open');
+  document.querySelectorAll('#dt-body tr').forEach(r => r.classList.remove('dt-selected'));
+  document.getElementById('dtr-' + idx)?.classList.add('dt-selected');
+}
+
+function closeDesktopPanel() { document.getElementById('dt-panel').classList.remove('open'); }
+
+function editFromDesktop() {
+  editRowIdx = modalRowIdx;
+  closeDesktopPanel();
+  deskEditRow(filteredData.indexOf(allData[editRowIdx]));
+}
+
+
+
+function showScreen(name) {
+  // On desktop, phone screens aren't used — desktop has its own nav
+  if (isDesktop()) {
+    // Just sync the desktop nav button state
+    ['data','chat','reports'].forEach(n => {
+      document.getElementById('dnav-' + n)?.classList.toggle('active', n === name);
+    });
+    return;
+  }
+  // Phone: switch active screen
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name)?.classList.add('active');
+  ['data','chat','reports'].forEach(n => {
+    document.getElementById('nav-' + n)?.classList.toggle('active', n === name);
+  });
+}
+
+
+
+async function genReport(type) {
+  if (!allData.length) { toast('No data loaded', 'error'); return; }
+  if (!ANTHROPIC_KEY()) { toast('API key missing — re-enter it on the sign-in screen', 'error'); return; }
+  const prompts = {
+    summary: 'Generate a comprehensive sales summary. Include total lots, settled count, exchanged count, revenue, and key insights.',
+    pipeline: 'Analyse the open sales pipeline. Which deals are at risk? What is the likely revenue from open deals?',
+    channel: 'Analyse channel partner performance. Who are the top performers? Any trends worth noting?',
+    monthly: 'Analyse settled revenue by month and year. Show trends and highlight strong or weak periods.',
+  };
+  const out = document.getElementById('report-output');
+  out.style.display = 'block'; out.textContent = 'Generating report...';
+  out.scrollIntoView({ behavior: 'smooth' });
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 1000, system: `You are a property sales analyst. Data:\n\n${dataSnapshot()}`, messages: [{ role: 'user', content: prompts[type] }] })
+    });
+    const d = await res.json();
+    out.textContent = d.content?.find(b=>b.type==='text')?.text || 'No report generated.';
+  } catch(e) { out.textContent = 'Error: ' + e.message; }
+}
+
+// ── SCAN PDF ──────────────────────────────────────────
+const SCAN_FIELDS = [
+  { key: 'Sales Advice Received Date',     label: 'SA Received Date',      type: 'date' },
+  { key: 'Proposed Exchanged Date',        label: 'Proposed Exchange Date', type: 'date' },
+  { key: 'Proposed Settled Date',          label: 'Proposed Settled Date',  type: 'date' },
+  { key: 'CfS Issued Price',               label: 'CfS Issue Price',        type: 'currency' },
+  { key: 'Rebate',                         label: 'Rebate',                 type: 'currency' },
+  { key: 'Deposit%',                       label: 'Deposit %',              type: 'percent' },
+  { key: "(1) Purchaser's Name",           label: 'Purchaser 1 Name',       type: 'text' },
+  { key: "(1) Purchaser's Email",          label: 'Purchaser 1 Email',      type: 'text' },
+  { key: "(1) Purchaser's Mobile",         label: 'Purchaser 1 Mobile',     type: 'text' },
+  { key: "(2) Purchaser's Name",           label: 'Purchaser 2 Name',       type: 'text' },
+  { key: "(2) Purchaser's Email",          label: 'Purchaser 2 Email',      type: 'text' },
+  { key: "(2) Purchaser's Mobile",         label: 'Purchaser 2 Mobile',     type: 'text' },
+  { key: "Purchaser's Postcode",           label: 'Purchaser Postcode',     type: 'text' },
+  { key: "Purchaser's Suburb",             label: 'Purchaser Suburb',       type: 'text' },
+  { key: "Purchaser's Solicitor (P'Sol)",  label: 'Purchaser Solicitor',    type: 'text' },
+  { key: "Purchaser's Solicitor Phone",    label: 'Solicitor Phone',        type: 'text' },
+];
+
+let scanPdfFile = null;
+let scanExtractedData = {};
+let scanMatchedRowIdx = -1;
+
+function openScanPdf() {
+  document.getElementById('scan-pdf-overlay').style.display = 'flex';
+  resetScanPdf();
+}
+
+function closeScanPdf() {
+  document.getElementById('scan-pdf-overlay').style.display = 'none';
+  scanPdfFile = null;
+  scanExtractedData = {};
+  scanMatchedRowIdx = -1;
+}
+
+function resetScanPdf() {
+  scanPdfFile = null;
+  document.getElementById('scan-file-name').textContent = 'No file selected';
+  document.getElementById('scan-extract-btn').style.opacity = '0.4';
+  document.getElementById('scan-extract-btn').style.pointerEvents = 'none';
+  showScanStep('upload');
+}
+
+function showScanStep(step) {
+  ['upload','processing','review','error','success'].forEach(s => {
+    const el = document.getElementById('scan-step-' + s);
+    if (el) el.style.display = 'none';
+  });
+  const active = document.getElementById('scan-step-' + step);
+  if (!active) return;
+  if (step === 'review') {
+    active.style.display = 'flex';
+    active.style.flexDirection = 'column';
+  } else if (step === 'upload') {
+    active.style.display = 'flex';
+    active.style.flexDirection = 'column';
+  } else {
+    active.style.display = 'block';
+  }
+}
+
+function onScanFileSelected(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  scanPdfFile = file;
+  document.getElementById('scan-file-name').textContent = file.name;
+  document.getElementById('scan-extract-btn').style.opacity = '1';
+  document.getElementById('scan-extract-btn').style.pointerEvents = 'auto';
+}
+
+async function runScanPdf() {
+  if (!scanPdfFile) return;
+  const key = ANTHROPIC_KEY();
+  if (!key) { alert('Please save your Anthropic API key first.'); return; }
+
+  showScanStep('processing');
+
+  try {
+    // Read PDF as base64
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(scanPdfFile);
+    });
+
+    // Ask Claude to extract fields
+    const prompt = `This is a Sales Advice document for a property sale. Extract the following fields exactly as they appear. Return ONLY a JSON object with these keys (use null if not found):
+
+{
+  "lot_number": "the lot number or lot # mentioned",
+  "sa_received_date": "date document was prepared or signed (dd/mm/yyyy)",
+  "proposed_exchange_date": "proposed exchange date (dd/mm/yyyy)",
+  "proposed_settled_date": "proposed settlement date (dd/mm/yyyy)",
+  "cfs_issue_price": "contract price or sale price as a number only (no $ or commas)",
+  "rebate": "rebate amount as number only (no $ or commas), null if none",
+  "deposit_percent": "deposit percentage as number only e.g. 10 for 10%",
+  "purchaser1_name": "first purchaser full name",
+  "purchaser1_email": "first purchaser email",
+  "purchaser1_mobile": "first purchaser mobile/phone",
+  "purchaser2_name": "second purchaser full name, null if none",
+  "purchaser2_email": "second purchaser email, null if none",
+  "purchaser2_mobile": "second purchaser mobile, null if none",
+  "purchaser_postcode": "purchaser postcode",
+  "purchaser_suburb": "purchaser suburb",
+  "solicitor_name": "purchaser solicitor name or firm",
+  "solicitor_phone": "solicitor phone number"
+}
+
+Return ONLY the JSON object, no other text.`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
+            { type: 'text', text: prompt }
+          ]
+        }]
+      })
+    });
+
+    const d = await res.json();
+    if (d.error) throw new Error(d.error.message);
+
+    const text = d.content?.find(b => b.type === 'text')?.text || '';
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('Could not parse response from Claude');
+    const extracted = JSON.parse(jsonMatch[0]);
+
+    // Find matching row by lot number
+    const lotNum = String(extracted.lot_number || '').trim();
+    if (!lotNum) throw new Error('Could not find a Lot # in the PDF');
+
+    const rowIdx = allData.findIndex(r =>
+      String(r['Lot #'] || r['Lot#'] || '').trim() === lotNum
+    );
+    if (rowIdx === -1) throw new Error(`Lot ${lotNum} not found in database`);
+
+    scanMatchedRowIdx = rowIdx;
+
+    // Map extracted values to DB fields
+    scanExtractedData = {};
+    const map = {
+      'Sales Advice Received Date':    extracted.sa_received_date,
+      'Proposed Exchanged Date':       extracted.proposed_exchange_date,
+      'Proposed Settled Date':         extracted.proposed_settled_date,
+      'CfS Issued Price':              extracted.cfs_issue_price,
+      'Rebate':                        extracted.rebate,
+      'Deposit%':                      extracted.deposit_percent != null ? String(Number(extracted.deposit_percent) / 100) : null,
+      "(1) Purchaser's Name":          extracted.purchaser1_name,
+      "(1) Purchaser's Email":         extracted.purchaser1_email,
+      "(1) Purchaser's Mobile":        extracted.purchaser1_mobile,
+      "(2) Purchaser's Name":          extracted.purchaser2_name,
+      "(2) Purchaser's Email":         extracted.purchaser2_email,
+      "(2) Purchaser's Mobile":        extracted.purchaser2_mobile,
+      "Purchaser's Postcode":          extracted.purchaser_postcode,
+      "Purchaser's Suburb":            extracted.purchaser_suburb,
+      "Purchaser's Solicitor (P'Sol)": extracted.solicitor_name,
+      "Purchaser's Solicitor Phone":   extracted.solicitor_phone,
+    };
+    Object.entries(map).forEach(([k, v]) => {
+      if (v !== null && v !== undefined && String(v).trim() !== '' && String(v) !== 'null') {
+        scanExtractedData[k] = String(v).trim();
+      }
+    });
+
+    // Render review screen
+    document.getElementById('scan-matched-lot').textContent =
+      `Lot ${lotNum} — ${allData[rowIdx]['Project Name'] || ''}`;
+
+    // Show Resc/Exch warning if applicable
+    const cfsType = String(allData[rowIdx]['CfS Type'] || allData[rowIdx]['CFS Type'] || '').trim();
+    const isRescExch = cfsType.toLowerCase().includes('resc') || cfsType.toLowerCase().includes('exch');
+    document.getElementById('scan-resc-banner').style.display = isRescExch ? 'block' : 'none';
+
+    const list = document.getElementById('scan-fields-list');
+    list.innerHTML = SCAN_FIELDS.map(f => {
+      const val = scanExtractedData[f.key] || '';
+      const display = val ? formatCellValue(f.key, val) || val : '';
+      return `<div style="padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">${f.label}</div>
+        <input
+          data-field="${f.key}"
+          type="text"
+          value="${display.replace(/"/g,'&quot;')}"
+          placeholder="Not found"
+          style="width:100%;padding:8px 10px;border:1px solid ${val ? 'var(--accent)' : 'var(--border)'};border-radius:6px;font-size:13px;font-family:Aptos,sans-serif;background:${val ? 'rgba(37,99,235,0.04)' : 'var(--bg)'};color:var(--ink);outline:none"
+        >
+      </div>`;
+    }).join('');
+
+    showScanStep('review');
+
+  } catch(e) {
+    document.getElementById('scan-error-msg').textContent = e.message;
+    showScanStep('error');
+  }
+}
+
+async function confirmScanPdf() {
+  if (scanMatchedRowIdx < 0) return;
+  const row = allData[scanMatchedRowIdx];
+  const lotNum = row['Lot #'] || row['Lot#'] || '';
+
+  // Read values from the review inputs (user may have edited them)
+  document.querySelectorAll('#scan-fields-list input[data-field]').forEach(input => {
+    const field = input.getAttribute('data-field');
+    let val = input.value.trim();
+    if (!val) return;
+    // Currency: strip $ and commas
+    if (field === 'CfS Issued Price' || field === 'Rebate') {
+      val = val.replace(/[$,]/g, '').trim();
+    }
+    // Percent: convert display back to decimal
+    if (field === 'Deposit%') {
+      const n = parseFloat(val.replace(/%/g, ''));
+      if (!isNaN(n)) val = String(n > 1 ? n / 100 : n);
+    }
+    if (val && val !== row[field]) {
+      row[field] = val;
+      markEdit(scanMatchedRowIdx, field, val);
+    }
+  });
+
+  applyFilters();
+  if (isDesktop()) renderDesktopTable();
+
+  // Show processing while syncing
+  showScanStep('processing');
+  document.querySelector('#scan-step-processing div:nth-child(2)').textContent = 'Saving to OneDrive...';
+
+  try {
+    await syncToOneDrive();
+    // Show success screen
+    const updatedCount = Object.keys(pendingEdits[scanMatchedRowIdx] || {}).length || SCAN_FIELDS.filter(f => row[f.key]).length;
+    document.getElementById('scan-success-msg').textContent =
+      `Lot ${lotNum} updated — ${updatedCount} field${updatedCount !== 1 ? 's' : ''} saved to OneDrive`;
+    showScanStep('success');
+    scanMatchedRowIdx = -1;
+    scanExtractedData = {};
+  } catch(e) {
+    document.getElementById('scan-error-msg').textContent = 'Sync failed: ' + e.message + '\n\nData was applied locally but not saved to OneDrive.';
+    showScanStep('error');
+  }
+}
+
+function saveChatKey() {
+  const inp = document.getElementById('chat-key-input');
+  const key = (inp?.value || '').replace(/\s+/g,'').trim();
+  if (!key || key.includes('•') || !key.startsWith('sk-')) {
+    toast('Invalid key — must start with sk-', 'error'); return;
+  }
+  localStorage.setItem('anthropic_key', key);
+  inp.value = '';
+  document.getElementById('chat-key-banner').style.display = 'none';
+  toast('API key saved ✓', 'success');
+}
+
+function checkKeyBanner() {
+  const banner = document.getElementById('chat-key-banner');
+  if (banner) banner.style.display = ANTHROPIC_KEY() ? 'none' : 'block';
+}
+
+async function sendChat() {
+  const inp = document.getElementById('chat-input');
+  const msg = inp.value.trim(); if (!msg) return;
+  const key = ANTHROPIC_KEY();
+  if (!key) {
+    addMsg('system', 'API key missing or invalid. Please re-enter it on the sign-in screen.');
+    return;
+  }
+  inp.value = ''; addMsg('user', msg);
+  const thinking = addThinking();
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1000, system: `You are a property sales analyst. Database: ${allData.length} lots.\n\n${dataSnapshot()}\n\nRules: plain text only, no markdown, no bold, no tables. List lots as: Lot 42 — Exchanged — $980,000`, messages: [{ role: 'user', content: msg }] })
+    });
+    const d = await res.json(); thinking.remove();
+    if (d.error) { addMsg('system', 'Error: ' + d.error.message); return; }
+    addMsg('assistant', d.content?.find(b=>b.type==='text')?.text || 'No response.');
+  } catch(e) { thinking.remove(); addMsg('system', 'Error: ' + e.message + '\n\nIf this is a CORS error, the Anthropic API does not allow direct browser calls. This is a known limitation.'); console.error('Chat error:', e); }
+}
+
+function dataSnapshot() {
+  const total = allData.length;
+  const conditions = {}, partners = {}, stages = {};
+  let totalVal = 0, valCount = 0;
+
+  allData.forEach(r => {
+    const cond = String(r['Sales Condition ']||r['Sales Condition']||'Unknown').trim();
+    const partner = String(r['Channel Partner']||'Unknown').trim();
+    const stage = String(r['Stage']||'Unknown').trim();
+    const val = Number(r['$VAL ']||r['$VAL']||0);
+    conditions[cond] = (conditions[cond]||0) + 1;
+    partners[partner] = (partners[partner]||0) + 1;
+    stages[stage] = (stages[stage]||0) + 1;
+    if (val) { totalVal += val; valCount++; }
+  });
+
+  const fmt = obj => Object.entries(obj).sort((a,b)=>b[1]-a[1]).map(([k,v])=>k+': '+v).join(', ');
+
+  // Compact lot index — just lot number, condition, stage, value
+  const lotIndex = allData.map(r => {
+    const lot = r['Lot #']||r['Lot#']||'';
+    const cond = String(r['Sales Condition ']||r['Sales Condition']||'').trim();
+    const stage = String(r['Stage']||'').trim();
+    const val = Number(r['$VAL ']||r['$VAL']||0);
+    const partner = String(r['Channel Partner']||'').trim();
+    return lot+'|'+cond+'|'+stage+'|$'+val.toLocaleString()+'|'+partner;
+  }).join('\n');
+
+  return 'DATABASE: '+total+' lots\nCONDITIONS: '+fmt(conditions)+'\nSTAGES: '+fmt(stages)+'\nPARTNERS: '+fmt(partners)+'\nTOTAL VALUE: $'+totalVal.toLocaleString()+'\n\nLOT INDEX (Lot#|Condition|Stage|Value|Partner):\n'+lotIndex;
+}
+
+function renderMarkdown(text) {
+  // Strip markdown tables
+  text = text.replace(/[|]/g, ' ').replace(/^[-|: ]+$/gm, '');
+  let t = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  t = t.replace(/[*][*]([^*\n]+)[*][*]/g,'<strong>$1</strong>');
+  t = t.replace(/[*]([^*\n]+)[*]/g,'<em>$1</em>');
+  t = t.replace(/^#{1,3} (.+)$/gm,'<div style="font-weight:600;font-size:14px;margin:8px 0 4px">$1</div>');
+  t = t.replace(/^[-] (.+)$/gm,'<div style="padding-left:12px;margin:2px 0">&bull; $1</div>');
+  t = t.replace(/^[0-9]+[.] (.+)$/gm,'<div style="padding-left:12px;margin:2px 0">$1</div>');
+  t = t.split('\n\n').join('<br><br>').split('\n').join('<br>');
+  return t;
+}
+
+function addMsg(role, text) {
+  const c = document.getElementById('chat-msgs');
+  const d = document.createElement('div'); d.className = `msg ${role}`;
+  const body = role === 'assistant' ? renderMarkdown(text) : text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  d.innerHTML = `<div class="msg-who">${role==='user'?'You':role==='assistant'?'Claude':'Info'}</div><div class="msg-body">${body}</div>`;
+  c.appendChild(d); c.scrollTop = c.scrollHeight; return d;
+}
+
+function addThinking() {
+  const c = document.getElementById('chat-msgs');
+  const d = document.createElement('div'); d.className = 'msg assistant';
+  d.innerHTML = `<div class="msg-who">Claude</div><div class="typing"><span></span><span></span><span></span></div>`;
+  c.appendChild(d); c.scrollTop = c.scrollHeight; return d;
+}
+
+function clearChat() { document.getElementById('chat-msgs').innerHTML = '<div class="msg system"><div class="msg-body">Chat cleared.</div></div>'; }
+function handleKey(e) { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); } }
+function useSug(btn) { document.getElementById('chat-input').value = btn.textContent; sendChat(); }
+
+function setSyncStatus(state) {
+  const bar = document.getElementById('sync-bar');
+  const text = document.getElementById('sync-text');
+  bar.className = 'sync-bar' + (state==='saving'?' saving':state==='error'?' error':'');
+  text.textContent = state==='saving'?'Saving to OneDrive...':state==='error'?'Save failed':'Synced with OneDrive';
+}
+
+function showLoading(msg) { document.getElementById('loading-msg').textContent = msg||'Loading...'; document.getElementById('loading').classList.add('show'); }
+function hideLoading() { document.getElementById('loading').classList.remove('show'); }
+function toast(msg, type='') { const el = document.getElementById('toast'); el.textContent = msg; el.className = `show ${type}`; setTimeout(() => el.className = '', 3000); }
+function toastLong(msg, type='') { const el = document.getElementById('toast'); el.textContent = msg; el.className = 'show ' + type; setTimeout(function(){ el.className = ''; }, 5000); }
+
+window.addEventListener('popstate', function(e) {
+  // Desktop edit screen
+  const deskEdit = document.getElementById('dscreen-edit');
+  if (deskEdit && deskEdit.style.display === 'flex') {
+    history.pushState({ app: true }, '');
+    if (formDirty) {
+      if (confirm('You have unsaved changes. Save before leaving?')) { deskSaveEdit(); }
+      else { formDirty = false; deskShowScreen('data'); }
+    } else {
+      deskShowScreen('data');
+    }
+    return;
+  }
+  // Mobile detail screen
+  const detail = document.getElementById('screen-detail');
+  if (detail && detail.classList.contains('active')) {
+    showScreen('data');
+    history.pushState({ app: true }, '');
+    return;
+  }
+  // Mobile edit screen
+  const editScreen = document.getElementById('screen-edit');
+  if (editScreen && editScreen.classList.contains('active') && formDirty) {
+    history.pushState({ app: true }, '');
+    if (confirm('You have unsaved changes. Save before leaving?')) { saveEdit(); }
+    else { formDirty = false; showScreen('data'); }
+    return;
+  }
+  history.pushState({ app: true }, '');
+});
+
+window.addEventListener('resize', function() {
+  if (isDesktop() && allData.length) renderDesktopTable();
+});
+
+(async () => {
+  // On mobile, immediately force desktop elements hidden in case of stale inline styles from redirect
+  if (window.innerWidth < 768) {
+    ['desktop-nav','desktop-content','desktop-main'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  }
+  const saved = localStorage.getItem('anthropic_key');
+  if (saved) {
+    const f = document.getElementById('api-key-field');
+    if (f) f.value = '••••••••••••••••';
+    const s = document.getElementById('api-key-status');
+    if (s) {
+      if (saved.startsWith('sk-')) {
+        s.textContent = '✓ API key is saved';
+        s.style.color = '#16a34a';
+      } else {
+        s.textContent = '✗ Saved key looks invalid — please re-enter';
+        s.style.color = '#dc2626';
+      }
+    }
+  }
+  try {
+    const pca = await getMsal();
+    const response = await pca.handleRedirectPromise();
+    if (response?.account) { await afterSignIn(response.account); }
+    else { const accounts = pca.getAllAccounts(); if (accounts.length) await afterSignIn(accounts[0]); }
+  } catch(e) { console.error(e); toast('Login error: ' + e.message, 'error'); }
+})();
+
+
+// ── DESKTOP FUNCTIONS ──────────────────────────────────
+
+function isDesktop() { return window.innerWidth >= 768; }
+
+function deskShowScreen(name) {
+  const editScreen = document.getElementById('dscreen-edit');
+
+  if (name === 'edit') {
+    editScreen.style.display = 'flex';
+    return;
+  }
+
+  // Hide edit overlay
+  editScreen.style.display = 'none';
+
+  document.querySelectorAll('.desktop-screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('dscreen-' + name)?.classList.add('active');
+  ['data','chat','reports'].forEach(n => {
+    document.getElementById('dnav-' + n)?.classList.toggle('active', n === name);
+  });
+  if (name !== 'data') closeDtPanel();
+}
+
+function initDesktop() {
+  // Don't set inline display styles — let CSS media query handle visibility.
+  // Just render the data.
+  renderDesktopTable();
+  updateDeskStats();
+}
+
+function updateDeskStats() {
+  const settled = allData.filter(r => String(r['Sales Condition ']||r['Sales Condition']||'').includes('Settled')).length;
+  const exchanged = allData.filter(r => String(r['Sales Condition ']||r['Sales Condition']||'').includes('Exchanged')).length;
+  const settledVal = allData.filter(r => String(r['Sales Condition ']||r['Sales Condition']||'').includes('Settled')).reduce((s,r) => s + (Number(r['CfS Settled Price ($)'])||0), 0);
+  document.getElementById('d-stat-total').textContent = allData.length;
+  document.getElementById('d-stat-settled').textContent = settled;
+  document.getElementById('d-stat-exchanged').textContent = exchanged;
+  document.getElementById('d-stat-value').textContent = settledVal ? '$' + (settledVal/1000000).toFixed(1) + 'M' : '&#8212;';
+}
+
+// ── DESKTOP SPREADSHEET ──
+let currentCfCol = null;
+let allCfValues = [];
+let dtSelectedIdx = -1;
+
+
+
+function getHeaderColour(h) {
+  const lightblue = ['Project Name','Lot ID','Property Address','Stage','Lot #','CfS Type','Product Line','Product Type','Lot Area (m²)','Lot Frontage (Width) (m)'];
+  const yellow = ['Sales Condition ','Pending S/A Date','Pending S/A Days','Pending S/A Agency','$VAL ','$BASE','$LIST ','Notes.1','March Campaign','OFFER Rebate','SETTLE Rebate','Type Of Purchaser','Special Condilions/Variations','2026 Report','Comments.1'];
+  const darkgrey = ['*LEADS Name'];
+  const peachL = ['Property Type'];
+  const purple = ['StockList','Notes'];
+  const hotpink = ['$CHECK$                   $BASE-$VAL','$CHECK$ $LIST-$BASE'];
+  const landtax = ['Land Tax Per lot Value','Land Tax $Uplift / $Shortfall'];
+  const peach = ['Sales Advice Received Date','Sales Advice Sent To Legal Date','Contract Issued Date','Days From CfS Issued','CfS Issued Price','Proposed Exchanged Date','Exchanged Date','CfS Exchanged Price ($)','Proposed Settled Date','Settled Date','Settled Month','Settled Year','CfS Settled Price ($)','Rebate','Deposit%','Cooling Off Date','FIRB Approval','March Campaign.1','Comments'];
+  const pink = ["(1) Purchaser's Name","(1) Purchaser's Email","(1) Purchaser's Mobile","(2) Purchaser's Name","(2) Purchaser's Email","(2) Purchaser's Mobile","Purchaser's Suburb","Purchaser's Postcode","Purchaser's Solicitor (P'Sol)","Purchaser's Solicitor Phone"];
+  if (lightblue.includes(h)) return '#BDD7EE';
+  if (yellow.includes(h)) return '#FFFF00';
+  if (darkgrey.includes(h)) return '#404040';
+  if (peachL.includes(h)) return '#FCE4D6';
+  if (purple.includes(h)) return '#7030A0';
+  if (hotpink.includes(h)) return '#FF0066';
+  if (landtax.includes(h)) return '#FFFFFF';
+  if (peach.includes(h)) return '#FCE4D6';
+  if (pink.includes(h)) return '#FCE4D6';
+  return '#e8e3d8';
+}
+function getHeaderTextColour(bg, h) {
+  if (bg === '#404040' || bg === '#7030A0' || bg === '#FF0066') return '#ffffff';
+  if (h === 'Land Tax Per lot Value' || h === 'Land Tax $Uplift / $Shortfall') return '#FF0000';
+  return '#1a1408';
+}
+
+
+function fmtDate(v) {
+  if (!v || String(v).trim() === '' || String(v) === 'NaN' || String(v) === 'undefined') return '';
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let d;
+  if (typeof v === 'number' && v > 40000) {
+    // Excel serial date
+    d = new Date(Math.round((v - 25569) * 86400 * 1000));
+  } else {
+    d = new Date(v);
+  }
+  if (isNaN(d.getTime())) return String(v);
+  return String(d.getDate()).padStart(2,'0') + '-' + months[d.getMonth()] + '-' + d.getFullYear();
+}
+
+function fmtPhone(v) {
+  if (!v || String(v).trim() === '' || String(v) === 'NaN') return '';
+  let num = String(v).replace(/\.0$/, '').replace(/[^0-9+]/g, '');
+  if (!num) return String(v);
+  if (!num.startsWith('0') && !num.startsWith('+')) num = '0' + num;
+  if (num.startsWith('+')) {
+    const digits = num.slice(1);
+    if (digits.startsWith('61') && digits.length === 11) return '+61 ' + digits.slice(2,5) + ' ' + digits.slice(5,8) + ' ' + digits.slice(8);
+    if (digits.startsWith('1') && digits.length === 11) return '+1 ' + digits.slice(1,4) + ' ' + digits.slice(4,7) + ' ' + digits.slice(7);
+    if (digits.startsWith('44') && digits.length === 12) return '+44 ' + digits.slice(2,6) + ' ' + digits.slice(6);
+    return '+' + digits;
+  }
+  if (num.length === 10) {
+    if (['02','03','07','08'].some(p => num.startsWith(p))) return num.slice(0,2) + ' ' + num.slice(2,6) + ' ' + num.slice(6);
+    return num.slice(0,4) + ' ' + num.slice(4,7) + ' ' + num.slice(7);
+  }
+  return num;
+}
+
+
+
+
+function formatCellValue(h, v) {
+  const vs = String(v ?? '');
+  if (vs === '' || vs === 'NaN' || vs === 'undefined' || vs === 'null') return '';
+  if (DATE_COLS.has(h)) return fmtDate(v);
+  if (PHONE_COLS.has(h) || h.toLowerCase().includes('mobile') || h.toLowerCase().includes('phone')) return fmtPhone(v);
+  if (PERCENT_COLS.has(h) || h.trim() === 'Deposit%') return fmtPercentText(v);
+  if (AREA_COLS.has(h)) { const n = Number(vs); return (!isNaN(n) && vs !== '') ? Math.round(n).toLocaleString() : vs; }
+  if ((CURRENCY_COLS.has(h) || h.includes('$') || h.toLowerCase().includes('price')) && !isNaN(v) && vs !== '' && vs !== '0') return '$' + Number(v).toLocaleString();
+  return vs;
+}
+
+
+function badgeCellStyle(cond) {
+  const c = String(cond || '').toLowerCase().trim();
+  if (c.includes('exchange')) return 'background:#fff0e0;color:#c45f00;font-weight:500';
+  if (c.includes('settle')) return 'background:#fde8e8;color:#a01a1a;font-weight:500';
+  if (c.includes('deposit')) return 'background:#e8f0fd;color:#1a3a8b;font-weight:500';
+  if (c.includes('on sale')) return 'background:#e8f4ed;color:#1a6b3a;font-weight:500';
+  if (c.includes('pending')) return 'background:#eeedfe;color:#534ab7;font-weight:500';
+  return 'background:#f0ebe0;color:#8a7d65;font-weight:500';
+}
+function renderDesktopTable() {
+  if (!filteredData.length) {
+    document.getElementById('dt-body').innerHTML = '<tr><td colspan="' + headers.length + '" style="text-align:center;padding:40px;color:var(--muted)">No records match your filters.</td></tr>';
+    document.getElementById('dt-rec-count').textContent = '0 of ' + allData.length + ' records';
+    return;
+  }
+  document.getElementById('dt-head').innerHTML = '<tr>' + headers.map((h,i) => {
+    const bg = getHeaderColour(h);
+    const tc = getHeaderTextColour(bg, h);
+    const filtered = deskActiveColFilters[h] ? ' filtered' : '';
+    return `<th data-col="${h}" class="${filtered}" style="background:${bg};color:${tc}" onclick="openCfPopup(event,'${h.replace(/'/g,"\'")}')" title="Click to filter: ${h.trim()}">${h.trim()} &#9660;</th>`;
+  }).join('') + '</tr>';
+
+  document.getElementById('dt-body').innerHTML = filteredData.map((row, i) => {
+    const cond = String(row['Sales Condition ']||row['Sales Condition']||'');
+    const cells = headers.map((h, hi) => {
+      const v = row[h]; const vs = String(v ?? '');
+      let cls = hi === 0 ? 'td-lot' : '';
+      let display;
+      if (h === 'Sales Condition ' || h === 'Sales Condition') {
+        const condStyle = badgeCellStyle(cond);
+        return `<td class="${cls.trim()}" style="${condStyle}" title="${vs}">${cond}</td>`;
+      } else {
+        display = formatCellValue(h, v) || '&#8212;';
+        if ((h.includes('$') || h.toLowerCase().includes('price')) && !isNaN(v) && vs !== '' && vs !== 'NaN') cls += ' td-val';
+      }
+      return `<td class="${cls.trim()}" title="${vs}">${display}</td>`;
+    }).join('');
+    return `<tr onclick="deskSelectRow(${i})" ondblclick="deskEditRow(${i})" id="dtr-${i}" class="${i===dtSelectedIdx?'dt-sel':''}">${cells}</tr>`;
+  }).join('');
+
+  document.getElementById('dt-rec-count').textContent = filteredData.length + ' of ' + allData.length + ' records';
+  updateActiveFilterLabel();
+}
+
+function deskSelectRow(i) {
+  dtSelectedIdx = i;
+  document.querySelectorAll('#dt-body tr').forEach(r => r.classList.remove('dt-sel'));
+  document.getElementById('dtr-' + i)?.classList.add('dt-sel');
+}
+
+function openDtPanel(idx) {
+  dtSelectedIdx = idx;
+  document.querySelectorAll('#dt-body tr').forEach(r => r.classList.remove('dt-sel'));
+  document.getElementById('dtr-' + idx)?.classList.add('dt-sel');
+  const row = filteredData[idx];
+  const lotNum = row['Lot #'] || row['Lot#'] || '&#8212;';
+  document.getElementById('dt-panel-title').textContent = 'Lot ' + lotNum;
+  document.getElementById('dt-panel-body').innerHTML = buildDetailHtml(row);
+  document.getElementById('dt-panel').classList.add('open');
+  modalRowIdx = allData.indexOf(row);
+}
+
+function closeDtPanel() {
+  document.getElementById('dt-panel').classList.remove('open');
+  dtSelectedIdx = -1;
+  document.querySelectorAll('#dt-body tr').forEach(r => r.classList.remove('dt-sel'));
+}
+
+
+const COL_GROUPS = [
+  { label: 'Property Details', colour: '#C0E6F5', textColour: '#000000', cols: ['Project Name','Lot ID','Property Address','Stage','Lot #','Sales Condition '] },
+  { label: 'Pending SA', colour: '#FFFF00', textColour: '#000000', cols: ['Pending S/A Date','Pending S/A Days','Pending S/A Agency','*LEADS Name'] },
+  { label: 'Property Info', colour: '#156082', textColour: '#ffffff', cols: ['CfS Type','Property Type','Product Line','Product Type','Lot Area (m\u00b2)','Lot Frontage (Width) (m)'] },
+  { label: 'Stock & Notes', colour: '#9437FF', textColour: '#ffffff', cols: ['StockList','Notes'] },
+  { label: 'Channel & Allocation', colour: '#A02B93', textColour: '#ffffff', cols: ['Channel Market','Sales Channel','Channel Partner','Swap to/from Channel Partner','Allocation Date','Allocation Days','Allocation Period (days)','Allocation Days / Allocation Expiry Date'] },
+  { label: 'Pricing', colour: '#FFFF00', textColour: '#000000', cols: ['$VAL ','$BASE','$LIST '] },
+  { label: 'Price Checks', colour: '#FF0066', textColour: '#ffffff', cols: ['$CHECK$                   $BASE-$VAL','$CHECK$ $LIST-$BASE'] },
+  { label: 'Land Tax', colour: '#FFFFFF', textColour: '#FF0000', cols: ['Land Tax Per lot Value','Land Tax $Uplift / $Shortfall'] },
+  { label: 'Campaign & Rebates', colour: '#FFFF00', textColour: '#000000', cols: ['March Campaign','OFFER Rebate','SETTLE Rebate','H&L $House (S/S)','$H&L Total (S/S)','H&L $House (D/S)','$H&L Total (D/S)','Notes.1'] },
+  { label: 'Dates & CfS', colour: '#4EA72E', textColour: '#ffffff', cols: ['Sales Advice Received Date','Sales Advice Sent To Legal Date','Contract Issued Date','Days From CfS Issued','CfS Issued Price','Proposed Exchanged Date','Exchanged Date','CfS Exchanged Price ($)','Proposed Settled Date','Settled Date','Settled Month','Settled Year','CfS Settled Price ($)','Rebate','Deposit%','Cooling Off Date','FIRB Approval','March Campaign.1','Comments'] },
+  { label: 'Vendors & Agents', colour: '#A02B93', textColour: '#ffffff', cols: ['Vendors Agency','Vendors Agency Agent',"Agent's Mobile","Agent's Email"] },
+  { label: 'Purchaser Details', colour: '#E97132', textColour: '#ffffff', cols: ["(1) Purchaser's Name","(1) Purchaser's Email","(1) Purchaser's Mobile","(2) Purchaser's Name","(2) Purchaser's Email","(2) Purchaser's Mobile","Purchaser's Suburb","Purchaser's Postcode","Purchaser's Solicitor (P'Sol)","Purchaser's Solicitor Phone"] },
+  { label: 'Other', colour: '#FFFF00', textColour: '#000000', cols: ['Type Of Purchaser','Special Condilions/Variations','2026 Report','Comments.1'] },
+];
+
+function deskEditRow(idx) {
+  dtSelectedIdx = idx;
+  modalRowIdx = allData.indexOf(filteredData[idx]);
+  editRowIdx = modalRowIdx;
+  const row = allData[editRowIdx];
+  const lotNum = row['Lot #'] || row['Lot#'] || '';
+  document.getElementById('d-edit-title').textContent = 'Lot ' + lotNum;
+  let editHtml = '<table style="width:100%;border-collapse:collapse">';
+  const groupedCols = COL_GROUPS.flatMap(g => g.cols);
+  COL_GROUPS.forEach(group => {
+    const groupCols = group.cols.filter(c => headers.includes(c));
+    if (!groupCols.length) return;
+    // Section header row spanning full width
+
+    groupCols.forEach(h => {
+      const val = String(row[h] ?? '').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const bg = group.colour;
+      const tc = group.textColour;
+      const labelBg = group.colour;
+      const labelTc = group.textColour;
+      const fmtDisp = deskFormatDisplay(h, String(row[h] ?? ''));
+      editHtml += `<tr id="d-row-${sid(h)}" onclick="deskStartEdit('${sid(h)}','${val}')" style="cursor:pointer">
+        <td style="padding:9px 16px;border-bottom:0.5px solid rgba(0,0,0,0.1);white-space:nowrap;width:1%;font-size:12px;font-weight:500;background:${labelBg};color:${labelTc};user-select:none">${h.trim()}</td>
+        <td style="padding:9px 16px;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--ink);background:var(--surface)" id="d-disp-${sid(h)}">${fmtDisp}</td>
+      </tr>`;
+    });
+  });
+  // Ungrouped
+  const ungrouped = headers.filter(h => !groupedCols.includes(h));
+  if (ungrouped.length) {
+
+    ungrouped.forEach(h => {
+      const val = String(row[h] ?? '').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const fmtDispU = deskFormatDisplay(h, String(row[h] ?? ''));
+      editHtml += `<tr id="d-row-${sid(h)}" onclick="deskStartEdit('${sid(h)}','${val}')" style="cursor:pointer">
+        <td style="padding:9px 16px;border-bottom:0.5px solid rgba(0,0,0,0.1);white-space:nowrap;width:1%;font-size:12px;font-weight:500;background:#e8e3d8;color:#1a1408;user-select:none">${h.trim()}</td>
+        <td style="padding:9px 16px;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--ink);background:var(--surface)" id="d-disp-${sid(h)}">${fmtDispU}</td>
+      </tr>`;
+    });
+  }
+  editHtml += '</table>';
+  document.getElementById('d-edit-fields').innerHTML = editHtml;
+  formDirty = false;
+  closeDtPanel();
+  deskShowScreen('edit');
+  history.pushState({ deskEdit: true }, '');
+}
+
+function deskEditFromPanel() {
+  closeDtPanel();
+  editRowIdx = modalRowIdx;
+  const row = allData[editRowIdx];
+  const lotNum = row['Lot #'] || row['Lot#'] || '';
+  document.getElementById('d-edit-title').textContent = 'Lot ' + lotNum;
+  let editHtml = '<table style="width:100%;border-collapse:collapse">';
+  const groupedCols = COL_GROUPS.flatMap(g => g.cols);
+  COL_GROUPS.forEach(group => {
+    const groupCols = group.cols.filter(c => headers.includes(c));
+    if (!groupCols.length) return;
+    // Section header row spanning full width
+
+    groupCols.forEach(h => {
+      const val = String(row[h] ?? '').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const bg = group.colour;
+      const tc = group.textColour;
+      const labelBg = group.colour;
+      const labelTc = group.textColour;
+      const fmtDisp = deskFormatDisplay(h, String(row[h] ?? ''));
+      editHtml += `<tr id="d-row-${sid(h)}" onclick="deskStartEdit('${sid(h)}','${val}')" style="cursor:pointer">
+        <td style="padding:9px 16px;border-bottom:0.5px solid rgba(0,0,0,0.1);white-space:nowrap;width:1%;font-size:12px;font-weight:500;background:${labelBg};color:${labelTc};user-select:none">${h.trim()}</td>
+        <td style="padding:9px 16px;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--ink);background:var(--surface)" id="d-disp-${sid(h)}">${fmtDisp}</td>
+      </tr>`;
+    });
+  });
+  // Ungrouped
+  const ungrouped = headers.filter(h => !groupedCols.includes(h));
+  if (ungrouped.length) {
+
+    ungrouped.forEach(h => {
+      const val = String(row[h] ?? '').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const fmtDispU = deskFormatDisplay(h, String(row[h] ?? ''));
+      editHtml += `<tr id="d-row-${sid(h)}" onclick="deskStartEdit('${sid(h)}','${val}')" style="cursor:pointer">
+        <td style="padding:9px 16px;border-bottom:0.5px solid rgba(0,0,0,0.1);white-space:nowrap;width:1%;font-size:12px;font-weight:500;background:#e8e3d8;color:#1a1408;user-select:none">${h.trim()}</td>
+        <td style="padding:9px 16px;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--ink);background:var(--surface)" id="d-disp-${sid(h)}">${fmtDispU}</td>
+      </tr>`;
+    });
+  }
+  editHtml += '</table>';
+  document.getElementById('d-edit-fields').innerHTML = editHtml;
+  formDirty = false;
+  deskShowScreen('edit');
+}
+
+const SALES_CONDITIONS = ['1. On Sale','2. Pending SA','3. Deposit','4. Exchanged','5. Settled','6. Unreleased','7. Withheld','8. Avantaus'];
+const SALES_COND_KEYS = new Set([sid('Sales Condition '), sid('Sales Condition')]);
+
+function fmtPercent(rawVal) {
+  if (!rawVal || rawVal === '' || rawVal === 'NaN') return '<span style="color:var(--muted);font-style:italic">&#8212;</span>';
+  const s = String(rawVal).trim().replace(/%/g, '');
+  const n = Number(s);
+  if (!isNaN(n) && s !== '') {
+    const pct = n > 0 && n <= 1 ? (n * 100) : n;
+    return pct + '%';
+  }
+  return String(rawVal).includes('%') ? String(rawVal) : String(rawVal) + '%';
+}
+
+function fmtPercentText(rawVal) {
+  if (!rawVal || rawVal === '' || rawVal === 'NaN') return '—';
+  const s = String(rawVal).trim().replace(/%/g, '');
+  const n = Number(s);
+  if (!isNaN(n) && s !== '') {
+    const pct = n > 0 && n <= 1 ? (n * 100) : n;
+    return pct + '%';
+  }
+  return String(rawVal).includes('%') ? String(rawVal) : String(rawVal) + '%';
+}
+
+function deskFormatDisplay(h, rawVal) {
+  if (!rawVal || rawVal === '' || rawVal === 'NaN') return '<span style="color:var(--muted);font-style:italic">&#8212;</span>';
+  if (DATE_COLS.has(h)) return fmtDate(rawVal);
+  if (PHONE_COLS.has(h) || h.toLowerCase().includes('mobile') || h.toLowerCase().includes('phone')) return fmtPhone(rawVal);
+  if (PERCENT_COLS.has(h) || h.trim() === 'Deposit%') return fmtPercent(rawVal);
+  if (AREA_COLS.has(h)) { const n = Number(String(rawVal).trim()); return (!isNaN(n) && String(rawVal).trim() !== '') ? Math.round(n).toLocaleString() : rawVal; }
+  if (CURRENCY_COLS.has(h) || h.includes('$') || h.toLowerCase().includes('price')) {
+    const n = Number(rawVal);
+    if (!isNaN(n)) return '$' + n.toLocaleString();
+  }
+  return rawVal;
+}
+
+function deskStartEdit(key, currentVal) {
+  const row = document.getElementById('d-row-' + key);
+  const disp = document.getElementById('d-disp-' + key);
+  if (!row || !disp || disp.querySelector('input,select')) return;
+  const rawVal = (currentVal === '&#8212;' || currentVal === '—') ? '' : currentVal;
+  disp.style.background = 'var(--accent-light)';
+  disp.innerHTML = '';
+  const inputStyle = 'width:100%;border:none;outline:none;font-size:13px;font-family:Aptos,sans-serif;background:transparent;padding:0;color:var(--ink)';
+
+  // Percent field
+  if (PERCENT_COLS.has(key) || key === sid('Deposit%')) {
+    const input = document.createElement('input');
+    input.type = 'text';
+    // Convert decimal to display percent: 0.05 → "5"
+    const n = parseFloat(String(rawVal).replace(/%/g,'').trim());
+    const displayVal = (!isNaN(n) && n !== '') ? (n > 0 && n <= 1 ? String(n * 100) : String(n)) : '';
+    input.value = displayVal;
+    input.id = 'd-edit-' + key;
+    input.setAttribute('autocorrect','off');
+    input.setAttribute('autocapitalize','none');
+    input.placeholder = 'e.g. 10';
+    input.style.cssText = inputStyle;
+    // Show suffix hint
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;align-items:center;gap:4px;width:100%';
+    const suffix = document.createElement('span');
+    suffix.textContent = '%';
+    suffix.style.cssText = 'font-size:13px;color:var(--muted);flex-shrink:0';
+    wrap.appendChild(input);
+    wrap.appendChild(suffix);
+    disp.appendChild(wrap);
+    input.focus();
+    input.addEventListener('input', () => { formDirty = true; });
+    input.addEventListener('blur', () => {
+      disp.style.background = '';
+      const n = parseFloat(input.value.trim());
+      const saveVal = isNaN(n) ? '' : String(n / 100); // store as decimal e.g. 0.05
+      disp.innerHTML = saveVal ? fmtPercent(saveVal) : '<span style="color:var(--muted);font-style:italic">&#8212;</span>';
+      row.onclick = () => deskStartEdit(key, saveVal);
+    });
+    return;
+  }
+
+  // Sales Condition dropdown
+  if (SALES_COND_KEYS.has(key)) {
+    const sel = document.createElement('select');
+    sel.style.cssText = inputStyle + ';cursor:pointer';
+    SALES_CONDITIONS.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c; o.textContent = c;
+      if (c === rawVal) o.selected = true;
+      sel.appendChild(o);
+    });
+    disp.appendChild(sel);
+    sel.focus();
+    formDirty = true;
+    sel.addEventListener('change', () => { formDirty = true; });
+    sel.addEventListener('blur', () => {
+      disp.style.background = '';
+      disp.innerHTML = deskFormatDisplay(key, sel.value);
+      row.onclick = () => deskStartEdit(key, sel.value);
+    });
+    return;
+  }
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = rawVal;
+  input.id = 'd-edit-' + key;
+  input.setAttribute('autocorrect','off');
+  input.setAttribute('autocapitalize','none');
+  input.style.cssText = inputStyle;
+  disp.appendChild(input);
+  input.focus();
+  input.addEventListener('input', () => { formDirty = true; });
+  input.addEventListener('blur', () => {
+    disp.style.background = '';
+    disp.innerHTML = deskFormatDisplay(key, input.value);
+    row.onclick = () => deskStartEdit(key, input.value);
+  });
+}
+
+async function deskSaveEdit() {
+  if (editRowIdx < 0) return;
+  formDirty = false;
+  headers.forEach(h => {
+    const disp = document.getElementById('d-disp-' + sid(h));
+    if (!disp) return;
+    const input = disp.querySelector('input');
+    let newVal = input ? input.value : disp.textContent.trim();
+    if (newVal === '—' || newVal === '') newVal = '';
+    // For percent fields, user types e.g. "5" or "5%" → save as decimal 0.05
+    if (newVal && (PERCENT_COLS.has(h) || h.trim() === 'Deposit%')) {
+      const n = parseFloat(String(newVal).replace(/%/g, '').trim());
+      newVal = isNaN(n) ? '' : String(n / 100);
+    }
+    if (String(newVal) !== String(allData[editRowIdx][h] ?? '')) {
+      allData[editRowIdx][h] = newVal;
+      markEdit(editRowIdx, h, newVal);
+    }
+  });
+  applyFilters();
+  updateStats();
+  updateDeskStats();
+  try {
+    await syncToOneDrive();
+    deskShowScreen('data');
+  } catch(e) {}
+}
+
+function deskCancelEditCheck() {
+  if (formDirty) {
+    if (confirm('You have unsaved changes. Save before leaving?')) { deskSaveEdit(); }
+    else { formDirty = false; deskShowScreen('data'); }
+  } else { deskShowScreen('data'); }
+}
+
+// ── COLUMN FILTER POPUP ──
+function openCfPopup(event, colName) {
+  event.stopPropagation();
+  currentCfCol = colName;
+  const popup = document.getElementById('cf-popup');
+  document.getElementById('cf-title').textContent = colName.trim();
+  document.getElementById('cf-search').value = '';
+  allCfValues = [...new Set(allData.map(r => String(r[colName] ?? '').trim()).filter(v => v && v !== 'NaN'))].sort();
+  renderCfList(allCfValues);
+  const th = event.currentTarget || event.target;
+  const rect = th.getBoundingClientRect();
+  popup.style.display = 'flex';
+  let left = rect.left;
+  if (left + 220 > window.innerWidth) left = window.innerWidth - 230;
+  popup.style.top = rect.bottom + 'px';
+  popup.style.left = left + 'px';
+  document.getElementById('cf-search').focus();
+}
+
+function renderCfList(vals) {
+  const selected = deskActiveColFilters[currentCfCol] || new Set();
+  document.getElementById('cf-list').innerHTML = vals.map(v =>
+    `<label class="cf-item"><input type="checkbox" value="${v.replace(/"/g,'&quot;')}" ${selected.has(v)?'checked':''}><span>${v}</span></label>`
+  ).join('');
+}
+
+function filterCfList() {
+  const q = document.getElementById('cf-search').value.toLowerCase();
+  renderCfList(allCfValues.filter(v => v.toLowerCase().includes(q)));
+}
+
+function applyCfFilter() {
+  const checked = [...document.getElementById('cf-list').querySelectorAll('input:checked')].map(i => i.value);
+  if (checked.length === 0 || checked.length === allCfValues.length) delete deskActiveColFilters[currentCfCol];
+  else deskActiveColFilters[currentCfCol] = new Set(checked);
+  closeCfPopup();
+  applyFiltersWithCol();
+}
+
+function clearCfFilter() {
+  delete deskActiveColFilters[currentCfCol];
+  closeCfPopup();
+  applyFiltersWithCol();
+}
+
+function clearAllColFilters() {
+  deskActiveColFilters = {};
+  applyFiltersWithCol();
+}
+
+function closeCfPopup() {
+  document.getElementById('cf-popup').style.display = 'none';
+  currentCfCol = null;
+}
+
+function applyFiltersWithCol() {
+  const terms = document.getElementById('search-input')?.value.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean) || [];
+  const dropVals = {};
+  Object.entries(FILTER_MAP).forEach(([id, col]) => {
+    const el = document.getElementById(id);
+    dropVals[col] = el?.value || '';
+  });
+  filteredData = allData.filter(row => {
+    if (terms.length) { const text = Object.values(row).join(' ').toLowerCase(); if (!terms.every(t => text.includes(t))) return false; }
+    if (!Object.entries(dropVals).every(([col, val]) => !val || String(row[col]||'').trim() === val)) return false;
+    for (const [col, vals] of Object.entries(deskActiveColFilters)) {
+      if (!vals.has(String(row[col] ?? '').trim())) return false;
+    }
+    return true;
+  });
+  renderLotList();
+  renderDesktopTable();
+}
+
+function updateActiveFilterLabel() {
+  const count = Object.keys(deskActiveColFilters).length;
+  const el = document.getElementById('dt-active-filters');
+  if (el) el.textContent = count ? count + ' column filter' + (count > 1 ? 's' : '') + ' active' : '';
+}
+
+document.addEventListener('click', e => {
+  const popup = document.getElementById('cf-popup');
+  if (popup && !popup.contains(e.target) && currentCfCol) closeCfPopup();
+});
+
+// ── DESKTOP CHAT ──
+async function deskSendChat() {
+  const inp = document.getElementById('dchat-input');
+  const msg = inp.value.trim(); if (!msg) return;
+  if (!ANTHROPIC_KEY()) { toast('API key missing — re-enter it on the sign-in screen', 'error'); return; }
+  inp.value = '';
+  deskAddMsg('user', msg);
+  const thinking = deskAddThinking();
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1000, system: `You are a property sales analyst. Database: ${allData.length} lots.\n\n${dataSnapshot()}\n\nBe concise. No markdown tables or ** symbols. Format numbers nicely.`, messages: [{ role: 'user', content: msg }] })
+    });
+    const d = await res.json(); thinking.remove();
+    if (d.error) { deskAddMsg('system', 'Error: ' + d.error.message); return; }
+    deskAddMsg('assistant', renderMarkdown(d.content?.find(b=>b.type==='text')?.text || 'No response.'));
+  } catch(e) { thinking.remove(); deskAddMsg('system', 'Network error. Check your API key.'); }
+}
+
+function deskAddMsg(role, text) {
+  const c = document.getElementById('dchat-msgs');
+  const d = document.createElement('div'); d.className = `msg ${role}`;
+  d.innerHTML = `<div class="msg-who">${role==='user'?'You':role==='assistant'?'Claude':'Info'}</div><div class="msg-body">${text}</div>`;
+  c.appendChild(d); c.scrollTop = c.scrollHeight; return d;
+}
+function deskAddThinking() {
+  const c = document.getElementById('dchat-msgs');
+  const d = document.createElement('div'); d.className = 'msg assistant';
+  d.innerHTML = `<div class="msg-who">Claude</div><div class="typing"><span></span><span></span><span></span></div>`;
+  c.appendChild(d); c.scrollTop = c.scrollHeight; return d;
+}
+function deskHandleKey(e) { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); deskSendChat(); } }
+function deskUseSug(btn) { document.getElementById('dchat-input').value = btn.textContent; deskSendChat(); }
+
+// ── DESKTOP REPORTS ──
+async function deskGenReport(type) {
+  if (!allData.length) { toast('No data loaded', 'error'); return; }
+  if (!ANTHROPIC_KEY()) { toast('API key missing — re-enter it on the sign-in screen', 'error'); return; }
+  const prompts = {
+    summary: 'Generate a comprehensive sales summary. Include total lots, settled count, exchanged count, revenue, and key insights.',
+    pipeline: 'Analyse the open sales pipeline. Which deals are at risk? What is the likely revenue from open deals?',
+    channel: 'Analyse channel partner performance. Who are the top performers? Any trends worth noting?',
+    monthly: 'Analyse settled revenue by month and year. Show trends and highlight strong or weak periods.',
+  };
+  const out = document.getElementById('d-report-output');
+  out.style.display = 'block'; out.textContent = 'Generating report...';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1000, system: `You are a property sales analyst. Data:\n\n${dataSnapshot()}`, messages: [{ role: 'user', content: prompts[type] }] })
+    });
+    const d = await res.json();
+    out.textContent = d.content?.find(b=>b.type==='text')?.text || 'No report generated.';
+  } catch(e) { out.textContent = 'Error: ' + e.message; }
+}
+
+// ── DESKTOP SYNC STATUS ──
+function setSyncStatus(state) {
+  const bar = document.getElementById('sync-bar');
+  const text = document.getElementById('sync-text');
+  const ddot = document.getElementById('d-sync-dot');
+  const dtext = document.getElementById('d-sync-text');
+  if (bar) bar.className = 'sync-bar' + (state==='saving'?' saving':state==='error'?' error':'');
+  if (text) text.textContent = state==='saving'?'Saving...':state==='error'?'Save failed':'Synced with OneDrive';
+  if (ddot) ddot.className = 'sync-dot' + (state==='saving'?' saving':state==='error'?' error':'');
+  if (dtext) dtext.textContent = state==='saving'?'Saving...':state==='error'?'Error':'Synced';
+}
+
+
+
+window.addEventListener('resize', () => {
+  if (isDesktop() && allData.length) initDesktop();
+});
+</script>
+</body>
+</html>
