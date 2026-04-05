@@ -158,8 +158,9 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
   .desktop-reports{overflow-y:auto;padding:20px;height:100%}
   .desktop-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
   .desktop-stat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
-  .desktop-stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
-  .desktop-stat-val{font-size:24px;font-weight:600;color:var(--ink)}
+  .desktop-stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+  .desktop-stat-val{font-size:24px;font-weight:600;color:var(--ink);line-height:1.1}
+  .desktop-stat-rev{font-size:11px;color:var(--accent);font-weight:500;margin-top:3px}
   .desktop-report-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .desktop-report-btn{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all 0.15s}
   .desktop-report-btn:hover{background:var(--accent-light);border-color:var(--accent)}
@@ -285,8 +286,9 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
 /* ── REPORTS (phone) ── */
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px}
-.stat-label{font-size:10px;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px}
-.stat-val{font-size:22px;font-weight:600;color:var(--ink)}
+.stat-label{font-size:10px;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px}
+.stat-val{font-size:22px;font-weight:600;color:var(--ink);line-height:1.1}
+.stat-rev{font-size:10px;color:var(--accent);font-weight:500;margin-top:3px}
 .section-title{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:4px 16px 8px}
 .report-btn-card{margin:0 14px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;display:flex;align-items:center;gap:14px;cursor:pointer}
 .report-btn-card:active{background:var(--surface2)}
@@ -413,10 +415,10 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
       <div class="desktop-screen" id="dscreen-reports">
         <div class="desktop-reports">
           <div class="desktop-stats">
-            <div class="desktop-stat"><div class="desktop-stat-label">Pending SA</div><div class="desktop-stat-val" id="d-stat-pending">&#8212;</div></div>
-            <div class="desktop-stat"><div class="desktop-stat-label">Deposit</div><div class="desktop-stat-val" id="d-stat-deposit">&#8212;</div></div>
-            <div class="desktop-stat"><div class="desktop-stat-label">Exchanged</div><div class="desktop-stat-val" id="d-stat-exchanged">&#8212;</div></div>
-            <div class="desktop-stat"><div class="desktop-stat-label">Settled</div><div class="desktop-stat-val" id="d-stat-settled">&#8212;</div></div>
+            <div class="desktop-stat"><div class="desktop-stat-label">Pending SA</div><div class="desktop-stat-val" id="d-stat-pending">&#8212;</div><div class="desktop-stat-rev" id="d-stat-pending-rev"></div></div>
+            <div class="desktop-stat"><div class="desktop-stat-label">Deposit</div><div class="desktop-stat-val" id="d-stat-deposit">&#8212;</div><div class="desktop-stat-rev" id="d-stat-deposit-rev"></div></div>
+            <div class="desktop-stat"><div class="desktop-stat-label">Exchanged</div><div class="desktop-stat-val" id="d-stat-exchanged">&#8212;</div><div class="desktop-stat-rev" id="d-stat-exchanged-rev"></div></div>
+            <div class="desktop-stat"><div class="desktop-stat-label">Settled</div><div class="desktop-stat-val" id="d-stat-settled">&#8212;</div><div class="desktop-stat-rev" id="d-stat-settled-rev"></div></div>
           </div>
           <div class="desktop-report-grid">
             <div class="desktop-report-btn" onclick="deskGenReport('summary')">
@@ -570,10 +572,10 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
     <div id="screen-reports" class="screen" style="background:var(--bg);overflow-y:auto">
       <div class="sub-header"><span class="sub-title">Reports</span></div>
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-label">Pending SA</div><div class="stat-val" id="stat-pending">&#8212;</div></div>
-        <div class="stat-card"><div class="stat-label">Deposit</div><div class="stat-val" id="stat-deposit">&#8212;</div></div>
-        <div class="stat-card"><div class="stat-label">Exchanged</div><div class="stat-val" id="stat-exchanged">&#8212;</div></div>
-        <div class="stat-card"><div class="stat-label">Settled</div><div class="stat-val" id="stat-settled">&#8212;</div></div>
+        <div class="stat-card"><div class="stat-label">Pending SA</div><div class="stat-val" id="stat-pending">&#8212;</div><div class="stat-rev" id="stat-pending-rev"></div></div>
+        <div class="stat-card"><div class="stat-label">Deposit</div><div class="stat-val" id="stat-deposit">&#8212;</div><div class="stat-rev" id="stat-deposit-rev"></div></div>
+        <div class="stat-card"><div class="stat-label">Exchanged</div><div class="stat-val" id="stat-exchanged">&#8212;</div><div class="stat-rev" id="stat-exchanged-rev"></div></div>
+        <div class="stat-card"><div class="stat-label">Settled</div><div class="stat-val" id="stat-settled">&#8212;</div><div class="stat-rev" id="stat-settled-rev"></div></div>
       </div>
       <div class="section-title">Generate AI reports</div>
       <div class="report-btn-card" onclick="genReport('summary')"><div class="report-icon" style="background:#e8f4ed">&#128202;</div><div class="report-info"><div class="report-title">Sales summary</div><div class="report-sub">Revenue, counts, key insights</div></div></div>
@@ -1167,14 +1169,27 @@ function badgeClass(cond) {
 
 function updateStats() {
   const sc = r => String(r['Sales Condition '] || r['Sales Condition'] || '').trim();
-  const pending  = allData.filter(r => sc(r).includes('Pending')).length;
-  const deposit  = allData.filter(r => sc(r).includes('Deposit')).length;
-  const exchanged = allData.filter(r => sc(r).includes('Exchanged')).length;
-  const settled  = allData.filter(r => sc(r).includes('Settled')).length;
-  document.getElementById('stat-pending').textContent   = pending;
-  document.getElementById('stat-deposit').textContent   = deposit;
-  document.getElementById('stat-exchanged').textContent = exchanged;
-  document.getElementById('stat-settled').textContent   = settled;
+  const fmtM = v => v ? '$' + (v/1000000).toFixed(2) + 'M' : '';
+
+  const pendingRows   = allData.filter(r => sc(r).includes('Pending'));
+  const depositRows   = allData.filter(r => sc(r).includes('Deposit'));
+  const exchangedRows = allData.filter(r => sc(r).includes('Exchanged'));
+  const settledRows   = allData.filter(r => sc(r).includes('Settled'));
+
+  const pendingRev   = pendingRows.reduce((s,r)   => s + (Number(r['$LIST '] || r['$LIST'] || 0)), 0);
+  const depositRev   = depositRows.reduce((s,r)   => s + (Number(r['CfS Issued Price'] || 0)), 0);
+  const exchangedRev = exchangedRows.reduce((s,r) => s + (Number(r['CfS Exchanged Price ($)'] || 0)), 0);
+  const settledRev   = settledRows.reduce((s,r)   => s + (Number(r['CfS Settled Price ($)'] || 0)), 0);
+
+  document.getElementById('stat-pending').textContent      = pendingRows.length;
+  document.getElementById('stat-deposit').textContent      = depositRows.length;
+  document.getElementById('stat-exchanged').textContent    = exchangedRows.length;
+  document.getElementById('stat-settled').textContent      = settledRows.length;
+
+  document.getElementById('stat-pending-rev').textContent   = fmtM(pendingRev);
+  document.getElementById('stat-deposit-rev').textContent   = fmtM(depositRev);
+  document.getElementById('stat-exchanged-rev').textContent = fmtM(exchangedRev);
+  document.getElementById('stat-settled-rev').textContent   = fmtM(settledRev);
 }
 
 function openModal(idx) {
@@ -2230,14 +2245,27 @@ function initDesktop() {
 
 function updateDeskStats() {
   const sc = r => String(r['Sales Condition '] || r['Sales Condition'] || '').trim();
-  const pending   = allData.filter(r => sc(r).includes('Pending')).length;
-  const deposit   = allData.filter(r => sc(r).includes('Deposit')).length;
-  const exchanged = allData.filter(r => sc(r).includes('Exchanged')).length;
-  const settled   = allData.filter(r => sc(r).includes('Settled')).length;
-  document.getElementById('d-stat-pending').textContent   = pending;
-  document.getElementById('d-stat-deposit').textContent   = deposit;
-  document.getElementById('d-stat-exchanged').textContent = exchanged;
-  document.getElementById('d-stat-settled').textContent   = settled;
+  const fmtM = v => v ? '$' + (v/1000000).toFixed(2) + 'M' : '';
+
+  const pendingRows   = allData.filter(r => sc(r).includes('Pending'));
+  const depositRows   = allData.filter(r => sc(r).includes('Deposit'));
+  const exchangedRows = allData.filter(r => sc(r).includes('Exchanged'));
+  const settledRows   = allData.filter(r => sc(r).includes('Settled'));
+
+  const pendingRev   = pendingRows.reduce((s,r)   => s + (Number(r['$LIST '] || r['$LIST'] || 0)), 0);
+  const depositRev   = depositRows.reduce((s,r)   => s + (Number(r['CfS Issued Price'] || 0)), 0);
+  const exchangedRev = exchangedRows.reduce((s,r) => s + (Number(r['CfS Exchanged Price ($)'] || 0)), 0);
+  const settledRev   = settledRows.reduce((s,r)   => s + (Number(r['CfS Settled Price ($)'] || 0)), 0);
+
+  document.getElementById('d-stat-pending').textContent      = pendingRows.length;
+  document.getElementById('d-stat-deposit').textContent      = depositRows.length;
+  document.getElementById('d-stat-exchanged').textContent    = exchangedRows.length;
+  document.getElementById('d-stat-settled').textContent      = settledRows.length;
+
+  document.getElementById('d-stat-pending-rev').textContent   = fmtM(pendingRev);
+  document.getElementById('d-stat-deposit-rev').textContent   = fmtM(depositRev);
+  document.getElementById('d-stat-exchanged-rev').textContent = fmtM(exchangedRev);
+  document.getElementById('d-stat-settled-rev').textContent   = fmtM(settledRev);
 }
 
 // ── DESKTOP SPREADSHEET ──
