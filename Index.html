@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Sales DB</title>
 <link href="https://fonts.googleapis.com/css2?family=Aptos:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -155,8 +158,10 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
   .desktop-reports{overflow-y:auto;padding:20px;height:100%}
   .desktop-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
   .desktop-stat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
-  .desktop-stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+  .desktop-stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+  .desktop-stat-val-row{display:flex;align-items:baseline;gap:8px}
   .desktop-stat-val{font-size:24px;font-weight:600;color:var(--ink)}
+  .desktop-stat-rev{font-size:24px;font-weight:600;color:var(--accent)}
   .desktop-report-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .desktop-report-btn{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all 0.15s}
   .desktop-report-btn:hover{background:var(--accent-light);border-color:var(--accent)}
@@ -282,8 +287,10 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
 /* ── REPORTS (phone) ── */
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px}
-.stat-label{font-size:10px;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px}
+.stat-label{font-size:10px;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px}
+.stat-val-row{display:flex;align-items:baseline;gap:6px}
 .stat-val{font-size:22px;font-weight:600;color:var(--ink)}
+.stat-rev{font-size:22px;font-weight:600;color:var(--accent)}
 .section-title{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:4px 16px 8px}
 .report-btn-card{margin:0 14px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;display:flex;align-items:center;gap:14px;cursor:pointer}
 .report-btn-card:active{background:var(--surface2)}
@@ -311,7 +318,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
   <div class="login-card">
     <div class="login-icon">&#128202;</div>
     <div class="login-title">Sales DB</div>
-    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.18</div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.25</div>
     <div class="login-sub">Sign in with your Microsoft account to access your OneDrive sales data.</div>
     <button class="ms-btn" onclick="signIn()">
       <div class="ms-logo"><div></div><div></div><div></div><div></div></div>
@@ -335,7 +342,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
 <!-- APP -->
 <div id="app-wrapper" style="display:none">
   <div class="app-header">
-    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.18</span></div>
+    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.25</span></div>
     <div class="header-right">
       <div class="user-pill">
         <div class="user-avatar" id="user-avatar">?</div>
@@ -371,7 +378,6 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
           <span style="font-size:11px;color:var(--muted)" id="dt-active-filters"></span>
           <span class="dt-rec-count" id="dt-rec-count">— records</span>
           <button class="dt-clear-btn" onclick="clearAllColFilters()">&#10005; Clear filters</button>
-          <button onclick="openScanPdf()" style="margin-left:auto;padding:5px 14px;background:var(--accent);color:#fff;border:none;border-radius:4px;font-family:Aptos,sans-serif;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px">&#128196; Scan PDF</button>
         </div>
         <div class="dt-wrap" id="dt-wrap">
           <table class="dt" id="dt">
@@ -398,6 +404,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
               <button class="sug-btn" onclick="deskUseSug(this)">Open pipeline value?</button>
               <button class="sug-btn" onclick="deskUseSug(this)">Settled this year?</button>
             </div>
+
             <div class="chat-input-row">
               <textarea class="chat-textarea" id="dchat-input" placeholder="Ask about your data..." onkeydown="deskHandleKey(event)"></textarea>
               <button class="chat-send" onclick="deskSendChat()">&#8594;</button>
@@ -410,12 +417,16 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
       <div class="desktop-screen" id="dscreen-reports">
         <div class="desktop-reports">
           <div class="desktop-stats">
-            <div class="desktop-stat"><div class="desktop-stat-label">Total lots</div><div class="desktop-stat-val" id="d-stat-total">&#8212;</div></div>
-            <div class="desktop-stat"><div class="desktop-stat-label">Settled</div><div class="desktop-stat-val" id="d-stat-settled">&#8212;</div></div>
-            <div class="desktop-stat"><div class="desktop-stat-label">Exchanged</div><div class="desktop-stat-val" id="d-stat-exchanged">&#8212;</div></div>
-            <div class="desktop-stat"><div class="desktop-stat-label">Settled value</div><div class="desktop-stat-val" id="d-stat-value">&#8212;</div></div>
+            <div class="desktop-stat"><div class="desktop-stat-label">Pending SA</div><div class="desktop-stat-val-row"><div class="desktop-stat-val" id="d-stat-pending">&#8212;</div><div class="desktop-stat-rev" id="d-stat-pending-rev"></div></div></div>
+            <div class="desktop-stat"><div class="desktop-stat-label">Deposit</div><div class="desktop-stat-val-row"><div class="desktop-stat-val" id="d-stat-deposit">&#8212;</div><div class="desktop-stat-rev" id="d-stat-deposit-rev"></div></div></div>
+            <div class="desktop-stat"><div class="desktop-stat-label">Exchanged</div><div class="desktop-stat-val-row"><div class="desktop-stat-val" id="d-stat-exchanged">&#8212;</div><div class="desktop-stat-rev" id="d-stat-exchanged-rev"></div></div></div>
+            <div class="desktop-stat"><div class="desktop-stat-label">Settled</div><div class="desktop-stat-val-row"><div class="desktop-stat-val" id="d-stat-settled">&#8212;</div><div class="desktop-stat-rev" id="d-stat-settled-rev"></div></div></div>
           </div>
           <div class="desktop-report-grid">
+            <div class="desktop-report-btn" onclick="openSalesTarget()">
+              <div class="report-icon" style="background:#fde8e8;border-radius:8px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">&#127919;</div>
+              <div class="desktop-report-info"><div class="report-title">Sales Target</div><div class="report-sub">Deposit, Exchange & Settlement vs targets</div></div>
+            </div>
             <div class="desktop-report-btn" onclick="deskGenReport('summary')">
               <div class="desktop-report-icon" style="background:#e8f4ed">&#128202;</div>
               <div class="desktop-report-info"><div class="report-title">Sales summary</div><div class="report-sub">Revenue, counts, key insights</div></div>
@@ -466,7 +477,6 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
         <button class="filter-toggle-btn" id="filter-toggle-btn" onclick="toggleFilterDrawer()">
           Filters <span id="filter-count-badge" class="filter-count-badge" style="display:none">0</span>
         </button>
-        <button onclick="openScanPdf()" style="padding:8px 12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:Aptos,sans-serif;font-size:12px;cursor:pointer;white-space:nowrap">&#128196; Scan PDF</button>
       </div>
       <div class="filter-drawer" id="filter-drawer">
         <div class="filter-drawer-row">
@@ -521,7 +531,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
       <div class="sub-header">
         <button class="back-btn" onclick="cancelEditCheck()">&#8592; Back</button>
         <span class="sub-title">Edit record</span>
-        <div style="width:50px"></div>
+        <button onclick="openScanPdf()" style="padding:5px 10px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-family:Aptos,sans-serif;font-size:11px;cursor:pointer">&#128196; Scan PDF</button>
       </div>
       <div class="form-screen">
         <div id="edit-fields"></div>
@@ -556,6 +566,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
           <button class="sug-btn" onclick="useSug(this)">Open pipeline value?</button>
           <button class="sug-btn" onclick="useSug(this)">Settled this year?</button>
         </div>
+
         <div class="chat-input-row">
           <textarea class="chat-textarea" id="chat-input" placeholder="Ask about your data..." onkeydown="handleKey(event)"></textarea>
           <button class="chat-send" onclick="sendChat()">&#8594;</button>
@@ -567,12 +578,13 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
     <div id="screen-reports" class="screen" style="background:var(--bg);overflow-y:auto">
       <div class="sub-header"><span class="sub-title">Reports</span></div>
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-label">Total lots</div><div class="stat-val" id="stat-total">&#8212;</div></div>
-        <div class="stat-card"><div class="stat-label">Settled</div><div class="stat-val" id="stat-settled">&#8212;</div></div>
-        <div class="stat-card"><div class="stat-label">Exchanged</div><div class="stat-val" id="stat-exchanged">&#8212;</div></div>
-        <div class="stat-card"><div class="stat-label">Settled value</div><div class="stat-val" id="stat-value">&#8212;</div></div>
+        <div class="stat-card"><div class="stat-label">Pending SA</div><div class="stat-val-row"><div class="stat-val" id="stat-pending">&#8212;</div><div class="stat-rev" id="stat-pending-rev"></div></div></div>
+        <div class="stat-card"><div class="stat-label">Deposit</div><div class="stat-val-row"><div class="stat-val" id="stat-deposit">&#8212;</div><div class="stat-rev" id="stat-deposit-rev"></div></div></div>
+        <div class="stat-card"><div class="stat-label">Exchanged</div><div class="stat-val-row"><div class="stat-val" id="stat-exchanged">&#8212;</div><div class="stat-rev" id="stat-exchanged-rev"></div></div></div>
+        <div class="stat-card"><div class="stat-label">Settled</div><div class="stat-val-row"><div class="stat-val" id="stat-settled">&#8212;</div><div class="stat-rev" id="stat-settled-rev"></div></div></div>
       </div>
       <div class="section-title">Generate AI reports</div>
+      <div class="report-btn-card" onclick="openSalesTarget()"><div class="report-icon" style="background:#fde8e8">&#127919;</div><div class="report-info"><div class="report-title">Sales Target</div><div class="report-sub">Deposit, Exchange & Settlement vs targets</div></div></div>
       <div class="report-btn-card" onclick="genReport('summary')"><div class="report-icon" style="background:#e8f4ed">&#128202;</div><div class="report-info"><div class="report-title">Sales summary</div><div class="report-sub">Revenue, counts, key insights</div></div></div>
       <div class="report-btn-card" onclick="genReport('pipeline')"><div class="report-icon" style="background:#eeedfe">&#128270;</div><div class="report-info"><div class="report-title">Pipeline forecast</div><div class="report-sub">Open deals & risk assessment</div></div></div>
       <div class="report-btn-card" onclick="genReport('channel')"><div class="report-icon" style="background:#faeeda">&#127942;</div><div class="report-info"><div class="report-title">Channel performance</div><div class="report-sub">By partner & channel</div></div></div>
@@ -589,6 +601,43 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
     <div class="nav-item" id="nav-reports" onclick="showScreen('reports')"><span class="nav-label">Reports</span></div>
   </nav>
 
+</div>
+
+<!-- SALES TARGET MODAL -->
+<div id="sales-target-overlay" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.5);align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto">
+  <div style="background:var(--bg);border-radius:12px;width:100%;max-width:1100px;margin:auto;display:flex;flex-direction:column;overflow:hidden">
+    <!-- Header -->
+    <div style="padding:14px 20px;background:#1a2a3a;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+      <div>
+        <div style="font-size:16px;font-weight:700;color:white">&#127919; Sales Target Report</div>
+        <div style="font-size:11px;color:#a8d0d0;margin-top:2px">Deposit · Exchanged · Settled vs targets</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button onclick="refreshSalesTarget()" style="padding:5px 12px;background:rgba(255,255,255,0.15);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">&#8635; Refresh</button>
+        <button onclick="closeSalesTarget()" style="background:none;border:none;font-size:20px;cursor:pointer;color:white;padding:4px">&#10005;</button>
+      </div>
+    </div>
+    <!-- Loading -->
+    <div id="st-loading" style="padding:40px;text-align:center;color:var(--muted)">
+      <div style="font-size:24px;margin-bottom:8px">&#8987;</div>
+      <div>Loading sales target data...</div>
+    </div>
+    <!-- Table container -->
+    <div id="st-table-wrap" style="display:none;overflow-x:auto;padding:16px">
+      <div id="st-save-bar" style="display:none;padding:8px 0 12px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:12px;color:var(--muted)">&#9998; Targets edited</span>
+        <button onclick="saveSalesTargets()" style="padding:6px 16px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600">Save to Excel</button>
+        <button onclick="cancelSalesTargets()" style="padding:6px 12px;background:none;border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;color:var(--muted)">Cancel</button>
+      </div>
+      <table id="st-table" style="border-collapse:collapse;font-size:11px;font-family:Aptos,sans-serif;min-width:800px;width:100%"></table>
+    </div>
+    <!-- Error -->
+    <div id="st-error" style="display:none;padding:32px;text-align:center">
+      <div style="font-size:32px;margin-bottom:8px">&#9888;&#65039;</div>
+      <div id="st-error-msg" style="font-size:13px;color:var(--ink)"></div>
+      <button onclick="refreshSalesTarget()" style="margin-top:12px;padding:8px 20px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">Try Again</button>
+    </div>
+  </div>
 </div>
 
 <!-- SCAN PDF MODAL -->
@@ -634,6 +683,36 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
           </div>
         </div>
       </div>
+      <div id="scan-price-banner" style="display:none;padding:10px 20px;background:#fef2f2;border-bottom:2px solid #dc2626;flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">⚠️</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#991b1b">Land Price Below $LIST</div>
+            <div style="font-size:11px;color:#991b1b;margin-top:1px" id="scan-price-msg"></div>
+            <div style="font-size:11px;color:#991b1b;margin-top:2px">You can still proceed — verify before saving.</div>
+          </div>
+        </div>
+      </div>
+      <div id="scan-idname-banner" style="display:none;padding:10px 20px;background:#fef2f2;border-bottom:2px solid #dc2626;flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">⚠️</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#991b1b">ID Name Mismatch</div>
+            <div style="font-size:11px;color:#991b1b;margin-top:1px" id="scan-idname-msg"></div>
+            <div style="font-size:11px;color:#991b1b;margin-top:2px">Please verify before saving.</div>
+          </div>
+        </div>
+      </div>
+      <div id="scan-trust-banner" style="display:none;padding:10px 20px;background:#fef2f2;border-bottom:2px solid #dc2626;flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">⚠️</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#991b1b">Missing Trust Receipt</div>
+            <div style="font-size:11px;color:#991b1b;margin-top:1px">No $2,000 trust account receipt found in this PDF.</div>
+            <div style="font-size:11px;color:#991b1b;margin-top:2px">You can still proceed — verify before saving.</div>
+          </div>
+        </div>
+      </div>
       <div id="scan-fields-list" style="overflow-y:auto;flex:1;padding:12px 20px"></div>
       <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0;background:var(--bg)">
         <button onclick="closeScanPdf()" style="flex:1;padding:11px;background:none;border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;color:var(--muted)">Cancel</button>
@@ -662,7 +741,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
     <div class="desktop-edit-header">
       <button class="back-btn" onclick="deskCancelEditCheck()">&#8592; Back</button>
       <span class="sub-title" id="d-edit-title">Edit record</span>
-      <div style="width:60px"></div>
+      <button onclick="openScanPdf()" style="padding:5px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-family:Aptos,sans-serif;font-size:12px;cursor:pointer">&#128196; Scan PDF</button>
     </div>
     <div class="desktop-edit-body" id="d-edit-fields" style="flex:1;overflow-y:auto"></div>
     <div class="desktop-edit-actions">
@@ -1133,13 +1212,28 @@ function badgeClass(cond) {
 }
 
 function updateStats() {
-  const settled = allData.filter(r => String(r['Sales Condition ']||r['Sales Condition']||'').includes('Settled')).length;
-  const exchanged = allData.filter(r => String(r['Sales Condition ']||r['Sales Condition']||'').includes('Exchanged')).length;
-  const settledVal = allData.filter(r => String(r['Sales Condition ']||r['Sales Condition']||'').includes('Settled')).reduce((s,r) => s + (Number(r['CfS Settled Price ($)'])||0), 0);
-  document.getElementById('stat-total').textContent = allData.length;
-  document.getElementById('stat-settled').textContent = settled;
-  document.getElementById('stat-exchanged').textContent = exchanged;
-  document.getElementById('stat-value').textContent = settledVal ? '$' + (settledVal/1000000).toFixed(1) + 'M' : '—';
+  const sc = r => String(r['Sales Condition '] || r['Sales Condition'] || '').trim();
+  const fmtM = v => v ? '$' + (v/1000000).toFixed(2) + 'M' : '';
+
+  const pendingRows   = allData.filter(r => sc(r).includes('Pending'));
+  const depositRows   = allData.filter(r => sc(r).includes('Deposit'));
+  const exchangedRows = allData.filter(r => sc(r).includes('Exchanged'));
+  const settledRows   = allData.filter(r => sc(r).includes('Settled'));
+
+  const pendingRev   = pendingRows.reduce((s,r)   => s + (Number(r['$LIST '] || r['$LIST'] || 0)), 0);
+  const depositRev   = depositRows.reduce((s,r)   => s + (Number(r['CfS Issued Price'] || 0)), 0);
+  const exchangedRev = exchangedRows.reduce((s,r) => s + (Number(r['CfS Exchanged Price ($)'] || 0)), 0);
+  const settledRev   = settledRows.reduce((s,r)   => s + (Number(r['CfS Settled Price ($)'] || 0)), 0);
+
+  document.getElementById('stat-pending').textContent      = pendingRows.length;
+  document.getElementById('stat-deposit').textContent      = depositRows.length;
+  document.getElementById('stat-exchanged').textContent    = exchangedRows.length;
+  document.getElementById('stat-settled').textContent      = settledRows.length;
+
+  document.getElementById('stat-pending-rev').textContent   = fmtM(pendingRev);
+  document.getElementById('stat-deposit-rev').textContent   = fmtM(depositRev);
+  document.getElementById('stat-exchanged-rev').textContent = fmtM(exchangedRev);
+  document.getElementById('stat-settled-rev').textContent   = fmtM(settledRev);
 }
 
 function openModal(idx) {
@@ -1596,22 +1690,27 @@ async function genReport(type) {
 
 // ── SCAN PDF ──────────────────────────────────────────
 const SCAN_FIELDS = [
-  { key: 'Sales Advice Received Date',     label: 'SA Received Date',      type: 'date' },
-  { key: 'Proposed Exchanged Date',        label: 'Proposed Exchange Date', type: 'date' },
-  { key: 'Proposed Settled Date',          label: 'Proposed Settled Date',  type: 'date' },
-  { key: 'CfS Issued Price',               label: 'CfS Issue Price',        type: 'currency' },
-  { key: 'Rebate',                         label: 'Rebate',                 type: 'currency' },
-  { key: 'Deposit%',                       label: 'Deposit %',              type: 'percent' },
-  { key: "(1) Purchaser's Name",           label: 'Purchaser 1 Name',       type: 'text' },
-  { key: "(1) Purchaser's Email",          label: 'Purchaser 1 Email',      type: 'text' },
-  { key: "(1) Purchaser's Mobile",         label: 'Purchaser 1 Mobile',     type: 'text' },
-  { key: "(2) Purchaser's Name",           label: 'Purchaser 2 Name',       type: 'text' },
-  { key: "(2) Purchaser's Email",          label: 'Purchaser 2 Email',      type: 'text' },
-  { key: "(2) Purchaser's Mobile",         label: 'Purchaser 2 Mobile',     type: 'text' },
-  { key: "Purchaser's Postcode",           label: 'Purchaser Postcode',     type: 'text' },
-  { key: "Purchaser's Suburb",             label: 'Purchaser Suburb',       type: 'text' },
-  { key: "Purchaser's Solicitor (P'Sol)",  label: 'Purchaser Solicitor',    type: 'text' },
-  { key: "Purchaser's Solicitor Phone",    label: 'Solicitor Phone',        type: 'text' },
+  { key: 'Sales Advice Received Date',     label: 'SA Received Date',       type: 'date' },
+  { key: 'Proposed Exchanged Date',        label: 'Proposed Exchange Date',  type: 'date' },
+  { key: 'Proposed Settled Date',          label: 'Proposed Settled Date',   type: 'date' },
+  { key: 'CfS Issued Price',               label: 'Land Price (CfS)',        type: 'currency' },
+  { key: 'Rebate',                         label: 'Rebate',                  type: 'currency' },
+  { key: 'Deposit%',                       label: 'Deposit %',               type: 'percent' },
+  { key: "(1) Purchaser's Name",           label: 'Purchaser 1 Name',        type: 'text' },
+  { key: "(1) Purchaser's Email",          label: 'Purchaser 1 Email',       type: 'text' },
+  { key: "(1) Purchaser's Mobile",         label: 'Purchaser 1 Mobile',      type: 'text' },
+  { key: "(2) Purchaser's Name",           label: 'Purchaser 2 Name',        type: 'text' },
+  { key: "(2) Purchaser's Email",          label: 'Purchaser 2 Email',       type: 'text' },
+  { key: "(2) Purchaser's Mobile",         label: 'Purchaser 2 Mobile',      type: 'text' },
+  { key: "Purchaser's Postcode",           label: 'Purchaser Postcode',      type: 'text' },
+  { key: "Purchaser's Suburb",             label: 'Purchaser Suburb',        type: 'text' },
+  { key: "Purchaser's Solicitor (P'Sol)",  label: 'Purchaser Solicitor',     type: 'text' },
+  { key: "Purchaser's Solicitor Phone",    label: 'Solicitor Phone',         type: 'text' },
+  { key: "Vendors Agent",                  label: 'Agency Full Name',        type: 'text' },
+  { key: "Vendors Agency Agent",           label: "Agent's Name",            type: 'text' },
+  { key: "Agent's Email",                  label: 'Agency Admin Email',      type: 'text' },
+  { key: "Agent's Mobile",                 label: 'Agency Admin Mobile',     type: 'text' },
+  { key: "FIRB Approval",                  label: 'FIRB Approval Required',  type: 'text' },
 ];
 
 let scanPdfFile = null;
@@ -1621,6 +1720,14 @@ let scanMatchedRowIdx = -1;
 function openScanPdf() {
   document.getElementById('scan-pdf-overlay').style.display = 'flex';
   resetScanPdf();
+  // Pre-set the matched row from whichever edit screen is open
+  if (editRowIdx >= 0) {
+    scanMatchedRowIdx = editRowIdx;
+    const lot = allData[editRowIdx]['Lot #'] || allData[editRowIdx]['Lot#'] || '';
+    if (lot) {
+      document.getElementById('scan-file-name').textContent = `Will match to Lot ${lot}`;
+    }
+  }
 }
 
 function closeScanPdf() {
@@ -1635,6 +1742,10 @@ function resetScanPdf() {
   document.getElementById('scan-file-name').textContent = 'No file selected';
   document.getElementById('scan-extract-btn').style.opacity = '0.4';
   document.getElementById('scan-extract-btn').style.pointerEvents = 'none';
+  document.getElementById('scan-resc-banner').style.display = 'none';
+  document.getElementById('scan-price-banner').style.display = 'none';
+  document.getElementById('scan-idname-banner').style.display = 'none';
+  document.getElementById('scan-trust-banner').style.display = 'none';
   showScanStep('upload');
 }
 
@@ -1682,26 +1793,38 @@ async function runScanPdf() {
     });
 
     // Ask Claude to extract fields
-    const prompt = `This is a Sales Advice document for a property sale. Extract the following fields exactly as they appear. Return ONLY a JSON object with these keys (use null if not found):
+    const todayStr = new Date().toLocaleDateString('en-AU', { day:'2-digit', month:'2-digit', year:'numeric' }).replace(/\//g,'/');
+    const prompt = `This is a Sales Advice (S/A) document for a property sale. Extract the following fields. Return ONLY a JSON object with these keys (use null if not found):
 
 {
-  "lot_number": "the lot number or lot # mentioned",
-  "sa_received_date": "date document was prepared or signed (dd/mm/yyyy)",
-  "proposed_exchange_date": "proposed exchange date (dd/mm/yyyy)",
-  "proposed_settled_date": "proposed settlement date (dd/mm/yyyy)",
-  "cfs_issue_price": "contract price or sale price as a number only (no $ or commas)",
-  "rebate": "rebate amount as number only (no $ or commas), null if none",
-  "deposit_percent": "deposit percentage as number only e.g. 10 for 10%",
-  "purchaser1_name": "first purchaser full name",
-  "purchaser1_email": "first purchaser email",
-  "purchaser1_mobile": "first purchaser mobile/phone",
-  "purchaser2_name": "second purchaser full name, null if none",
-  "purchaser2_email": "second purchaser email, null if none",
-  "purchaser2_mobile": "second purchaser mobile, null if none",
-  "purchaser_postcode": "purchaser postcode",
-  "purchaser_suburb": "purchaser suburb",
-  "solicitor_name": "purchaser solicitor name or firm",
-  "solicitor_phone": "solicitor phone number"
+  "lot_number": "the lot number — look for 'Lot Number', 'Lot #', or 'Lot [number]' anywhere in the document",
+  "sa_received_date": "the date the document was signed or prepared — look for 'Date' near the top of the Sales Advice — return exactly as shown e.g. 22/03/26",
+  "proposed_exchange_date": "look in SPECIAL (CfS) CONDITIONS for 'Exchanged Date' — return exactly as shown e.g. 05/06/26",
+  "proposed_settled_date": "look in SPECIAL (CfS) CONDITIONS or 'Settlement Date' field — return exactly as shown e.g. 06/04/26",
+  "cfs_issue_price": "the land price — look specifically for 'Land Price: $' field — return as number only, no $ or commas",
+  "rebate": "look in SPECIAL (CfS) CONDITIONS for any dollar rebate amount e.g. '$5,000 rebate on settlement' — return as number only (e.g. 5000), null if none",
+  "deposit_percent": "look in SPECIAL (CfS) CONDITIONS for a deposit percentage e.g. '5% deposit to exchange' — return as number only (e.g. 5), null if none. If only standard 10% is mentioned return 10",
+  "purchaser1_name": "Purchaser 1 Full Name as per ID",
+  "purchaser1_email": "Purchaser 1 Email",
+  "purchaser1_mobile": "Purchaser 1 mobile — first number from 'Purchaser 1 & 2 Mobile No'",
+  "purchaser2_name": "Purchaser 2 Full Name as per ID, null if none",
+  "purchaser2_email": "Purchaser 2 Email, null if none",
+  "purchaser2_mobile": "Purchaser 2 mobile — second number from 'Purchaser 1 & 2 Mobile No', null if none",
+  "purchaser_postcode": "postcode from purchaser address",
+  "purchaser_suburb": "suburb from purchaser address",
+  "solicitor_name": "PURCHASER'S SOLICITOR firm name",
+  "solicitor_phone": "PURCHASER'S SOLICITOR phone number",
+  "agency_name": "SELLING AGENCIES DETAILS — Agency Full Name",
+  "agent_name": "SELLING AGENCIES DETAILS — Agent's Name",
+  "agency_email": "SELLING AGENCIES DETAILS — Agency Admin Email",
+  "agency_mobile": "SELLING AGENCIES DETAILS — Agency Admin Mobile No",
+  "firb": "FIRB APPROVAL REQUIRED — if the Yes box is ticked or marked with X return 'Yes', if No is ticked or marked with X return null",
+  "purchaser1_signed": "PURCHASER'S SIGNATURE section — is Purchaser/Guarantor 1 signature field filled, signed, or contains any mark, name, or DocuSign stamp? Return true or false",
+  "purchaser2_signed": "PURCHASER'S SIGNATURE section — is Purchaser/Guarantor 2 signature field filled, signed, or contains any mark, name, or DocuSign stamp? Return true or false",
+  "id_count": "Count the number of ID documents (driver's licences or passports) visible as images in this PDF across all pages — return as a number e.g. 0, 1, 2",
+  "id1_name": "The full name as it appears on the first ID document (driver's licence or passport) found in the PDF",
+  "id2_name": "The full name as it appears on the second ID document (driver's licence or passport) found in the PDF, null if only one ID",
+  "has_trust_receipt": "Is there a Trust Account Receipt showing a $2,000 holding deposit payment anywhere in this PDF? Return true or false"
 }
 
 Return ONLY the JSON object, no other text.`;
@@ -1735,36 +1858,115 @@ Return ONLY the JSON object, no other text.`;
     if (!jsonMatch) throw new Error('Could not parse response from Claude');
     const extracted = JSON.parse(jsonMatch[0]);
 
-    // Find matching row by lot number
-    const lotNum = String(extracted.lot_number || '').trim();
-    if (!lotNum) throw new Error('Could not find a Lot # in the PDF');
+    // Use pre-matched row from edit screen if available, otherwise match by lot number
+    let rowIdx = scanMatchedRowIdx >= 0 ? scanMatchedRowIdx : -1;
+    let lotNum = rowIdx >= 0
+      ? String(allData[rowIdx]['Lot #'] || allData[rowIdx]['Lot#'] || '').trim()
+      : String(extracted.lot_number || '').trim();
 
-    const rowIdx = allData.findIndex(r =>
-      String(r['Lot #'] || r['Lot#'] || '').trim() === lotNum
-    );
-    if (rowIdx === -1) throw new Error(`Lot ${lotNum} not found in database`);
+    if (rowIdx === -1) {
+      if (!lotNum) throw new Error('Could not find a Lot # in the PDF');
+      rowIdx = allData.findIndex(r => String(r['Lot #'] || r['Lot#'] || '').trim() === lotNum);
+      if (rowIdx === -1) throw new Error(`Lot ${lotNum} not found in database`);
+    }
 
     scanMatchedRowIdx = rowIdx;
 
+    // ── RULE 1: Lot mismatch — hard stop ──────────────────────────
+    // If opened from edit screen, PDF lot must match the edit lot exactly
+    if (editRowIdx >= 0) {
+      const editLot = String(allData[editRowIdx]['Lot #'] || allData[editRowIdx]['Lot#'] || '').trim();
+      const pdfLot  = String(extracted.lot_number || '').trim();
+      if (pdfLot && editLot && pdfLot !== editLot) {
+        throw new Error(`Lot mismatch — this PDF is for Lot ${pdfLot} but you are editing Lot ${editLot}. Please load the correct Sales Advice PDF.`);
+      }
+    }
+
+    // ── RULE: Signature validation — hard stop ────────────────────
+    const hasPurchaser2 = extracted.purchaser2_name && String(extracted.purchaser2_name).trim() !== '' && String(extracted.purchaser2_name).toLowerCase() !== 'null';
+    const sig1 = extracted.purchaser1_signed === true || extracted.purchaser1_signed === 'true';
+    const sig2 = extracted.purchaser2_signed === true || extracted.purchaser2_signed === 'true';
+
+    if (!sig1) {
+      throw new Error(`Missing signature — Purchaser 1 (${extracted.purchaser1_name || 'unknown'}) has not signed the Sales Advice. Cannot proceed.`);
+    }
+    if (hasPurchaser2 && !sig2) {
+      throw new Error(`Missing signature — There are 2 purchasers but Purchaser 2 (${extracted.purchaser2_name}) has not signed the Sales Advice. Cannot proceed.`);
+    }
+
+    // ── RULE: ID count must match buyer count — hard stop ─────────
+    const expectedIDs = hasPurchaser2 ? 2 : 1;
+    const idCount = parseInt(extracted.id_count, 10) || 0;
+    if (idCount < expectedIDs) {
+      throw new Error(`Missing ID — ${expectedIDs} buyer${expectedIDs > 1 ? 's' : ''} but only ${idCount} ID document${idCount !== 1 ? 's' : ''} found in this PDF. All purchasers must have ID attached. Cannot proceed.`);
+    }
+
+    // ── RULE: ID name must match purchaser name — warning ─────────
+    const normName = n => String(n || '').toLowerCase().trim().replace(/\s+/g, ' ');
+    const idNameWarnings = [];
+    if (extracted.id1_name && extracted.purchaser1_name) {
+      if (normName(extracted.id1_name) !== normName(extracted.purchaser1_name)) {
+        idNameWarnings.push(`Purchaser 1 — Form: "${extracted.purchaser1_name}" / ID: "${extracted.id1_name}"`);
+      }
+    }
+    if (hasPurchaser2 && extracted.id2_name && extracted.purchaser2_name) {
+      if (normName(extracted.id2_name) !== normName(extracted.purchaser2_name)) {
+        idNameWarnings.push(`Purchaser 2 — Form: "${extracted.purchaser2_name}" / ID: "${extracted.id2_name}"`);
+      }
+    }
+
+    // ── RULE 2: Land price below $LIST — warn but allow override ──
+    const listPrice = parseFloat(String(allData[rowIdx]['$LIST '] || allData[rowIdx]['$LIST'] || '0').replace(/[^0-9.]/g,''));
+    const landPrice = parseFloat(String(extracted.cfs_issue_price || '0').replace(/[^0-9.]/g,''));
+    let priceWarning = null;
+    if (listPrice > 0 && landPrice > 0 && landPrice < listPrice) {
+      priceWarning = `Land Price $${landPrice.toLocaleString()} is below the $LIST price of $${listPrice.toLocaleString()} for this lot. Do you want to continue?`;
+    }
+
     // Map extracted values to DB fields
     scanExtractedData = {};
+
+    // Convert dd/mm/yy → dd-mmm-yyyy (app and Excel use dd-mmm-yyyy format)
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const fixYear = (d) => {
+      if (!d) return null;
+      const m = String(d).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+      if (m) {
+        const day = m[1].padStart(2,'0');
+        const mon = MONTHS[parseInt(m[2], 10) - 1] || m[2];
+        const year = m[3].length === 2 ? '20' + m[3] : m[3];
+        return `${day}-${mon}-${year}`;
+      }
+      return d; // already correct format, leave as-is
+    };
+
+    // SA Received Date always defaults to today (date you scanned the document)
+    const now = new Date();
+    const pad = n => String(n).padStart(2,'0');
+    const todayFormatted = `${pad(now.getDate())}-${MONTHS[now.getMonth()]}-${now.getFullYear()}`;
+
     const map = {
-      'Sales Advice Received Date':    extracted.sa_received_date,
-      'Proposed Exchanged Date':       extracted.proposed_exchange_date,
-      'Proposed Settled Date':         extracted.proposed_settled_date,
+      'Sales Advice Received Date':    fixYear(extracted.sa_received_date) || todayFormatted,
+      'Proposed Exchanged Date':       fixYear(extracted.proposed_exchange_date),
+      'Proposed Settled Date':         fixYear(extracted.proposed_settled_date),
       'CfS Issued Price':              extracted.cfs_issue_price,
       'Rebate':                        extracted.rebate,
       'Deposit%':                      extracted.deposit_percent != null ? String(Number(extracted.deposit_percent) / 100) : null,
       "(1) Purchaser's Name":          extracted.purchaser1_name,
       "(1) Purchaser's Email":         extracted.purchaser1_email,
-      "(1) Purchaser's Mobile":        extracted.purchaser1_mobile,
+      "(1) Purchaser's Mobile":        extracted.purchaser1_mobile ? fmtPhone(extracted.purchaser1_mobile) : null,
       "(2) Purchaser's Name":          extracted.purchaser2_name,
       "(2) Purchaser's Email":         extracted.purchaser2_email,
-      "(2) Purchaser's Mobile":        extracted.purchaser2_mobile,
+      "(2) Purchaser's Mobile":        extracted.purchaser2_mobile ? fmtPhone(extracted.purchaser2_mobile) : null,
       "Purchaser's Postcode":          extracted.purchaser_postcode,
       "Purchaser's Suburb":            extracted.purchaser_suburb,
       "Purchaser's Solicitor (P'Sol)": extracted.solicitor_name,
-      "Purchaser's Solicitor Phone":   extracted.solicitor_phone,
+      "Purchaser's Solicitor Phone":   extracted.solicitor_phone ? fmtPhone(extracted.solicitor_phone) : null,
+      "Vendors Agent":                 extracted.agency_name,
+      "Vendors Agency Agent":          extracted.agent_name,
+      "Agent's Email":                 extracted.agency_email,
+      "Agent's Mobile":                extracted.agency_mobile ? fmtPhone(extracted.agency_mobile) : null,
+      "FIRB Approval":                 extracted.firb === 'Yes' ? 'Yes' : null,
     };
     Object.entries(map).forEach(([k, v]) => {
       if (v !== null && v !== undefined && String(v).trim() !== '' && String(v) !== 'null') {
@@ -1780,6 +1982,27 @@ Return ONLY the JSON object, no other text.`;
     const cfsType = String(allData[rowIdx]['CfS Type'] || allData[rowIdx]['CFS Type'] || '').trim();
     const isRescExch = cfsType.toLowerCase().includes('resc') || cfsType.toLowerCase().includes('exch');
     document.getElementById('scan-resc-banner').style.display = isRescExch ? 'block' : 'none';
+
+    // Show price warning banner if land price is below $LIST
+    if (priceWarning) {
+      document.getElementById('scan-price-msg').textContent =
+        `Extracted: $${landPrice.toLocaleString()} — $LIST: $${listPrice.toLocaleString()}`;
+      document.getElementById('scan-price-banner').style.display = 'block';
+    } else {
+      document.getElementById('scan-price-banner').style.display = 'none';
+    }
+
+    // Show ID name mismatch banner if names don't match
+    if (idNameWarnings.length > 0) {
+      document.getElementById('scan-idname-msg').innerHTML = idNameWarnings.join('<br>');
+      document.getElementById('scan-idname-banner').style.display = 'block';
+    } else {
+      document.getElementById('scan-idname-banner').style.display = 'none';
+    }
+
+    // Show trust receipt warning if missing
+    const hasTrustReceipt = extracted.has_trust_receipt === true || extracted.has_trust_receipt === 'true';
+    document.getElementById('scan-trust-banner').style.display = hasTrustReceipt ? 'none' : 'block';
 
     const list = document.getElementById('scan-fields-list');
     list.innerHTML = SCAN_FIELDS.map(f => {
@@ -1815,12 +2038,12 @@ async function confirmScanPdf() {
     const field = input.getAttribute('data-field');
     let val = input.value.trim();
     if (!val) return;
-    // Currency: strip $ and commas
-    if (field === 'CfS Issued Price' || field === 'Rebate') {
+    // Currency: strip $ and commas for any currency field
+    if (CURRENCY_COLS.has(field) || field.includes('$') || field.toLowerCase().includes('price')) {
       val = val.replace(/[$,]/g, '').trim();
     }
-    // Percent: convert display back to decimal
-    if (field === 'Deposit%') {
+    // Percent: convert display (e.g. "5%") back to decimal (0.05)
+    if (field === 'Deposit%' || PERCENT_COLS.has(field)) {
       const n = parseFloat(val.replace(/%/g, ''));
       if (!isNaN(n)) val = String(n > 1 ? n / 100 : n);
     }
@@ -1850,6 +2073,177 @@ async function confirmScanPdf() {
     document.getElementById('scan-error-msg').textContent = 'Sync failed: ' + e.message + '\n\nData was applied locally but not saved to OneDrive.';
     showScanStep('error');
   }
+}
+
+
+// ── SALES TARGET REPORT ──────────────────────────────
+const ST_SHEET = 'salestarget';
+let stSheetData = null;      // raw 2D array from Excel
+let stOriginalData = null;   // copy for cancel
+let stTargetRows = [];       // row indices of editable target rows
+let stDirty = false;
+
+async function openSalesTarget() {
+  document.getElementById('sales-target-overlay').style.display = 'flex';
+  await loadSalesTarget();
+}
+
+function closeSalesTarget() {
+  document.getElementById('sales-target-overlay').style.display = 'none';
+  stDirty = false;
+}
+
+async function refreshSalesTarget() {
+  document.getElementById('st-table-wrap').style.display = 'none';
+  document.getElementById('st-error').style.display = 'none';
+  document.getElementById('st-loading').style.display = 'block';
+  await loadSalesTarget();
+}
+
+async function loadSalesTarget() {
+  document.getElementById('st-loading').style.display = 'block';
+  document.getElementById('st-table-wrap').style.display = 'none';
+  document.getElementById('st-error').style.display = 'none';
+
+  try {
+    const token = await getToken();
+    const driveBase = fileDriveId
+      ? `https://graph.microsoft.com/v1.0/drives/${fileDriveId}/items/${fileId}`
+      : `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}`;
+
+    // Get used range from salestarget sheet
+    const res = await fetch(
+      `${driveBase}/workbook/worksheets/${encodeURIComponent(ST_SHEET)}/usedRange`,
+      { headers: { Authorization: 'Bearer ' + token } }
+    );
+    if (!res.ok) throw new Error(`Could not read "${ST_SHEET}" sheet (${res.status})`);
+    const data = await res.json();
+    stSheetData = data.values;
+    stOriginalData = JSON.parse(JSON.stringify(stSheetData));
+    stDirty = false;
+    renderSalesTargetTable();
+  } catch(e) {
+    document.getElementById('st-loading').style.display = 'none';
+    document.getElementById('st-error-msg').textContent = e.message;
+    document.getElementById('st-error').style.display = 'block';
+  }
+}
+
+function renderSalesTargetTable() {
+  document.getElementById('st-loading').style.display = 'none';
+  document.getElementById('st-error').style.display = 'none';
+
+  const table = document.getElementById('st-table');
+  table.innerHTML = '';
+  stTargetRows = [];
+
+  if (!stSheetData || !stSheetData.length) {
+    document.getElementById('st-error-msg').textContent = 'No data found in salestarget sheet';
+    document.getElementById('st-error').style.display = 'block';
+    return;
+  }
+
+  // Colour map based on cell content keywords
+  const getRowStyle = (row) => {
+    const label = String(row[0] || row[1] || '').toUpperCase();
+    if (label.includes('TARGET') || label.includes('# OF LOTS') && !label.includes('PROPOSED')) {
+      if (label.includes('DEPOSIT'))   return { bg:'#e53e3e', color:'white', bold:true };
+      if (label.includes('EXCHANGE'))  return { bg:'#e53e3e', color:'white', bold:true };
+      if (label.includes('SETTLED') || label.includes('SETTLEMENT')) return { bg:'#e53e3e', color:'white', bold:true };
+    }
+    if (label.includes('BASE'))        return { bg:'#e53e3e', color:'white', bold:true };
+    if (label.includes('PROPOSED'))    return { bg:'#3182ce', color:'white', bold:false };
+    if (label.includes('CFS') || label.includes('CfS')) return { bg:'#38a169', color:'white', bold:false };
+    return { bg:'white', color:'#1a1a1a', bold:false };
+  };
+
+  const fmtCell = (val) => {
+    if (val === null || val === undefined || val === '') return '—';
+    if (typeof val === 'number') {
+      if (val >= 1000) return '$' + val.toLocaleString();
+      return val;
+    }
+    return String(val);
+  };
+
+  const numCols = stSheetData[0].length;
+
+  stSheetData.forEach((row, rowIdx) => {
+    const tr = document.createElement('tr');
+    const label = String(row[0] || row[1] || '').toUpperCase();
+    const isTarget = label.includes('TARGET') || (label.includes('# OF LOTS') && rowIdx < 4);
+    if (isTarget) stTargetRows.push(rowIdx);
+
+    const style = getRowStyle(row);
+
+    row.forEach((cell, colIdx) => {
+      const td = document.createElement(rowIdx === 0 ? 'th' : 'td');
+      td.style.cssText = `padding:5px 10px;border:1px solid #ddd;white-space:nowrap;text-align:${colIdx === 0 ? 'left' : 'center'};background:${rowIdx === 0 ? '#1a2a3a' : style.bg};color:${rowIdx === 0 ? 'white' : style.color};font-weight:${style.bold || rowIdx === 0 ? '600' : '400'}`;
+
+      if (isTarget && colIdx > 0 && rowIdx !== 0 && typeof cell === 'number') {
+        // Editable target cell
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.value = cell === null || cell === '' ? '' : cell;
+        input.dataset.row = rowIdx;
+        input.dataset.col = colIdx;
+        input.style.cssText = 'width:50px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);border-radius:3px;color:white;font-size:11px;text-align:center;padding:2px 4px;font-family:Aptos,sans-serif';
+        input.addEventListener('change', (e) => {
+          stSheetData[rowIdx][colIdx] = Number(e.target.value);
+          stDirty = true;
+          document.getElementById('st-save-bar').style.display = 'flex';
+        });
+        td.appendChild(input);
+      } else {
+        td.textContent = rowIdx === 0 ? String(cell || '') : fmtCell(cell);
+      }
+      tr.appendChild(td);
+    });
+    table.appendChild(tr);
+  });
+
+  document.getElementById('st-table-wrap').style.display = 'block';
+  if (!stDirty) document.getElementById('st-save-bar').style.display = 'none';
+}
+
+async function saveSalesTargets() {
+  if (!stDirty) return;
+  try {
+    const token = await getToken();
+    const driveBase = fileDriveId
+      ? `https://graph.microsoft.com/v1.0/drives/${fileDriveId}/items/${fileId}`
+      : `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}`;
+
+    // Write all target row values back
+    for (const rowIdx of stTargetRows) {
+      const row = stSheetData[rowIdx];
+      // Build range address — row is 1-based in Excel, +1 for header offset
+      const excelRow = rowIdx + 1;
+      const lastCol = String.fromCharCode(64 + row.length);
+      const rangeAddr = `A${excelRow}:${lastCol}${excelRow}`;
+
+      await fetch(
+        `${driveBase}/workbook/worksheets/${encodeURIComponent(ST_SHEET)}/range(address='${rangeAddr}')`,
+        {
+          method: 'PATCH',
+          headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ values: [row] })
+        }
+      );
+    }
+    stOriginalData = JSON.parse(JSON.stringify(stSheetData));
+    stDirty = false;
+    document.getElementById('st-save-bar').style.display = 'none';
+    toast('Targets saved to Excel ✓', 'success');
+  } catch(e) {
+    toast('Save failed: ' + e.message, 'error');
+  }
+}
+
+function cancelSalesTargets() {
+  stSheetData = JSON.parse(JSON.stringify(stOriginalData));
+  stDirty = false;
+  renderSalesTargetTable();
 }
 
 function saveChatKey() {
@@ -2064,13 +2458,28 @@ function initDesktop() {
 }
 
 function updateDeskStats() {
-  const settled = allData.filter(r => String(r['Sales Condition ']||r['Sales Condition']||'').includes('Settled')).length;
-  const exchanged = allData.filter(r => String(r['Sales Condition ']||r['Sales Condition']||'').includes('Exchanged')).length;
-  const settledVal = allData.filter(r => String(r['Sales Condition ']||r['Sales Condition']||'').includes('Settled')).reduce((s,r) => s + (Number(r['CfS Settled Price ($)'])||0), 0);
-  document.getElementById('d-stat-total').textContent = allData.length;
-  document.getElementById('d-stat-settled').textContent = settled;
-  document.getElementById('d-stat-exchanged').textContent = exchanged;
-  document.getElementById('d-stat-value').textContent = settledVal ? '$' + (settledVal/1000000).toFixed(1) + 'M' : '&#8212;';
+  const sc = r => String(r['Sales Condition '] || r['Sales Condition'] || '').trim();
+  const fmtM = v => v ? '$' + (v/1000000).toFixed(2) + 'M' : '';
+
+  const pendingRows   = allData.filter(r => sc(r).includes('Pending'));
+  const depositRows   = allData.filter(r => sc(r).includes('Deposit'));
+  const exchangedRows = allData.filter(r => sc(r).includes('Exchanged'));
+  const settledRows   = allData.filter(r => sc(r).includes('Settled'));
+
+  const pendingRev   = pendingRows.reduce((s,r)   => s + (Number(r['$LIST '] || r['$LIST'] || 0)), 0);
+  const depositRev   = depositRows.reduce((s,r)   => s + (Number(r['CfS Issued Price'] || 0)), 0);
+  const exchangedRev = exchangedRows.reduce((s,r) => s + (Number(r['CfS Exchanged Price ($)'] || 0)), 0);
+  const settledRev   = settledRows.reduce((s,r)   => s + (Number(r['CfS Settled Price ($)'] || 0)), 0);
+
+  document.getElementById('d-stat-pending').textContent      = pendingRows.length;
+  document.getElementById('d-stat-deposit').textContent      = depositRows.length;
+  document.getElementById('d-stat-exchanged').textContent    = exchangedRows.length;
+  document.getElementById('d-stat-settled').textContent      = settledRows.length;
+
+  document.getElementById('d-stat-pending-rev').textContent   = fmtM(pendingRev);
+  document.getElementById('d-stat-deposit-rev').textContent   = fmtM(depositRev);
+  document.getElementById('d-stat-exchanged-rev').textContent = fmtM(exchangedRev);
+  document.getElementById('d-stat-settled-rev').textContent   = fmtM(settledRev);
 }
 
 // ── DESKTOP SPREADSHEET ──
