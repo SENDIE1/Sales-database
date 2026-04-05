@@ -318,7 +318,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
   <div class="login-card">
     <div class="login-icon">&#128202;</div>
     <div class="login-title">Sales DB</div>
-    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.26</div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.28</div>
     <div class="login-sub">Sign in with your Microsoft account to access your OneDrive sales data.</div>
     <button class="ms-btn" onclick="signIn()">
       <div class="ms-logo"><div></div><div></div><div></div><div></div></div>
@@ -342,7 +342,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
 <!-- APP -->
 <div id="app-wrapper" style="display:none">
   <div class="app-header">
-    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.26</span></div>
+    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.28</span></div>
     <div class="header-right">
       <div class="user-pill">
         <div class="user-avatar" id="user-avatar">?</div>
@@ -789,7 +789,7 @@ let msalInstance = null;
 async function getMsal() { if (!msalInstance) msalInstance = await msal.PublicClientApplication.createPublicClientApplication(msalConfig); return msalInstance; }
 
 let allData = [], headers = [], filteredData = [], fileId = null, fileDriveId = null, editRowIdx = -1, modalRowIdx = -1, filterDrawerOpen = false;
-const FILTER_MAP = { 'f-stage':'Stage', 'f-condition':'Sales Condition ', 'f-channel':'Sales Channel', 'f-partner':'Channel Partner', 'f-productline':'Product Line', 'f-market':'Channel Market', 'f-year':'Settled Year' };
+const FILTER_MAP = { 'f-stage':'Stage', 'f-condition':'Sales Condition', 'f-channel':'Sales Channel', 'f-partner':'Channel Partner', 'f-productline':'Product Line', 'f-market':'Channel Market', 'f-year':'Settled Year' };
 
 async function testApiKey() {
   const key = localStorage.getItem('anthropic_key');
@@ -1104,7 +1104,7 @@ function applyFilters() {
   });
   filteredData = allData.filter(row => {
     if (activeQuickFilter) {
-      const cond = String(row['Sales Condition ']||row['Sales Condition']||'').trim();
+      const cond = String(row['Sales Condition']||row['Sales Condition']||'').trim();
       if (cond !== activeQuickFilter) return false;
     }
     if (terms.length) { const text = Object.values(row).join(' ').toLowerCase(); if (!terms.every(t => text.includes(t))) return false; }
@@ -1177,15 +1177,15 @@ function renderLotList() {
   if (!filteredData.length) { list.innerHTML = '<div class="empty-state">No records match your filters.</div>'; return; }
   list.innerHTML = filteredData.map((row, i) => {
     const lotNum = row['Lot #'] || row['Lot#'] || '—';
-    const cond_lower = String(row['Sales Condition '] || row['Sales Condition'] || '').toLowerCase();
+    const cond_lower = String(row['Sales Condition'] || row['Sales Condition'] || '').toLowerCase();
     let val = '';
-    if (cond_lower.includes('on sale') || cond_lower.includes('pending')) val = row['$LIST '] || row['$LIST'] || '';
+    if (cond_lower.includes('on sale') || cond_lower.includes('pending')) val = row['$LIST'] || '';
     else if (cond_lower.includes('deposit')) val = row['CfS Issued Price'] || '';
     else if (cond_lower.includes('exchanged')) val = row['CfS Exchanged Price ($)'] || '';
     else if (cond_lower.includes('settled')) val = row['CfS Settled Price ($)'] || '';
-    else val = row['$VAL '] || row['$VAL'] || '';
+    else val = row['$VAL'] || row['$VAL'] || '';
     const valFmt = val && !isNaN(val) ? '$' + Number(val).toLocaleString() : (val || '—');
-    const cond = String(row['Sales Condition '] || row['Sales Condition'] || '');
+    const cond = String(row['Sales Condition'] || row['Sales Condition'] || '');
     const partner = row['Channel Partner'] || '';
     const extras = conditionExtra(cond, row);
     const extraHtml = extras.length ? `<div class="lot-extras">${extras.map(e => `<span class="lot-extra">${e}</span>`).join('')}</div>` : '';
@@ -1212,7 +1212,7 @@ function badgeClass(cond) {
 }
 
 function updateStats() {
-  const sc = r => String(r['Sales Condition '] || r['Sales Condition'] || '').trim();
+  const sc = r => String(r['Sales Condition'] || r['Sales Condition'] || '').trim();
   const fmtM = v => v ? '$' + (v/1000000).toFixed(2) + 'M' : '';
 
   const pendingRows   = allData.filter(r => sc(r).includes('Pending'));
@@ -1220,10 +1220,11 @@ function updateStats() {
   const exchangedRows = allData.filter(r => sc(r).includes('Exchanged'));
   const settledRows   = allData.filter(r => sc(r).includes('Settled'));
 
-  const pendingRev   = pendingRows.reduce((s,r)   => s + (Number(r['$LIST '] || r['$LIST'] || 0)), 0);
-  const depositRev   = depositRows.reduce((s,r)   => s + (Number(r['CfS Issued Price'] || 0)), 0);
-  const exchangedRev = exchangedRows.reduce((s,r) => s + (Number(r['CfS Exchanged Price ($)'] || 0)), 0);
-  const settledRev   = settledRows.reduce((s,r)   => s + (Number(r['CfS Settled Price ($)'] || 0)), 0);
+  const n = v => parseFloat(String(v||'0').replace(/[^0-9.-]/g,''))||0;
+  const pendingRev   = pendingRows.reduce((s,r)   => s + n(r['$LIST']), 0);
+  const depositRev   = depositRows.reduce((s,r)   => s + n(r['CfS Issued Price']), 0);
+  const exchangedRev = exchangedRows.reduce((s,r) => s + n(r['CfS Exchanged Price ($)']), 0);
+  const settledRev   = settledRows.reduce((s,r)   => s + n(r['CfS Settled Price ($)']), 0);
 
   document.getElementById('stat-pending').textContent      = pendingRows.length;
   document.getElementById('stat-deposit').textContent      = depositRows.length;
@@ -1578,7 +1579,7 @@ const DATE_COLS = new Set(['Pending S/A Date','Allocation Date','Allocation Days
 const PHONE_COLS = new Set(["Agent's Mobile","Agent's Email".replace('Email','Mobile'),"(1) Purchaser's Mobile","(2) Purchaser's Mobile","Purchaser's Solicitor Phone"]);
 
 
-const CURRENCY_COLS = new Set(['$VAL ','$BASE','$LIST ','$CHECK$                   $BASE-$VAL','$CHECK$ $LIST-$BASE','Land Tax Per lot Value','Land Tax $Uplift / $Shortfall','OFFER Rebate','SETTLE Rebate','H&L $House (S/S)','$H&L Total (S/S)','H&L $House (D/S)','$H&L Total (D/S)','CfS Issued Price','CfS Exchanged Price ($)','CfS Settled Price ($)','Rebate']);
+const CURRENCY_COLS = new Set(['$VAL','$BASE','$LIST','$CHECK$                   $BASE-$VAL','$CHECK$ $LIST-$BASE','Land Tax Per lot Value','Land Tax $Uplift / $Shortfall','OFFER Rebate','SETTLE Rebate','H&L $House (S/S)','$H&L Total (S/S)','H&L $House (D/S)','$H&L Total (D/S)','CfS Issued Price','CfS Exchanged Price ($)','CfS Settled Price ($)','Rebate']);
 const PERCENT_COLS = new Set(['Deposit%']);
 const AREA_COLS = new Set(['Lot Area (m²)','Lot Area (m\u00b2)']);
 
@@ -1916,7 +1917,7 @@ Return ONLY the JSON object, no other text.`;
     }
 
     // ── RULE 2: Land price below $LIST — warn but allow override ──
-    const listPrice = parseFloat(String(allData[rowIdx]['$LIST '] || allData[rowIdx]['$LIST'] || '0').replace(/[^0-9.]/g,''));
+    const listPrice = parseFloat(String(allData[rowIdx]['$LIST'] || '0').replace(/[^0-9.]/g,''));
     const landPrice = parseFloat(String(extracted.cfs_issue_price || '0').replace(/[^0-9.]/g,''));
     let priceWarning = null;
     if (listPrice > 0 && landPrice > 0 && landPrice < listPrice) {
@@ -2077,15 +2078,29 @@ async function confirmScanPdf() {
 
 
 // ── SALES TARGET REPORT ──────────────────────────────
-const ST_SHEET = '2.SalesTarget';
-let stSheetData = null;      // raw 2D array from Excel
-let stOriginalData = null;   // copy for cancel
-let stTargetRows = [];       // row indices of editable target rows
+// ── SALES TARGET REPORT (calculated live from allData) ──────
+let stTargets = {
+  dep:  [3, 13, 23, 20, 20, 17, 0],
+  exch: [3, 15, 20, 20, 20, 18, 0],
+  sett: [5,  0, 15, 20, 20, 20, 16],
+};
 let stDirty = false;
+const ST_MONTHS = ['Jan-26','Feb-26','Mar-26','Apr-26','May-26','Jun-26','Jul-26'];
+const ST_MONTH_RANGES = [
+  [new Date(2026,0,1), new Date(2026,1,1)],
+  [new Date(2026,1,1), new Date(2026,2,1)],
+  [new Date(2026,2,1), new Date(2026,3,1)],
+  [new Date(2026,3,1), new Date(2026,4,1)],
+  [new Date(2026,4,1), new Date(2026,5,1)],
+  [new Date(2026,5,1), new Date(2026,6,1)],
+  [new Date(2026,6,1), new Date(2026,7,1)],
+];
+const AVG_BASE = 925325;
 
-async function openSalesTarget() {
+function openSalesTarget() {
+  if (!allData.length) { toast('Load data first', 'error'); return; }
   document.getElementById('sales-target-overlay').style.display = 'flex';
-  await loadSalesTarget();
+  renderSalesTargetTable();
 }
 
 function closeSalesTarget() {
@@ -2094,162 +2109,279 @@ function closeSalesTarget() {
 }
 
 async function refreshSalesTarget() {
-  document.getElementById('st-table-wrap').style.display = 'none';
-  document.getElementById('st-error').style.display = 'none';
-  document.getElementById('st-loading').style.display = 'block';
-  await loadSalesTarget();
+  renderSalesTargetTable();
 }
 
-async function loadSalesTarget() {
-  document.getElementById('st-loading').style.display = 'block';
-  document.getElementById('st-table-wrap').style.display = 'none';
-  document.getElementById('st-error').style.display = 'none';
+function stParseDate(v) {
+  if (!v) return null;
+  const d = new Date(v);
+  return isNaN(d) ? null : d;
+}
 
-  try {
-    const token = await getToken();
-    const driveBase = fileDriveId
-      ? `https://graph.microsoft.com/v1.0/drives/${fileDriveId}/items/${fileId}`
-      : `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}`;
+function stInMonth(dateVal, start, end) {
+  const d = stParseDate(dateVal);
+  return d && d >= start && d < end;
+}
 
-    // Get used range from salestarget sheet
-    const res = await fetch(
-      `${driveBase}/workbook/worksheets/${encodeURIComponent(ST_SHEET)}/usedRange`,
-      { headers: { Authorization: 'Bearer ' + token } }
-    );
-    if (!res.ok) throw new Error(`Could not read "${ST_SHEET}" sheet (${res.status})`);
-    const data = await res.json();
-    stSheetData = data.values;
-    stOriginalData = JSON.parse(JSON.stringify(stSheetData));
-    stDirty = false;
-    renderSalesTargetTable();
-  } catch(e) {
-    document.getElementById('st-loading').style.display = 'none';
-    document.getElementById('st-error-msg').textContent = e.message;
-    document.getElementById('st-error').style.display = 'block';
-  }
+function stNo2C(row) {
+  return !String(row['Stage'] || '').includes('C');
+}
+
+function stCnt(dateCol, mi, condCol, condVal) {
+  const [s, e] = ST_MONTH_RANGES[mi];
+  return allData.filter(r => {
+    if (!stNo2C(r)) return false;
+    if (condCol && String(r[condCol] || '').trim() !== condVal) return false;
+    return stInMonth(r[dateCol], s, e);
+  }).length;
+}
+
+function stCntNoFilter(dateCol, mi) {
+  // Jan deposit has no 2C filter
+  const [s, e] = ST_MONTH_RANGES[mi];
+  return allData.filter(r => stInMonth(r[dateCol], s, e)).length;
+}
+
+function stSum(valCol, dateCol, mi, condCol, condVal) {
+  const [s, e] = ST_MONTH_RANGES[mi];
+  return allData.filter(r => {
+    if (!stNo2C(r)) return false;
+    if (condCol && String(r[condCol] || '').trim() !== condVal) return false;
+    return stInMonth(r[dateCol], s, e);
+  }).reduce((acc, r) => acc + (Number(r[valCol]) || 0), 0);
+}
+
+function stCalc() {
+  const SC = 'Sales Condition';
+  const calc = { dep:{}, exch:{}, sett:{} };
+
+  // DEPOSIT actual: Contract Issued Date (AR), Jan has no 2C filter
+  calc.dep.act_lots = ST_MONTH_RANGES.map(([s,e], i) =>
+    i === 0 ? stCntNoFilter('Contract Issued Date', i)
+            : stCnt('Contract Issued Date', i));
+  calc.dep.act_rev = ST_MONTH_RANGES.map(([s,e], i) =>
+    i === 0
+      ? allData.filter(r => stInMonth(r['Contract Issued Date'], s, e)).reduce((a,r) => a + (Number(r['CfS Issued Price'])||0), 0)
+      : stSum('CfS Issued Price', 'Contract Issued Date', i));
+
+  // PROPOSED EXCHANGED: condition=3. Deposit, date=Proposed Exchanged Date
+  calc.exch.prop_lots = ST_MONTH_RANGES.map((_,i) =>
+    stCnt('Proposed Exchanged Date', i, SC, '3. Deposit'));
+  calc.exch.prop_rev = ST_MONTH_RANGES.map((_,i) =>
+    stSum('CfS Issued Price', 'Proposed Exchanged Date', i, SC, '3. Deposit'));
+
+  // ACTUAL EXCHANGED: Exchanged Date
+  calc.exch.act_lots = ST_MONTH_RANGES.map((_,i) =>
+    stCnt('Exchanged Date', i));
+  calc.exch.act_rev = ST_MONTH_RANGES.map((_,i) =>
+    stSum('CfS Issued Price', 'Exchanged Date', i));
+
+  // PROPOSED SETTLEMENT: condition=4. Exchanged, date=Proposed Settled Date
+  calc.sett.prop_lots = ST_MONTH_RANGES.map((_,i) =>
+    stCnt('Proposed Settled Date', i, SC, '4. Exchanged'));
+
+  // PROPOSED SETTLEMENT revenue — exact per-month formulas
+  calc.sett.prop_rev = ST_MONTH_RANGES.map(([s,e], i) => {
+    if (i <= 1) {
+      return stSum('CfS Exchanged Price ($)', 'Proposed Settled Date', i, SC, '4. Exchanged');
+    } else if (i === 2) {
+      return stSum('CfS Exchanged Price ($)', 'Proposed Settled Date', i, SC, '5. Settled')
+           + stSum('CfS Exchanged Price ($)', 'Proposed Settled Date', i, SC, '4. Exchanged')
+           + stSum('CfS Issued Price',        'Proposed Settled Date', i, SC, '3. Deposit');
+    } else {
+      return stSum('CfS Exchanged Price ($)', 'Proposed Settled Date', i, SC, '4. Exchanged')
+           + stSum('CfS Issued Price',        'Proposed Settled Date', i, SC, '3. Deposit');
+    }
+  });
+
+  // ACTUAL SETTLED: Settled Date, CfS Settled Price
+  calc.sett.act_lots = ST_MONTH_RANGES.map((_,i) =>
+    stCnt('Settled Date', i));
+  calc.sett.act_rev = ST_MONTH_RANGES.map((_,i) =>
+    stSum('CfS Settled Price ($)', 'Settled Date', i));
+
+  return calc;
 }
 
 function renderSalesTargetTable() {
   document.getElementById('st-loading').style.display = 'none';
   document.getElementById('st-error').style.display = 'none';
+  document.getElementById('st-table-wrap').style.display = 'block';
+  document.getElementById('st-save-bar').style.display = stDirty ? 'flex' : 'none';
 
+  const calc = stCalc();
   const table = document.getElementById('st-table');
   table.innerHTML = '';
-  stTargetRows = [];
 
-  if (!stSheetData || !stSheetData.length) {
-    document.getElementById('st-error-msg').textContent = 'No data found in 2.SalesTarget sheet';
-    document.getElementById('st-error').style.display = 'block';
-    return;
-  }
-
-  // Exact colours from Excel (strip FF alpha prefix)
-  const HDR_RED = '#FF0000';  // FFFF0000 header cols A-E
-  const TGT_ORA = '#FF3300';  // FFFF3300 target data cells F-L
-  const ACT_GRN = '#83E28E';  // FF83E28E actual deposit full row
-  const ACT_BLU = '#44B3E1';  // FF44B3E1 actual exchanged totals col M only
-  const TGT_FC  = '#FF0000';  // FFFF0000 target label font
+  const HDR_RED = '#FF0000';
+  const TGT_ORA = '#FF3300';
+  const ACT_GRN = '#83E28E';
+  const ACT_BLU = '#44B3E1';
   const WHITE   = '#FFFFFF';
   const DARK    = '#1A1A1A';
+  const RED_FC  = '#FF0000';
 
-  const getColour = (rowIdx, colIdx) => {
-    if (rowIdx === 1) {
-      return colIdx <= 4
-        ? { bg: HDR_RED, fg: WHITE, bold: true }
-        : { bg: 'transparent', fg: DARK, bold: true };
-    }
-    const status  = String(stSheetData[rowIdx]?.[0] || '').trim().toUpperCase();
-    const section = String(stSheetData[rowIdx]?.[1] || '').trim().toUpperCase();
-    const isLabel = colIdx <= 4;
-    const isData  = colIdx >= 5 && colIdx <= 11;
-    const isTot   = colIdx === 12;
-
-    if (status === 'TARGET') {
-      if (isLabel) return { bg: 'transparent', fg: TGT_FC, bold: true };
-      if (isData)  return { bg: TGT_ORA, fg: WHITE, bold: true };
-      if (isTot)   return { bg: 'transparent', fg: DARK, bold: true };
-    }
-    if (status === 'ACTUAL' && section.includes('DEPOSIT')) {
-      return { bg: ACT_GRN, fg: DARK, bold: isLabel };
-    }
-    if (status === 'ACTUAL' && section.includes('EXCHANGE')) {
-      if (isTot) return { bg: ACT_BLU, fg: WHITE, bold: true };
-      return { bg: 'transparent', fg: DARK, bold: isLabel };
-    }
-    return { bg: 'transparent', fg: DARK, bold: isLabel };
+  const fmtV = (v) => {
+    if (!v) return '—';
+    if (Math.abs(v) >= 1000) return '$\u00a0' + Math.round(v).toLocaleString();
+    return String(v);
   };
 
-  const fmtVal = (val) => {
-    if (val === null || val === undefined || val === '') return '';
-    if (typeof val === 'string' && val.startsWith('=')) return '\u2014';
-    if (typeof val === 'object') return '\u2014';
-    if (typeof val === 'number') {
-      if (val === 0) return '\u2014';
-      if (Math.abs(val) >= 1000) return '$\u00a0' + val.toLocaleString();
-      return String(val);
-    }
-    return String(val);
+  const th = (txt, bg, fg, align='center') => {
+    const el = document.createElement('th');
+    el.textContent = txt;
+    el.style.cssText = `background:${bg};color:${fg};padding:5px 8px;border:1px solid rgba(0,0,0,0.1);text-align:${align};white-space:nowrap;font-size:11px;font-weight:700`;
+    return el;
   };
 
-  stSheetData.forEach((row, rowIdx) => {
-    if (rowIdx === 0) return;
-    if (rowIdx > 19) return; // only display rows 2-20
-    if (!row.some(v => v !== null && v !== undefined && v !== '')) return;
+  const td = (txt, bg, fg, bold=false, editable=false, onChange=null) => {
+    const el = document.createElement('td');
+    el.style.cssText = `background:${bg};color:${fg};padding:5px 8px;border:1px solid rgba(0,0,0,0.1);text-align:center;white-space:nowrap;font-size:11px;font-weight:${bold?'700':'400'}`;
+    if (editable) {
+      const inp = document.createElement('input');
+      inp.type = 'number';
+      inp.value = txt === '—' ? '' : txt;
+      inp.style.cssText = 'width:44px;background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.6);border-radius:3px;color:white;font-size:11px;text-align:center;padding:2px 4px;font-family:Aptos,sans-serif;font-weight:700';
+      inp.addEventListener('change', onChange);
+      el.appendChild(inp);
+    } else {
+      el.textContent = txt;
+    }
+    return el;
+  };
 
+  const tdL = (txt, fg, bold=false) => {
+    const el = document.createElement('td');
+    el.textContent = txt;
+    el.style.cssText = `color:${fg};padding:5px 8px;border:1px solid rgba(0,0,0,0.1);text-align:left;white-space:nowrap;font-size:11px;font-weight:${bold?'700':'400'};min-width:${txt.length > 15 ? 140 : 80}px`;
+    return el;
+  };
+
+  const spacer = () => {
     const tr = document.createElement('tr');
-    const status = String(row[0] || '').trim().toUpperCase();
-    const metric = String(row[2] || '').trim();
-    const isTargetRow = status === 'TARGET';
-    if (isTargetRow) stTargetRows.push(rowIdx);
+    const td = document.createElement('td');
+    td.colSpan = 11;
+    td.style.cssText = 'background:#f5f5f5;border:none;padding:2px';
+    tr.appendChild(td);
+    return tr;
+  };
 
-    row.forEach((cell, colIdx) => {
-      if (colIdx > 12) return; // stop at col M
-      if (colIdx === 3 || colIdx === 4) return; // skip cols D & E
-      const td = document.createElement(rowIdx === 1 ? 'th' : 'td');
-      const c = getColour(rowIdx, colIdx);
-
-      td.style.cssText = [
-        'background:' + c.bg,
-        'color:' + c.fg,
-        'font-weight:' + (c.bold ? '700' : '400'),
-        'padding:5px ' + (colIdx <= 2 ? 10 : 7) + 'px',
-        'border:1px solid rgba(0,0,0,0.1)',
-        'text-align:' + (colIdx <= 2 ? 'left' : 'center'),
-        'white-space:nowrap',
-        'font-size:11px',
-        'font-family:Aptos,sans-serif',
-        'min-width:' + (colIdx === 0 ? 65 : colIdx === 1 ? 140 : colIdx === 2 ? 130 : 78) + 'px',
-      ].join(';');
-
-      if (isTargetRow && metric === '# of Lots' && colIdx >= 5 && colIdx <= 11) {
-        const input = document.createElement('input');
-        input.type = 'number';
-        input.value = (cell === null || cell === '' || cell === 0) ? '' : cell;
-        input.dataset.row = rowIdx;
-        input.dataset.col = colIdx;
-        input.style.cssText = [
-          'width:44px', 'background:rgba(255,255,255,0.25)',
-          'border:1px solid rgba(255,255,255,0.6)', 'border-radius:3px',
-          'color:white', 'font-size:11px', 'text-align:center',
-          'padding:2px 4px', 'font-family:Aptos,sans-serif', 'font-weight:700',
-        ].join(';');
-        input.addEventListener('change', (e) => {
-          stSheetData[rowIdx][colIdx] = Number(e.target.value) || 0;
+  const addRow = (status, section, metric, vals, bgData, fgData, boldData, isTarget, section_key, metric_key) => {
+    const tr = document.createElement('tr');
+    tr.appendChild(tdL(status, RED_FC, true));
+    tr.appendChild(tdL(section, RED_FC, true));
+    tr.appendChild(tdL(metric, DARK, false));
+    vals.forEach((v, i) => {
+      if (isTarget) {
+        const cell = td(v === 0 ? '' : v, bgData, fgData, true, true, (e) => {
+          stTargets[section_key][i] = Number(e.target.value) || 0;
           stDirty = true;
           document.getElementById('st-save-bar').style.display = 'flex';
         });
-        td.appendChild(input);
+        tr.appendChild(cell);
       } else {
-        td.textContent = rowIdx === 1 ? String(cell || '') : fmtVal(cell);
+        tr.appendChild(td(fmtV(v), bgData, fgData, boldData));
       }
-      tr.appendChild(td);
     });
-    table.appendChild(tr);
+    // TOTALS
+    const tot = vals.reduce((a,b) => a+b, 0);
+    const totEl = document.createElement('td');
+    totEl.textContent = fmtV(tot);
+    totEl.style.cssText = `background:${section_key==='exch' && !isTarget && metric.includes('Lots') ? ACT_BLU : (section_key==='exch' && !isTarget && metric.includes('Revenue') ? ACT_BLU : 'transparent')};color:${section_key==='exch' && !isTarget ? WHITE : DARK};padding:5px 8px;border:1px solid rgba(0,0,0,0.1);text-align:center;font-size:11px;font-weight:700`;
+    tr.appendChild(totEl);
+    return tr;
+  };
+
+  const addActRow = (status, section, metric, vals, bg, fg) => {
+    const tr = document.createElement('tr');
+    tr.appendChild(tdL(status, fg === WHITE ? WHITE : DARK, true)).style.background = bg;
+    tr.appendChild(tdL(section, fg === WHITE ? WHITE : DARK, true)).style.background = bg;
+    tr.appendChild(tdL(metric, fg === WHITE ? WHITE : DARK, true)).style.background = bg;
+    vals.forEach(v => {
+      const el = td(fmtV(v), bg, fg === WHITE ? WHITE : DARK, false);
+      tr.appendChild(el);
+    });
+    const tot = vals.reduce((a,b) => a+b, 0);
+    tr.appendChild(td(fmtV(tot), 'transparent', DARK, true));
+    return tr;
+  };
+
+  const addPlainRow = (status, section, metric, vals) => {
+    const tr = document.createElement('tr');
+    tr.appendChild(tdL(status, DARK, true));
+    tr.appendChild(tdL(section, DARK, false));
+    tr.appendChild(tdL(metric, DARK, false));
+    vals.forEach(v => tr.appendChild(td(fmtV(v), 'transparent', DARK, false)));
+    const tot = vals.reduce((a,b) => a+b, 0);
+    tr.appendChild(td(fmtV(tot), 'transparent', DARK, true));
+    return tr;
+  };
+
+  // Header
+  const headRow = document.createElement('tr');
+  ['STATUS','SALES CONDITION','STOCK / REVENUE / PRODUCT',...ST_MONTHS,'TOTALS'].forEach((h,i) => {
+    headRow.appendChild(th(h, i <= 2 ? HDR_RED : 'transparent', i <= 2 ? WHITE : DARK, i <= 2 ? 'left' : 'center'));
+  });
+  table.appendChild(headRow);
+
+  // Helper: target rows
+  const tgtRow = (section, metric, vals, sk, mk) => {
+    const tr = document.createElement('tr');
+    const SC = section.toUpperCase();
+    tr.appendChild(tdL('TARGET', RED_FC, true));
+    tr.appendChild(tdL(SC, RED_FC, true));
+    tr.appendChild(tdL(metric, DARK, false));
+    vals.forEach((v, i) => {
+      if (mk === 'lots') {
+        const cell = td(v === 0 ? '' : v, TGT_ORA, WHITE, true, true, (e) => {
+          stTargets[sk][i] = Number(e.target.value) || 0;
+          stDirty = true;
+          document.getElementById('st-save-bar').style.display = 'flex';
+          renderSalesTargetTable();
+        });
+        tr.appendChild(cell);
+      } else {
+        tr.appendChild(td(fmtV(v), TGT_ORA, WHITE, true));
+      }
+    });
+    const tot = vals.reduce((a,b) => a+b, 0);
+    tr.appendChild(td(fmtV(tot), 'transparent', DARK, true));
+    return tr;
+  };
+
+  // DEPOSIT
+  table.appendChild(tgtRow('Deposit', '# of Lots', stTargets.dep, 'dep', 'lots'));
+  table.appendChild(tgtRow('Deposit', '$BASE Revenue ($)', stTargets.dep.map(v => v * AVG_BASE), 'dep', 'rev'));
+  table.appendChild(addActRow('ACTUAL','DEPOSIT','# of Lots', calc.dep.act_lots, ACT_GRN, DARK));
+  table.appendChild(addActRow('ACTUAL','DEPOSIT','$CfS Revenue ($)', calc.dep.act_rev, ACT_GRN, DARK));
+  table.appendChild(spacer());
+
+  // EXCHANGED
+  table.appendChild(tgtRow('Exchanged', '# of Lots', stTargets.exch, 'exch', 'lots'));
+  table.appendChild(tgtRow('Exchanged', '$BASE Revenue ($)', stTargets.exch.map(v => v * AVG_BASE), 'exch', 'rev'));
+  table.appendChild(addPlainRow('Proposed','PROPOSED EXCHANGED','# of Lots', calc.exch.prop_lots));
+  table.appendChild(addPlainRow('Proposed','PROPOSED EXCHANGED','CfS Issued Revenue ($)', calc.exch.prop_rev));
+  table.appendChild(addPlainRow('ACTUAL','EXCHANGED','# of Lots', calc.exch.act_lots));
+  table.appendChild(addPlainRow('ACTUAL','EXCHANGED','$CfS Revenue ($)', calc.exch.act_rev));
+
+  // Override totals col for ACTUAL EXCHANGED to blue
+  const rows = table.querySelectorAll('tr');
+  [rows[rows.length-2], rows[rows.length-1]].forEach(r => {
+    const last = r.lastChild;
+    if (last) { last.style.background = ACT_BLU; last.style.color = WHITE; }
   });
 
-  document.getElementById('st-table-wrap').style.display = 'block';
-  document.getElementById('st-save-bar').style.display = stDirty ? 'flex' : 'none';
+  table.appendChild(spacer());
+
+  // SETTLED
+  table.appendChild(tgtRow('Settled', '# of Lots', stTargets.sett, 'sett', 'lots'));
+  table.appendChild(tgtRow('Settled', '$BASE Revenue ($)', stTargets.sett.map(v => v * AVG_BASE), 'sett', 'rev'));
+  table.appendChild(addPlainRow('PROPOSED','PROPOSED SETTLEMENT','# of Lots', calc.sett.prop_lots));
+  table.appendChild(addPlainRow('PROPOSED','PROPOSED SETTLEMENT','$CfS Revenue ($)', calc.sett.prop_rev));
+  table.appendChild(addPlainRow('ACTUAL','SETTLED','# of Lots', calc.sett.act_lots));
+  table.appendChild(addPlainRow('ACTUAL','SETTLED','$CfS Revenue ($)', calc.sett.act_rev));
 }
+
 async function saveSalesTargets() {
   if (!stDirty) return;
   try {
@@ -2258,24 +2390,25 @@ async function saveSalesTargets() {
       ? `https://graph.microsoft.com/v1.0/drives/${fileDriveId}/items/${fileId}`
       : `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}`;
 
-    // Write all target row values back
-    for (const rowIdx of stTargetRows) {
-      const row = stSheetData[rowIdx];
-      // Build range address — row is 1-based in Excel, +1 for header offset
-      const excelRow = rowIdx + 1;
-      const lastCol = String.fromCharCode(64 + row.length);
-      const rangeAddr = `A${excelRow}:${lastCol}${excelRow}`;
+    // Save each target row back to Excel (rows 3, 8, 15 = # of Lots targets)
+    const targetMap = [
+      { row: 3, vals: stTargets.dep },
+      { row: 8, vals: stTargets.exch },
+      { row: 15, vals: stTargets.sett },
+    ];
 
+    for (const { row, vals } of targetMap) {
+      // Cols F-L = cols 6-12 in Excel (1-based)
+      const range = `F${row}:L${row}`;
       await fetch(
-        `${driveBase}/workbook/worksheets/${encodeURIComponent(ST_SHEET)}/range(address='${rangeAddr}')`,
+        `${driveBase}/workbook/worksheets/${encodeURIComponent('2.SalesTarget')}/range(address='${range}')`,
         {
           method: 'PATCH',
           headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ values: [row] })
+          body: JSON.stringify({ values: [vals] })
         }
       );
     }
-    stOriginalData = JSON.parse(JSON.stringify(stSheetData));
     stDirty = false;
     document.getElementById('st-save-bar').style.display = 'none';
     toast('Targets saved to Excel ✓', 'success');
@@ -2285,10 +2418,10 @@ async function saveSalesTargets() {
 }
 
 function cancelSalesTargets() {
-  stSheetData = JSON.parse(JSON.stringify(stOriginalData));
   stDirty = false;
   renderSalesTargetTable();
 }
+
 
 function saveChatKey() {
   const inp = document.getElementById('chat-key-input');
@@ -2335,10 +2468,10 @@ function dataSnapshot() {
   let totalVal = 0, valCount = 0;
 
   allData.forEach(r => {
-    const cond = String(r['Sales Condition ']||r['Sales Condition']||'Unknown').trim();
+    const cond = String(r['Sales Condition']||r['Sales Condition']||'Unknown').trim();
     const partner = String(r['Channel Partner']||'Unknown').trim();
     const stage = String(r['Stage']||'Unknown').trim();
-    const val = Number(r['$VAL ']||r['$VAL']||0);
+    const _vk = Object.keys(r).find(k => k.trim() === '$VAL'); const val = Number(_vk ? r[_vk] : 0);
     conditions[cond] = (conditions[cond]||0) + 1;
     partners[partner] = (partners[partner]||0) + 1;
     stages[stage] = (stages[stage]||0) + 1;
@@ -2350,9 +2483,9 @@ function dataSnapshot() {
   // Compact lot index — just lot number, condition, stage, value
   const lotIndex = allData.map(r => {
     const lot = r['Lot #']||r['Lot#']||'';
-    const cond = String(r['Sales Condition ']||r['Sales Condition']||'').trim();
+    const cond = String(r['Sales Condition']||r['Sales Condition']||'').trim();
     const stage = String(r['Stage']||'').trim();
-    const val = Number(r['$VAL ']||r['$VAL']||0);
+    const _vk = Object.keys(r).find(k => k.trim() === '$VAL'); const val = Number(_vk ? r[_vk] : 0);
     const partner = String(r['Channel Partner']||'').trim();
     return lot+'|'+cond+'|'+stage+'|$'+val.toLocaleString()+'|'+partner;
   }).join('\n');
@@ -2502,7 +2635,7 @@ function initDesktop() {
 }
 
 function updateDeskStats() {
-  const sc = r => String(r['Sales Condition '] || r['Sales Condition'] || '').trim();
+  const sc = r => String(r['Sales Condition'] || r['Sales Condition'] || '').trim();
   const fmtM = v => v ? '$' + (v/1000000).toFixed(2) + 'M' : '';
 
   const pendingRows   = allData.filter(r => sc(r).includes('Pending'));
@@ -2510,10 +2643,11 @@ function updateDeskStats() {
   const exchangedRows = allData.filter(r => sc(r).includes('Exchanged'));
   const settledRows   = allData.filter(r => sc(r).includes('Settled'));
 
-  const pendingRev   = pendingRows.reduce((s,r)   => s + (Number(r['$LIST '] || r['$LIST'] || 0)), 0);
-  const depositRev   = depositRows.reduce((s,r)   => s + (Number(r['CfS Issued Price'] || 0)), 0);
-  const exchangedRev = exchangedRows.reduce((s,r) => s + (Number(r['CfS Exchanged Price ($)'] || 0)), 0);
-  const settledRev   = settledRows.reduce((s,r)   => s + (Number(r['CfS Settled Price ($)'] || 0)), 0);
+  const n = v => parseFloat(String(v||'0').replace(/[^0-9.-]/g,''))||0;
+  const pendingRev   = pendingRows.reduce((s,r)   => s + n(r['$LIST']), 0);
+  const depositRev   = depositRows.reduce((s,r)   => s + n(r['CfS Issued Price']), 0);
+  const exchangedRev = exchangedRows.reduce((s,r) => s + n(r['CfS Exchanged Price ($)']), 0);
+  const settledRev   = settledRows.reduce((s,r)   => s + n(r['CfS Settled Price ($)']), 0);
 
   document.getElementById('d-stat-pending').textContent      = pendingRows.length;
   document.getElementById('d-stat-deposit').textContent      = depositRows.length;
@@ -2535,7 +2669,7 @@ let dtSelectedIdx = -1;
 
 function getHeaderColour(h) {
   const lightblue = ['Project Name','Lot ID','Property Address','Stage','Lot #','CfS Type','Product Line','Product Type','Lot Area (m²)','Lot Frontage (Width) (m)'];
-  const yellow = ['Sales Condition ','Pending S/A Date','Pending S/A Days','Pending S/A Agency','$VAL ','$BASE','$LIST ','Notes.1','March Campaign','OFFER Rebate','SETTLE Rebate','Type Of Purchaser','Special Condilions/Variations','2026 Report','Comments.1'];
+  const yellow = ['Sales Condition','Pending S/A Date','Pending S/A Days','Pending S/A Agency','$VAL','$BASE','$LIST','Notes.1','March Campaign','OFFER Rebate','SETTLE Rebate','Type Of Purchaser','Special Condilions/Variations','2026 Report','Comments.1'];
   const darkgrey = ['*LEADS Name'];
   const peachL = ['Property Type'];
   const purple = ['StockList','Notes'];
@@ -2632,12 +2766,12 @@ function renderDesktopTable() {
   }).join('') + '</tr>';
 
   document.getElementById('dt-body').innerHTML = filteredData.map((row, i) => {
-    const cond = String(row['Sales Condition ']||row['Sales Condition']||'');
+    const cond = String(row['Sales Condition']||row['Sales Condition']||'');
     const cells = headers.map((h, hi) => {
       const v = row[h]; const vs = String(v ?? '');
       let cls = hi === 0 ? 'td-lot' : '';
       let display;
-      if (h === 'Sales Condition ' || h === 'Sales Condition') {
+      if (h === 'Sales Condition' || h === 'Sales Condition') {
         const condStyle = badgeCellStyle(cond);
         return `<td class="${cls.trim()}" style="${condStyle}" title="${vs}">${cond}</td>`;
       } else {
@@ -2679,12 +2813,12 @@ function closeDtPanel() {
 
 
 const COL_GROUPS = [
-  { label: 'Property Details', colour: '#C0E6F5', textColour: '#000000', cols: ['Project Name','Lot ID','Property Address','Stage','Lot #','Sales Condition '] },
+  { label: 'Property Details', colour: '#C0E6F5', textColour: '#000000', cols: ['Project Name','Lot ID','Property Address','Stage','Lot #','Sales Condition'] },
   { label: 'Pending SA', colour: '#FFFF00', textColour: '#000000', cols: ['Pending S/A Date','Pending S/A Days','Pending S/A Agency','*LEADS Name'] },
   { label: 'Property Info', colour: '#156082', textColour: '#ffffff', cols: ['CfS Type','Property Type','Product Line','Product Type','Lot Area (m\u00b2)','Lot Frontage (Width) (m)'] },
   { label: 'Stock & Notes', colour: '#9437FF', textColour: '#ffffff', cols: ['StockList','Notes'] },
   { label: 'Channel & Allocation', colour: '#A02B93', textColour: '#ffffff', cols: ['Channel Market','Sales Channel','Channel Partner','Swap to/from Channel Partner','Allocation Date','Allocation Days','Allocation Period (days)','Allocation Days / Allocation Expiry Date'] },
-  { label: 'Pricing', colour: '#FFFF00', textColour: '#000000', cols: ['$VAL ','$BASE','$LIST '] },
+  { label: 'Pricing', colour: '#FFFF00', textColour: '#000000', cols: ['$VAL','$BASE','$LIST'] },
   { label: 'Price Checks', colour: '#FF0066', textColour: '#ffffff', cols: ['$CHECK$                   $BASE-$VAL','$CHECK$ $LIST-$BASE'] },
   { label: 'Land Tax', colour: '#FFFFFF', textColour: '#FF0000', cols: ['Land Tax Per lot Value','Land Tax $Uplift / $Shortfall'] },
   { label: 'Campaign & Rebates', colour: '#FFFF00', textColour: '#000000', cols: ['March Campaign','OFFER Rebate','SETTLE Rebate','H&L $House (S/S)','$H&L Total (S/S)','H&L $House (D/S)','$H&L Total (D/S)','Notes.1'] },
@@ -2788,7 +2922,7 @@ function deskEditFromPanel() {
 }
 
 const SALES_CONDITIONS = ['1. On Sale','2. Pending SA','3. Deposit','4. Exchanged','5. Settled','6. Unreleased','7. Withheld','8. Avantaus'];
-const SALES_COND_KEYS = new Set([sid('Sales Condition '), sid('Sales Condition')]);
+const SALES_COND_KEYS = new Set([sid('Sales Condition'), sid('Sales Condition')]);
 
 function fmtPercent(rawVal) {
   if (!rawVal || rawVal === '' || rawVal === 'NaN') return '<span style="color:var(--muted);font-style:italic">&#8212;</span>';
