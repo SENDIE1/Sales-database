@@ -314,7 +314,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
   <div class="login-card">
     <div class="login-icon">&#128202;</div>
     <div class="login-title">Sales DB</div>
-    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.23</div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.24</div>
     <div class="login-sub">Sign in with your Microsoft account to access your OneDrive sales data.</div>
     <button class="ms-btn" onclick="signIn()">
       <div class="ms-logo"><div></div><div></div><div></div><div></div></div>
@@ -338,7 +338,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
 <!-- APP -->
 <div id="app-wrapper" style="display:none">
   <div class="app-header">
-    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.23</span></div>
+    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.24</span></div>
     <div class="header-right">
       <div class="user-pill">
         <div class="user-avatar" id="user-avatar">?</div>
@@ -400,11 +400,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
               <button class="sug-btn" onclick="deskUseSug(this)">Open pipeline value?</button>
               <button class="sug-btn" onclick="deskUseSug(this)">Settled this year?</button>
             </div>
-            <div style="display:flex;justify-content:center;padding:6px 0 2px">
-              <button id="dchat-mic-btn" onclick="toggleVoice('dchat-input','dchat-mic-btn')" style="display:flex;align-items:center;gap:7px;padding:8px 20px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-family:Aptos,sans-serif;font-size:12px;cursor:pointer;transition:all 0.2s">
-                <span style="font-size:16px">🎤</span> Ask verbally
-              </button>
-            </div>
+
             <div class="chat-input-row">
               <textarea class="chat-textarea" id="dchat-input" placeholder="Ask about your data..." onkeydown="deskHandleKey(event)"></textarea>
               <button class="chat-send" onclick="deskSendChat()">&#8594;</button>
@@ -417,10 +413,10 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
       <div class="desktop-screen" id="dscreen-reports">
         <div class="desktop-reports">
           <div class="desktop-stats">
-            <div class="desktop-stat"><div class="desktop-stat-label">Total lots</div><div class="desktop-stat-val" id="d-stat-total">&#8212;</div></div>
-            <div class="desktop-stat"><div class="desktop-stat-label">Settled</div><div class="desktop-stat-val" id="d-stat-settled">&#8212;</div></div>
+            <div class="desktop-stat"><div class="desktop-stat-label">Pending SA</div><div class="desktop-stat-val" id="d-stat-pending">&#8212;</div></div>
+            <div class="desktop-stat"><div class="desktop-stat-label">Deposit</div><div class="desktop-stat-val" id="d-stat-deposit">&#8212;</div></div>
             <div class="desktop-stat"><div class="desktop-stat-label">Exchanged</div><div class="desktop-stat-val" id="d-stat-exchanged">&#8212;</div></div>
-            <div class="desktop-stat"><div class="desktop-stat-label">Settled value</div><div class="desktop-stat-val" id="d-stat-value">&#8212;</div></div>
+            <div class="desktop-stat"><div class="desktop-stat-label">Settled</div><div class="desktop-stat-val" id="d-stat-settled">&#8212;</div></div>
           </div>
           <div class="desktop-report-grid">
             <div class="desktop-report-btn" onclick="deskGenReport('summary')">
@@ -562,11 +558,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
           <button class="sug-btn" onclick="useSug(this)">Open pipeline value?</button>
           <button class="sug-btn" onclick="useSug(this)">Settled this year?</button>
         </div>
-        <div id="voice-btn-row" style="display:flex;justify-content:center;padding:6px 0 2px">
-          <button id="chat-mic-btn" onclick="toggleVoice('chat-input','chat-mic-btn')" style="display:flex;align-items:center;gap:7px;padding:8px 20px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-family:Aptos,sans-serif;font-size:12px;cursor:pointer;transition:all 0.2s">
-            <span style="font-size:16px">🎤</span> Ask verbally
-          </button>
-        </div>
+
         <div class="chat-input-row">
           <textarea class="chat-textarea" id="chat-input" placeholder="Ask about your data..." onkeydown="handleKey(event)"></textarea>
           <button class="chat-send" onclick="sendChat()">&#8594;</button>
@@ -578,10 +570,10 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
     <div id="screen-reports" class="screen" style="background:var(--bg);overflow-y:auto">
       <div class="sub-header"><span class="sub-title">Reports</span></div>
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-label">Total lots</div><div class="stat-val" id="stat-total">&#8212;</div></div>
-        <div class="stat-card"><div class="stat-label">Settled</div><div class="stat-val" id="stat-settled">&#8212;</div></div>
+        <div class="stat-card"><div class="stat-label">Pending SA</div><div class="stat-val" id="stat-pending">&#8212;</div></div>
+        <div class="stat-card"><div class="stat-label">Deposit</div><div class="stat-val" id="stat-deposit">&#8212;</div></div>
         <div class="stat-card"><div class="stat-label">Exchanged</div><div class="stat-val" id="stat-exchanged">&#8212;</div></div>
-        <div class="stat-card"><div class="stat-label">Settled value</div><div class="stat-val" id="stat-value">&#8212;</div></div>
+        <div class="stat-card"><div class="stat-label">Settled</div><div class="stat-val" id="stat-settled">&#8212;</div></div>
       </div>
       <div class="section-title">Generate AI reports</div>
       <div class="report-btn-card" onclick="genReport('summary')"><div class="report-icon" style="background:#e8f4ed">&#128202;</div><div class="report-info"><div class="report-title">Sales summary</div><div class="report-sub">Revenue, counts, key insights</div></div></div>
@@ -651,6 +643,26 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
           <div>
             <div style="font-size:13px;font-weight:600;color:#991b1b">Land Price Below $LIST</div>
             <div style="font-size:11px;color:#991b1b;margin-top:1px" id="scan-price-msg"></div>
+            <div style="font-size:11px;color:#991b1b;margin-top:2px">You can still proceed — verify before saving.</div>
+          </div>
+        </div>
+      </div>
+      <div id="scan-idname-banner" style="display:none;padding:10px 20px;background:#fef2f2;border-bottom:2px solid #dc2626;flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">⚠️</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#991b1b">ID Name Mismatch</div>
+            <div style="font-size:11px;color:#991b1b;margin-top:1px" id="scan-idname-msg"></div>
+            <div style="font-size:11px;color:#991b1b;margin-top:2px">Please verify before saving.</div>
+          </div>
+        </div>
+      </div>
+      <div id="scan-trust-banner" style="display:none;padding:10px 20px;background:#fef2f2;border-bottom:2px solid #dc2626;flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">⚠️</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#991b1b">Missing Trust Receipt</div>
+            <div style="font-size:11px;color:#991b1b;margin-top:1px">No $2,000 trust account receipt found in this PDF.</div>
             <div style="font-size:11px;color:#991b1b;margin-top:2px">You can still proceed — verify before saving.</div>
           </div>
         </div>
@@ -1154,13 +1166,15 @@ function badgeClass(cond) {
 }
 
 function updateStats() {
-  const settled = allData.filter(r => String(r['Sales Condition ']||r['Sales Condition']||'').includes('Settled')).length;
-  const exchanged = allData.filter(r => String(r['Sales Condition ']||r['Sales Condition']||'').includes('Exchanged')).length;
-  const settledVal = allData.filter(r => String(r['Sales Condition ']||r['Sales Condition']||'').includes('Settled')).reduce((s,r) => s + (Number(r['CfS Settled Price ($)'])||0), 0);
-  document.getElementById('stat-total').textContent = allData.length;
-  document.getElementById('stat-settled').textContent = settled;
+  const sc = r => String(r['Sales Condition '] || r['Sales Condition'] || '').trim();
+  const pending  = allData.filter(r => sc(r).includes('Pending')).length;
+  const deposit  = allData.filter(r => sc(r).includes('Deposit')).length;
+  const exchanged = allData.filter(r => sc(r).includes('Exchanged')).length;
+  const settled  = allData.filter(r => sc(r).includes('Settled')).length;
+  document.getElementById('stat-pending').textContent   = pending;
+  document.getElementById('stat-deposit').textContent   = deposit;
   document.getElementById('stat-exchanged').textContent = exchanged;
-  document.getElementById('stat-value').textContent = settledVal ? '$' + (settledVal/1000000).toFixed(1) + 'M' : '—';
+  document.getElementById('stat-settled').textContent   = settled;
 }
 
 function openModal(idx) {
@@ -1671,6 +1685,8 @@ function resetScanPdf() {
   document.getElementById('scan-extract-btn').style.pointerEvents = 'none';
   document.getElementById('scan-resc-banner').style.display = 'none';
   document.getElementById('scan-price-banner').style.display = 'none';
+  document.getElementById('scan-idname-banner').style.display = 'none';
+  document.getElementById('scan-trust-banner').style.display = 'none';
   showScanStep('upload');
 }
 
@@ -1746,7 +1762,10 @@ async function runScanPdf() {
   "firb": "FIRB APPROVAL REQUIRED — if the Yes box is ticked or marked with X return 'Yes', if No is ticked or marked with X return null",
   "purchaser1_signed": "PURCHASER'S SIGNATURE section — is Purchaser/Guarantor 1 signature field filled, signed, or contains any mark, name, or DocuSign stamp? Return true or false",
   "purchaser2_signed": "PURCHASER'S SIGNATURE section — is Purchaser/Guarantor 2 signature field filled, signed, or contains any mark, name, or DocuSign stamp? Return true or false",
-  "id_count": "Count the number of ID documents (driver's licences or passports) visible as images in this PDF across all pages — return as a number e.g. 0, 1, 2"
+  "id_count": "Count the number of ID documents (driver's licences or passports) visible as images in this PDF across all pages — return as a number e.g. 0, 1, 2",
+  "id1_name": "The full name as it appears on the first ID document (driver's licence or passport) found in the PDF",
+  "id2_name": "The full name as it appears on the second ID document (driver's licence or passport) found in the PDF, null if only one ID",
+  "has_trust_receipt": "Is there a Trust Account Receipt showing a $2,000 holding deposit payment anywhere in this PDF? Return true or false"
 }
 
 Return ONLY the JSON object, no other text.`;
@@ -1821,6 +1840,20 @@ Return ONLY the JSON object, no other text.`;
     const idCount = parseInt(extracted.id_count, 10) || 0;
     if (idCount < expectedIDs) {
       throw new Error(`Missing ID — ${expectedIDs} buyer${expectedIDs > 1 ? 's' : ''} but only ${idCount} ID document${idCount !== 1 ? 's' : ''} found in this PDF. All purchasers must have ID attached. Cannot proceed.`);
+    }
+
+    // ── RULE: ID name must match purchaser name — warning ─────────
+    const normName = n => String(n || '').toLowerCase().trim().replace(/\s+/g, ' ');
+    const idNameWarnings = [];
+    if (extracted.id1_name && extracted.purchaser1_name) {
+      if (normName(extracted.id1_name) !== normName(extracted.purchaser1_name)) {
+        idNameWarnings.push(`Purchaser 1 — Form: "${extracted.purchaser1_name}" / ID: "${extracted.id1_name}"`);
+      }
+    }
+    if (hasPurchaser2 && extracted.id2_name && extracted.purchaser2_name) {
+      if (normName(extracted.id2_name) !== normName(extracted.purchaser2_name)) {
+        idNameWarnings.push(`Purchaser 2 — Form: "${extracted.purchaser2_name}" / ID: "${extracted.id2_name}"`);
+      }
     }
 
     // ── RULE 2: Land price below $LIST — warn but allow override ──
@@ -1900,6 +1933,18 @@ Return ONLY the JSON object, no other text.`;
       document.getElementById('scan-price-banner').style.display = 'none';
     }
 
+    // Show ID name mismatch banner if names don't match
+    if (idNameWarnings.length > 0) {
+      document.getElementById('scan-idname-msg').innerHTML = idNameWarnings.join('<br>');
+      document.getElementById('scan-idname-banner').style.display = 'block';
+    } else {
+      document.getElementById('scan-idname-banner').style.display = 'none';
+    }
+
+    // Show trust receipt warning if missing
+    const hasTrustReceipt = extracted.has_trust_receipt === true || extracted.has_trust_receipt === 'true';
+    document.getElementById('scan-trust-banner').style.display = hasTrustReceipt ? 'none' : 'block';
+
     const list = document.getElementById('scan-fields-list');
     list.innerHTML = SCAN_FIELDS.map(f => {
       const val = scanExtractedData[f.key] || '';
@@ -1971,82 +2016,6 @@ async function confirmScanPdf() {
   }
 }
 
-// ── VOICE INPUT ───────────────────────────────────────
-let voiceRecognition = null;
-
-function toggleVoice(inputId, btnId) {
-  // Stop if already listening
-  if (voiceRecognition) {
-    voiceRecognition.stop();
-    return;
-  }
-
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    toast('Voice input not supported on this browser', 'error');
-    return;
-  }
-
-  const input = document.getElementById(inputId);
-  const btn = document.getElementById(btnId);
-
-  voiceRecognition = new SpeechRecognition();
-  voiceRecognition.lang = 'en-AU';
-  voiceRecognition.interimResults = true;
-  voiceRecognition.continuous = false;
-
-  // Button goes red/pulsing while listening
-  if (btn) {
-    btn.innerHTML = '<span style="font-size:16px">🔴</span> Listening... (tap to stop)';
-    btn.style.borderColor = '#dc2626';
-    btn.style.color = '#dc2626';
-    btn.style.background = '#fff1f1';
-  }
-  input.placeholder = '🎙 Listening...';
-
-  let finalTranscript = '';
-
-  voiceRecognition.onresult = (e) => {
-    let interim = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      const t = e.results[i][0].transcript;
-      if (e.results[i].isFinal) finalTranscript += t;
-      else interim = t;
-    }
-    input.value = finalTranscript || interim;
-  };
-
-  const resetBtn = () => {
-    if (btn) {
-      btn.innerHTML = '<span style="font-size:16px">🎤</span> Ask verbally';
-      btn.style.borderColor = '';
-      btn.style.color = '';
-      btn.style.background = '';
-    }
-    input.placeholder = 'Ask about your data...';
-    voiceRecognition = null;
-  };
-
-  voiceRecognition.onend = () => {
-    resetBtn();
-    // Auto-send if we captured something
-    if (input.value.trim()) {
-      if (inputId === 'chat-input') sendChat();
-      else deskSendChat();
-    }
-  };
-
-  voiceRecognition.onerror = (e) => {
-    resetBtn();
-    if (e.error === 'not-allowed') {
-      toast('Microphone access denied — check browser permissions', 'error');
-    } else if (e.error !== 'no-speech') {
-      toast('Voice error: ' + e.error, 'error');
-    }
-  };
-
-  voiceRecognition.start();
-}
 
 function saveChatKey() {
   const inp = document.getElementById('chat-key-input');
@@ -2260,13 +2229,15 @@ function initDesktop() {
 }
 
 function updateDeskStats() {
-  const settled = allData.filter(r => String(r['Sales Condition ']||r['Sales Condition']||'').includes('Settled')).length;
-  const exchanged = allData.filter(r => String(r['Sales Condition ']||r['Sales Condition']||'').includes('Exchanged')).length;
-  const settledVal = allData.filter(r => String(r['Sales Condition ']||r['Sales Condition']||'').includes('Settled')).reduce((s,r) => s + (Number(r['CfS Settled Price ($)'])||0), 0);
-  document.getElementById('d-stat-total').textContent = allData.length;
-  document.getElementById('d-stat-settled').textContent = settled;
+  const sc = r => String(r['Sales Condition '] || r['Sales Condition'] || '').trim();
+  const pending   = allData.filter(r => sc(r).includes('Pending')).length;
+  const deposit   = allData.filter(r => sc(r).includes('Deposit')).length;
+  const exchanged = allData.filter(r => sc(r).includes('Exchanged')).length;
+  const settled   = allData.filter(r => sc(r).includes('Settled')).length;
+  document.getElementById('d-stat-pending').textContent   = pending;
+  document.getElementById('d-stat-deposit').textContent   = deposit;
   document.getElementById('d-stat-exchanged').textContent = exchanged;
-  document.getElementById('d-stat-value').textContent = settledVal ? '$' + (settledVal/1000000).toFixed(1) + 'M' : '&#8212;';
+  document.getElementById('d-stat-settled').textContent   = settled;
 }
 
 // ── DESKTOP SPREADSHEET ──
