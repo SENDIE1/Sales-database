@@ -324,7 +324,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
   <div class="login-card">
     <div class="login-icon">&#128202;</div>
     <div class="login-title">Sales DB</div>
-    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.31</div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.32</div>
     <div class="login-sub">Sign in with your Microsoft account to access your OneDrive sales data.</div>
     <button class="ms-btn" onclick="signIn()">
       <div class="ms-logo"><div></div><div></div><div></div><div></div></div>
@@ -348,7 +348,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
 <!-- APP -->
 <div id="app-wrapper" style="display:none">
   <div class="app-header">
-    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.31</span></div>
+    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.32</span></div>
     <div class="header-right">
       <div class="user-pill">
         <div class="user-avatar" id="user-avatar">?</div>
@@ -1346,7 +1346,16 @@ function openModal(idx) {
 
 function closeModal(e) {}
 function closeModalDirect() { showScreen('data'); }
-function editFromDetail() { closeModalDirect(); editRowIdx = modalRowIdx; populateEditForm(allData[editRowIdx]); }
+async function editFromDetail() {
+  const row = allData[modalRowIdx];
+  const lotNum = String(row['Lot #'] || row['Lot#'] || '').trim();
+  const lock = await checkLock(lotNum);
+  if (lock) { showLockError(lotNum, lock); return; }
+  closeModalDirect();
+  editRowIdx = modalRowIdx;
+  populateEditForm(allData[editRowIdx]);
+  acquireLock(lotNum);
+}
 
 function populateEditForm(row) {
   document.getElementById('edit-fields').innerHTML = headers.map(h => {
@@ -1448,15 +1457,160 @@ async function addRecord() {
   }
 }
 
+
+// ─── LOT LOCKING ─────────────────────────────────────────────────────────────
+const LOCK_SHEET   = 'Locks';
+const LOCK_EXPIRE  = 30 * 60 * 1000; // 30 minutes in ms
+let currentLockLot = null;
+
+function getLockDriveBase() {
+  return fileDriveId
+    ? `https://graph.microsoft.com/v1.0/drives/${fileDriveId}/items/${fileId}`
+    : `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}`;
+}
+
+async function ensureLockSheet() {
+  const token = await getToken();
+  const driveBase = getLockDriveBase();
+  // Check if sheet exists
+  const res = await fetch(`${driveBase}/workbook/worksheets`, {
+    headers: { Authorization: 'Bearer ' + token }
+  });
+  const data = await res.json();
+  const exists = (data.value||[]).some(s => s.name === LOCK_SHEET);
+  if (!exists) {
+    // Create it
+    await fetch(`${driveBase}/workbook/worksheets`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: LOCK_SHEET })
+    });
+    // Add headers
+    await fetch(`${driveBase}/workbook/worksheets/${encodeURIComponent(LOCK_SHEET)}/range(address='A1:C1')`, {
+      method: 'PATCH',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ values: [['Lot', 'User', 'Timestamp']] })
+    });
+  }
+}
+
+async function readLocks() {
+  try {
+    const token = await getToken();
+    const driveBase = getLockDriveBase();
+    const res = await fetch(
+      `${driveBase}/workbook/worksheets/${encodeURIComponent(LOCK_SHEET)}/usedRange`,
+      { headers: { Authorization: 'Bearer ' + token } }
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    const rows = (data.values || []).slice(1); // skip header
+    const now = Date.now();
+    return rows
+      .filter(r => r[0] && r[1] && r[2])
+      .map(r => ({ lot: String(r[0]).trim(), user: String(r[1]).trim(), ts: Number(r[2]) }))
+      .filter(r => (now - r.ts) < LOCK_EXPIRE);
+  } catch(e) { return []; }
+}
+
+async function acquireLock(lotNum) {
+  try {
+    await ensureLockSheet();
+    const token = await getToken();
+    const driveBase = getLockDriveBase();
+    const sheetEnc = encodeURIComponent(LOCK_SHEET);
+
+    // Get current user name
+    const meRes = await fetch('https://graph.microsoft.com/v1.0/me?$select=displayName', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    const me = await meRes.json();
+    const userName = me.displayName || 'Unknown';
+
+    // Read existing locks, find first empty row
+    const usedRes = await fetch(`${driveBase}/workbook/worksheets/${sheetEnc}/usedRange`,
+      { headers: { Authorization: 'Bearer ' + token } });
+    const usedData = await usedRes.json();
+    const rowCount = (usedData.values || []).length;
+    const nextRow = rowCount + 1;
+
+    // Write lock
+    await fetch(`${driveBase}/workbook/worksheets/${sheetEnc}/range(address='A${nextRow}:C${nextRow}')`, {
+      method: 'PATCH',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ values: [[lotNum, userName, Date.now()]] })
+    });
+    currentLockLot = lotNum;
+  } catch(e) {
+    console.warn('Lock acquire failed:', e.message);
+  }
+}
+
+async function releaseLock(lotNum) {
+  if (!lotNum) return;
+  try {
+    const token = await getToken();
+    const driveBase = getLockDriveBase();
+    const sheetEnc = encodeURIComponent(LOCK_SHEET);
+
+    const usedRes = await fetch(`${driveBase}/workbook/worksheets/${sheetEnc}/usedRange`,
+      { headers: { Authorization: 'Bearer ' + token } });
+    if (!usedRes.ok) return;
+    const usedData = await usedRes.json();
+    const rows = usedData.values || [];
+
+    // Find and clear the row for this lot
+    for (let i = 1; i < rows.length; i++) {
+      if (String(rows[i][0]).trim() === String(lotNum).trim()) {
+        await fetch(`${driveBase}/workbook/worksheets/${sheetEnc}/range(address='A${i+1}:C${i+1}')`, {
+          method: 'PATCH',
+          headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ values: [['', '', '']] })
+        });
+        break;
+      }
+    }
+    currentLockLot = null;
+  } catch(e) {
+    console.warn('Lock release failed:', e.message);
+  }
+}
+
+async function checkLock(lotNum) {
+  // Returns null if free, or { user, ts } if locked by someone else
+  try {
+    const locks = await readLocks();
+    const me = await fetch('https://graph.microsoft.com/v1.0/me?$select=displayName', {
+      headers: { Authorization: 'Bearer ' + await getToken() }
+    }).then(r => r.json());
+    const myName = me.displayName || '';
+    const lock = locks.find(l => String(l.lot).trim() === String(lotNum).trim());
+    if (!lock) return null;
+    if (lock.user === myName) return null; // own lock
+    return lock;
+  } catch(e) { return null; }
+}
+
+function showLockError(lotNum, lock) {
+  const mins = Math.floor((Date.now() - lock.ts) / 60000);
+  const timeStr = mins < 1 ? 'just now' : `${mins} min${mins > 1 ? 's' : ''} ago`;
+  toast(`⛔ Lot ${lotNum} is being edited by ${lock.user} (opened ${timeStr})`, 'error');
+}
+// ─── END LOT LOCKING ──────────────────────────────────────────────────────────
+
 function cancelEditCheck() {
   if (formDirty) {
     if (confirm('You have unsaved changes. Save before leaving?')) {
       saveEdit();
     } else {
       formDirty = false;
+      const lot = allData[editRowIdx]?.['Lot #'] || allData[editRowIdx]?.['Lot#'] || null;
+      if (lot) releaseLock(lot);
       showScreen('data');
     }
   } else {
+    const lot = allData[editRowIdx]?.['Lot #'] || allData[editRowIdx]?.['Lot#'] || null;
+    if (lot) releaseLock(lot);
     showScreen('data');
   }
 }
@@ -1464,6 +1618,8 @@ function cancelEditCheck() {
 async function saveEdit() {
   formDirty = false;
   if (editRowIdx < 0) return;
+  const _lockLot = allData[editRowIdx]?.['Lot #'] || allData[editRowIdx]?.['Lot#'] || null;
+  if (_lockLot) releaseLock(_lockLot);
   headers.forEach(h => {
     const input = document.getElementById('edit-' + sid(h));
     const disp = document.getElementById('disp-' + sid(h));
@@ -3415,12 +3571,16 @@ const COL_GROUPS = [
   { label: 'Other', colour: '#FFFF00', textColour: '#000000', cols: ['Type Of Purchaser','Special Condilions/Variations','2026 Report','Comments.1'] },
 ];
 
-function deskEditRow(idx) {
+async function deskEditRow(idx) {
   dtSelectedIdx = idx;
   modalRowIdx = allData.indexOf(filteredData[idx]);
+  const row = allData[allData.indexOf(filteredData[idx])];
+  const lotNum = String(row['Lot #'] || row['Lot#'] || '').trim();
+  const lock = await checkLock(lotNum);
+  if (lock) { showLockError(lotNum, lock); return; }
   editRowIdx = modalRowIdx;
-  const row = allData[editRowIdx];
-  const lotNum = row['Lot #'] || row['Lot#'] || '';
+  acquireLock(lotNum);
+  const lotNumDisp = row['Lot #'] || row['Lot#'] || '';
   document.getElementById('d-edit-title').textContent = 'Lot ' + lotNum;
   let editHtml = '<table style="width:100%;border-collapse:collapse">';
   const groupedCols = COL_GROUPS.flatMap(g => g.cols);
@@ -3631,6 +3791,8 @@ function deskStartEdit(key, currentVal) {
 async function deskSaveEdit() {
   if (editRowIdx < 0) return;
   formDirty = false;
+  const _deskLockLot = allData[editRowIdx]?.['Lot #'] || allData[editRowIdx]?.['Lot#'] || null;
+  if (_deskLockLot) releaseLock(_deskLockLot);
   headers.forEach(h => {
     const disp = document.getElementById('d-disp-' + sid(h));
     if (!disp) return;
@@ -3657,10 +3819,11 @@ async function deskSaveEdit() {
 }
 
 function deskCancelEditCheck() {
+  const lot = allData[editRowIdx]?.['Lot #'] || allData[editRowIdx]?.['Lot#'] || null;
   if (formDirty) {
     if (confirm('You have unsaved changes. Save before leaving?')) { deskSaveEdit(); }
-    else { formDirty = false; deskShowScreen('data'); }
-  } else { deskShowScreen('data'); }
+    else { formDirty = false; if (lot) releaseLock(lot); deskShowScreen('data'); }
+  } else { if (lot) releaseLock(lot); deskShowScreen('data'); }
 }
 
 // ── COLUMN FILTER POPUP ──
