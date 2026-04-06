@@ -318,7 +318,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
   <div class="login-card">
     <div class="login-icon">&#128202;</div>
     <div class="login-title">Sales DB</div>
-    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.25</div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.31</div>
     <div class="login-sub">Sign in with your Microsoft account to access your OneDrive sales data.</div>
     <button class="ms-btn" onclick="signIn()">
       <div class="ms-logo"><div></div><div></div><div></div><div></div></div>
@@ -342,7 +342,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
 <!-- APP -->
 <div id="app-wrapper" style="display:none">
   <div class="app-header">
-    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.25</span></div>
+    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.31</span></div>
     <div class="header-right">
       <div class="user-pill">
         <div class="user-avatar" id="user-avatar">?</div>
@@ -426,6 +426,10 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
             <div class="desktop-report-btn" onclick="openSalesTarget()">
               <div class="report-icon" style="background:#fde8e8;border-radius:8px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">&#127919;</div>
               <div class="desktop-report-info"><div class="report-title">Sales Target</div><div class="report-sub">Deposit, Exchange & Settlement vs targets</div></div>
+            </div>
+            <div class="desktop-report-btn" onclick="openCfsTrack()">
+              <div class="desktop-report-icon" style="background:#e8f0fd">&#128203;</div>
+              <div class="desktop-report-info"><div class="report-title">CfS Track</div><div class="report-sub">Deposit lots · notes · follow-up actions</div></div>
             </div>
             <div class="desktop-report-btn" onclick="deskGenReport('summary')">
               <div class="desktop-report-icon" style="background:#e8f4ed">&#128202;</div>
@@ -585,6 +589,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
       </div>
       <div class="section-title">Generate AI reports</div>
       <div class="report-btn-card" onclick="openSalesTarget()"><div class="report-icon" style="background:#fde8e8">&#127919;</div><div class="report-info"><div class="report-title">Sales Target</div><div class="report-sub">Deposit, Exchange & Settlement vs targets</div></div></div>
+      <div class="report-btn-card" onclick="openCfsTrack()"><div class="report-icon" style="background:#e8f0fd">&#128203;</div><div class="report-info"><div class="report-title">CfS Track</div><div class="report-sub">Deposit lots · notes · follow-up actions</div></div></div>
       <div class="report-btn-card" onclick="genReport('summary')"><div class="report-icon" style="background:#e8f4ed">&#128202;</div><div class="report-info"><div class="report-title">Sales summary</div><div class="report-sub">Revenue, counts, key insights</div></div></div>
       <div class="report-btn-card" onclick="genReport('pipeline')"><div class="report-icon" style="background:#eeedfe">&#128270;</div><div class="report-info"><div class="report-title">Pipeline forecast</div><div class="report-sub">Open deals & risk assessment</div></div></div>
       <div class="report-btn-card" onclick="genReport('channel')"><div class="report-icon" style="background:#faeeda">&#127942;</div><div class="report-info"><div class="report-title">Channel performance</div><div class="report-sub">By partner & channel</div></div></div>
@@ -636,6 +641,61 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
       <div style="font-size:32px;margin-bottom:8px">&#9888;&#65039;</div>
       <div id="st-error-msg" style="font-size:13px;color:var(--ink)"></div>
       <button onclick="refreshSalesTarget()" style="margin-top:12px;padding:8px 20px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">Try Again</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- CFS TRACK MODAL -->
+<div id="cfstrack-overlay" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.5);align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto">
+  <div style="background:var(--bg);border-radius:12px;width:100%;max-width:1200px;margin:auto;display:flex;flex-direction:column;overflow:hidden">
+    <div style="padding:14px 20px;background:#1a2a3a;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+      <div>
+        <div style="font-size:16px;font-weight:700;color:white">&#128203; CfS Track</div>
+        <div style="font-size:11px;color:#a8d0d0;margin-top:2px">Pending SA &middot; Deposit &middot; Exchanged &middot; notes</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button onclick="refreshCfsTrack()" style="padding:5px 12px;background:rgba(255,255,255,0.15);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">&#8635; Refresh</button>
+        <button onclick="downloadCfsTrack()" style="padding:5px 12px;background:rgba(255,255,255,0.15);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">&#11015; Download</button>
+        <button onclick="closeCfsTrack()" style="background:none;border:none;font-size:20px;cursor:pointer;color:white;padding:4px">&#10005;</button>
+      </div>
+    </div>
+    <div id="cfs-loading" style="padding:40px;text-align:center;color:var(--muted)">
+      <div style="font-size:24px;margin-bottom:8px">&#8987;</div>
+      <div>Loading CfS Track data...</div>
+    </div>
+    <div id="cfs-table-wrap" style="display:none;overflow-x:auto;padding:16px">
+      <table id="cfs-table" style="border-collapse:collapse;font-size:11px;font-family:Aptos,sans-serif;min-width:900px;width:100%"></table>
+    </div>
+    <div id="cfs-error" style="display:none;padding:32px;text-align:center">
+      <div style="font-size:32px;margin-bottom:8px">&#9888;&#65039;</div>
+      <div id="cfs-error-msg" style="font-size:13px;color:var(--ink)"></div>
+      <button onclick="refreshCfsTrack()" style="margin-top:12px;padding:8px 20px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">Try Again</button>
+    </div>
+  </div>
+</div>
+
+<!-- CFS NOTE EDIT MODAL -->
+<div id="cfsnote-overlay" style="display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--bg);border-radius:12px;width:100%;max-width:500px;display:flex;flex-direction:column;overflow:hidden">
+    <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:14px;font-weight:600;color:var(--ink)">&#128221; Add Sales Note</div>
+        <div id="cfsnote-lot-label" style="font-size:11px;color:var(--muted);margin-top:2px"></div>
+      </div>
+      <button onclick="closeCfsNote()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted)">&#10005;</button>
+    </div>
+    <div style="padding:12px 20px;max-height:160px;overflow-y:auto;border-bottom:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600">EXISTING NOTES</div>
+      <div id="cfsnote-existing" style="font-size:12px;color:var(--ink);white-space:pre-line;line-height:1.6">—</div>
+    </div>
+    <div style="padding:16px 20px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600">NEW NOTE (prepended with today's date)</div>
+      <textarea id="cfsnote-input" placeholder="Enter note..." style="width:100%;height:80px;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:Aptos,sans-serif;color:var(--ink);background:var(--bg);resize:vertical;box-sizing:border-box"></textarea>
+    </div>
+    <div style="padding:0 20px 16px;display:flex;gap:10px;justify-content:flex-end">
+      <button onclick="closeCfsNote()" style="padding:8px 16px;background:none;border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;color:var(--muted)">Cancel</button>
+      <button onclick="saveCfsNote()" style="padding:8px 20px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">Save Note</button>
     </div>
   </div>
 </div>
@@ -771,7 +831,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
 
 const CLIENT_ID = 'cd53b987-59ab-4b81-9bfb-178cfa8ee5b2';
 const REDIRECT_URI = 'https://SENDIE1.github.io/Sales-database/';
-const FILE_NAME = 'Sales DB - Claude.xlsx';
+const FILE_NAME = 'SalesDB-Main.xlsx';
 const SCOPES = ['Files.ReadWrite', 'User.Read'];
 const ANTHROPIC_KEY = () => {
   let k = localStorage.getItem('anthropic_key') || '';
@@ -789,7 +849,7 @@ let msalInstance = null;
 async function getMsal() { if (!msalInstance) msalInstance = await msal.PublicClientApplication.createPublicClientApplication(msalConfig); return msalInstance; }
 
 let allData = [], headers = [], filteredData = [], fileId = null, fileDriveId = null, editRowIdx = -1, modalRowIdx = -1, filterDrawerOpen = false;
-const FILTER_MAP = { 'f-stage':'Stage', 'f-condition':'Sales Condition ', 'f-channel':'Sales Channel', 'f-partner':'Channel Partner', 'f-productline':'Product Line', 'f-market':'Channel Market', 'f-year':'Settled Year' };
+const FILTER_MAP = { 'f-stage':'Stage', 'f-condition':'Sales Condition', 'f-channel':'Sales Channel', 'f-partner':'Channel Partner', 'f-productline':'Product Line', 'f-market':'Channel Market', 'f-year':'Settled Year' };
 
 async function testApiKey() {
   const key = localStorage.getItem('anthropic_key');
@@ -916,7 +976,7 @@ async function loadFileFromOneDrive() {
   showLoading('Locating file...');
   // 1. Try own OneDrive by path
   try {
-    const r = await graphGet('https://graph.microsoft.com/v1.0/me/drive/root:/Sales%20DB/Sales%20DB%20-%20Claude.xlsx');
+    const r = await graphGet('https://graph.microsoft.com/v1.0/me/drive/root:/Sales%20Platform/Sales%20DB/SalesDB-Main.xlsx');
     if (r?.id) { itemId = r.id; driveId = r.parentReference?.driveId; }
   } catch(e) {}
   // 2. Try own OneDrive search
@@ -963,8 +1023,14 @@ async function loadFileFromOneDrive() {
   const buf = await res.arrayBuffer();
   const wb = XLSX.read(buf, { type: 'array' });
   const ws = wb.Sheets[wb.SheetNames[0]];
-  const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
-  if (!json.length) throw new Error('File is empty');
+  const rawJson = XLSX.utils.sheet_to_json(ws, { defval: '' });
+  if (!rawJson.length) throw new Error('File is empty');
+  // Trim trailing/leading spaces from all header keys
+  const json = rawJson.map(row => {
+    const clean = {};
+    Object.keys(row).forEach(k => { clean[k.trim()] = row[k]; });
+    return clean;
+  });
   headers = Object.keys(json[0]);
   allData = json;
   filteredData = [...allData];
@@ -1104,7 +1170,7 @@ function applyFilters() {
   });
   filteredData = allData.filter(row => {
     if (activeQuickFilter) {
-      const cond = String(row['Sales Condition ']||row['Sales Condition']||'').trim();
+      const cond = String(row['Sales Condition']||row['Sales Condition']||'').trim();
       if (cond !== activeQuickFilter) return false;
     }
     if (terms.length) { const text = Object.values(row).join(' ').toLowerCase(); if (!terms.every(t => text.includes(t))) return false; }
@@ -1177,15 +1243,15 @@ function renderLotList() {
   if (!filteredData.length) { list.innerHTML = '<div class="empty-state">No records match your filters.</div>'; return; }
   list.innerHTML = filteredData.map((row, i) => {
     const lotNum = row['Lot #'] || row['Lot#'] || '—';
-    const cond_lower = String(row['Sales Condition '] || row['Sales Condition'] || '').toLowerCase();
+    const cond_lower = String(row['Sales Condition'] || row['Sales Condition'] || '').toLowerCase();
     let val = '';
-    if (cond_lower.includes('on sale') || cond_lower.includes('pending')) val = row['$LIST '] || row['$LIST'] || '';
+    if (cond_lower.includes('on sale') || cond_lower.includes('pending')) val = row['$LIST'] || '';
     else if (cond_lower.includes('deposit')) val = row['CfS Issued Price'] || '';
     else if (cond_lower.includes('exchanged')) val = row['CfS Exchanged Price ($)'] || '';
     else if (cond_lower.includes('settled')) val = row['CfS Settled Price ($)'] || '';
-    else val = row['$VAL '] || row['$VAL'] || '';
+    else val = row['$VAL'] || row['$VAL'] || '';
     const valFmt = val && !isNaN(val) ? '$' + Number(val).toLocaleString() : (val || '—');
-    const cond = String(row['Sales Condition '] || row['Sales Condition'] || '');
+    const cond = String(row['Sales Condition'] || row['Sales Condition'] || '');
     const partner = row['Channel Partner'] || '';
     const extras = conditionExtra(cond, row);
     const extraHtml = extras.length ? `<div class="lot-extras">${extras.map(e => `<span class="lot-extra">${e}</span>`).join('')}</div>` : '';
@@ -1212,7 +1278,7 @@ function badgeClass(cond) {
 }
 
 function updateStats() {
-  const sc = r => String(r['Sales Condition '] || r['Sales Condition'] || '').trim();
+  const sc = r => String(r['Sales Condition'] || r['Sales Condition'] || '').trim();
   const fmtM = v => v ? '$' + (v/1000000).toFixed(2) + 'M' : '';
 
   const pendingRows   = allData.filter(r => sc(r).includes('Pending'));
@@ -1220,10 +1286,11 @@ function updateStats() {
   const exchangedRows = allData.filter(r => sc(r).includes('Exchanged'));
   const settledRows   = allData.filter(r => sc(r).includes('Settled'));
 
-  const pendingRev   = pendingRows.reduce((s,r)   => s + (Number(r['$LIST '] || r['$LIST'] || 0)), 0);
-  const depositRev   = depositRows.reduce((s,r)   => s + (Number(r['CfS Issued Price'] || 0)), 0);
-  const exchangedRev = exchangedRows.reduce((s,r) => s + (Number(r['CfS Exchanged Price ($)'] || 0)), 0);
-  const settledRev   = settledRows.reduce((s,r)   => s + (Number(r['CfS Settled Price ($)'] || 0)), 0);
+  const n = v => parseFloat(String(v||'0').replace(/[^0-9.-]/g,''))||0;
+  const pendingRev   = pendingRows.reduce((s,r)   => s + n(r['$LIST']), 0);
+  const depositRev   = depositRows.reduce((s,r)   => s + n(r['CfS Issued Price']), 0);
+  const exchangedRev = exchangedRows.reduce((s,r) => s + n(r['CfS Exchanged Price ($)']), 0);
+  const settledRev   = settledRows.reduce((s,r)   => s + n(r['CfS Settled Price ($)']), 0);
 
   document.getElementById('stat-pending').textContent      = pendingRows.length;
   document.getElementById('stat-deposit').textContent      = depositRows.length;
@@ -1578,7 +1645,7 @@ const DATE_COLS = new Set(['Pending S/A Date','Allocation Date','Allocation Days
 const PHONE_COLS = new Set(["Agent's Mobile","Agent's Email".replace('Email','Mobile'),"(1) Purchaser's Mobile","(2) Purchaser's Mobile","Purchaser's Solicitor Phone"]);
 
 
-const CURRENCY_COLS = new Set(['$VAL ','$BASE','$LIST ','$CHECK$                   $BASE-$VAL','$CHECK$ $LIST-$BASE','Land Tax Per lot Value','Land Tax $Uplift / $Shortfall','OFFER Rebate','SETTLE Rebate','H&L $House (S/S)','$H&L Total (S/S)','H&L $House (D/S)','$H&L Total (D/S)','CfS Issued Price','CfS Exchanged Price ($)','CfS Settled Price ($)','Rebate']);
+const CURRENCY_COLS = new Set(['$VAL','$BASE','$LIST','$CHECK$                   $BASE-$VAL','$CHECK$ $LIST-$BASE','Land Tax Per lot Value','Land Tax $Uplift / $Shortfall','OFFER Rebate','SETTLE Rebate','H&L $House (S/S)','$H&L Total (S/S)','H&L $House (D/S)','$H&L Total (D/S)','CfS Issued Price','CfS Exchanged Price ($)','CfS Settled Price ($)','Rebate']);
 const PERCENT_COLS = new Set(['Deposit%']);
 const AREA_COLS = new Set(['Lot Area (m²)','Lot Area (m\u00b2)']);
 
@@ -1916,7 +1983,7 @@ Return ONLY the JSON object, no other text.`;
     }
 
     // ── RULE 2: Land price below $LIST — warn but allow override ──
-    const listPrice = parseFloat(String(allData[rowIdx]['$LIST '] || allData[rowIdx]['$LIST'] || '0').replace(/[^0-9.]/g,''));
+    const listPrice = parseFloat(String(allData[rowIdx]['$LIST'] || '0').replace(/[^0-9.]/g,''));
     const landPrice = parseFloat(String(extracted.cfs_issue_price || '0').replace(/[^0-9.]/g,''));
     let priceWarning = null;
     if (listPrice > 0 && landPrice > 0 && landPrice < listPrice) {
@@ -2077,15 +2144,29 @@ async function confirmScanPdf() {
 
 
 // ── SALES TARGET REPORT ──────────────────────────────
-const ST_SHEET = 'salestarget';
-let stSheetData = null;      // raw 2D array from Excel
-let stOriginalData = null;   // copy for cancel
-let stTargetRows = [];       // row indices of editable target rows
+// ── SALES TARGET REPORT (calculated live from allData) ──────
+let stTargets = {
+  dep:  [3, 13, 23, 20, 20, 17, 0],
+  exch: [3, 15, 20, 20, 20, 18, 0],
+  sett: [5,  0, 15, 20, 20, 20, 16],
+};
 let stDirty = false;
+const ST_MONTHS = ['Jan-26','Feb-26','Mar-26','Apr-26','May-26','Jun-26','Jul-26'];
+const ST_MONTH_RANGES = [
+  [new Date(2026,0,1), new Date(2026,1,1)],
+  [new Date(2026,1,1), new Date(2026,2,1)],
+  [new Date(2026,2,1), new Date(2026,3,1)],
+  [new Date(2026,3,1), new Date(2026,4,1)],
+  [new Date(2026,4,1), new Date(2026,5,1)],
+  [new Date(2026,5,1), new Date(2026,6,1)],
+  [new Date(2026,6,1), new Date(2026,7,1)],
+];
+const AVG_BASE = 925325;
 
-async function openSalesTarget() {
+function openSalesTarget() {
+  if (!allData.length) { toast('Load data first', 'error'); return; }
   document.getElementById('sales-target-overlay').style.display = 'flex';
-  await loadSalesTarget();
+  renderSalesTargetTable();
 }
 
 function closeSalesTarget() {
@@ -2094,116 +2175,285 @@ function closeSalesTarget() {
 }
 
 async function refreshSalesTarget() {
-  document.getElementById('st-table-wrap').style.display = 'none';
-  document.getElementById('st-error').style.display = 'none';
-  document.getElementById('st-loading').style.display = 'block';
-  await loadSalesTarget();
+  renderSalesTargetTable();
 }
 
-async function loadSalesTarget() {
-  document.getElementById('st-loading').style.display = 'block';
-  document.getElementById('st-table-wrap').style.display = 'none';
-  document.getElementById('st-error').style.display = 'none';
+function stParseDate(v) {
+  if (!v) return null;
+  const d = new Date(v);
+  return isNaN(d) ? null : d;
+}
 
-  try {
-    const token = await getToken();
-    const driveBase = fileDriveId
-      ? `https://graph.microsoft.com/v1.0/drives/${fileDriveId}/items/${fileId}`
-      : `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}`;
+function stInMonth(dateVal, start, end) {
+  const d = stParseDate(dateVal);
+  return d && d >= start && d < end;
+}
 
-    // Get used range from salestarget sheet
-    const res = await fetch(
-      `${driveBase}/workbook/worksheets/${encodeURIComponent(ST_SHEET)}/usedRange`,
-      { headers: { Authorization: 'Bearer ' + token } }
-    );
-    if (!res.ok) throw new Error(`Could not read "${ST_SHEET}" sheet (${res.status})`);
-    const data = await res.json();
-    stSheetData = data.values;
-    stOriginalData = JSON.parse(JSON.stringify(stSheetData));
-    stDirty = false;
-    renderSalesTargetTable();
-  } catch(e) {
-    document.getElementById('st-loading').style.display = 'none';
-    document.getElementById('st-error-msg').textContent = e.message;
-    document.getElementById('st-error').style.display = 'block';
-  }
+function stNo2C(row) {
+  return !String(row['Stage'] || '').includes('C');
+}
+
+function stCnt(dateCol, mi, condCol, condVal) {
+  const [s, e] = ST_MONTH_RANGES[mi];
+  return allData.filter(r => {
+    if (!stNo2C(r)) return false;
+    if (condCol && String(r[condCol] || '').trim() !== condVal) return false;
+    return stInMonth(r[dateCol], s, e);
+  }).length;
+}
+
+function stCntNoFilter(dateCol, mi) {
+  // Jan deposit has no 2C filter
+  const [s, e] = ST_MONTH_RANGES[mi];
+  return allData.filter(r => stInMonth(r[dateCol], s, e)).length;
+}
+
+function stSum(valCol, dateCol, mi, condCol, condVal) {
+  const [s, e] = ST_MONTH_RANGES[mi];
+  return allData.filter(r => {
+    if (!stNo2C(r)) return false;
+    if (condCol && String(r[condCol] || '').trim() !== condVal) return false;
+    return stInMonth(r[dateCol], s, e);
+  }).reduce((acc, r) => acc + (Number(r[valCol]) || 0), 0);
+}
+
+function stCalc() {
+  const SC = 'Sales Condition';
+  const calc = { dep:{}, exch:{}, sett:{} };
+
+  // DEPOSIT actual: Contract Issued Date (AR), Jan has no 2C filter
+  calc.dep.act_lots = ST_MONTH_RANGES.map(([s,e], i) =>
+    i === 0 ? stCntNoFilter('Contract Issued Date', i)
+            : stCnt('Contract Issued Date', i));
+  calc.dep.act_rev = ST_MONTH_RANGES.map(([s,e], i) =>
+    i === 0
+      ? allData.filter(r => stInMonth(r['Contract Issued Date'], s, e)).reduce((a,r) => a + (Number(r['CfS Issued Price'])||0), 0)
+      : stSum('CfS Issued Price', 'Contract Issued Date', i));
+
+  // PROPOSED EXCHANGED: condition=3. Deposit, date=Proposed Exchanged Date
+  calc.exch.prop_lots = ST_MONTH_RANGES.map((_,i) =>
+    stCnt('Proposed Exchanged Date', i, SC, '3. Deposit'));
+  calc.exch.prop_rev = ST_MONTH_RANGES.map((_,i) =>
+    stSum('CfS Issued Price', 'Proposed Exchanged Date', i, SC, '3. Deposit'));
+
+  // ACTUAL EXCHANGED: Exchanged Date
+  calc.exch.act_lots = ST_MONTH_RANGES.map((_,i) =>
+    stCnt('Exchanged Date', i));
+  calc.exch.act_rev = ST_MONTH_RANGES.map((_,i) =>
+    stSum('CfS Issued Price', 'Exchanged Date', i));
+
+  // PROPOSED SETTLEMENT: condition=4. Exchanged, date=Proposed Settled Date
+  calc.sett.prop_lots = ST_MONTH_RANGES.map((_,i) =>
+    stCnt('Proposed Settled Date', i, SC, '4. Exchanged'));
+
+  // PROPOSED SETTLEMENT revenue — exact per-month formulas
+  calc.sett.prop_rev = ST_MONTH_RANGES.map(([s,e], i) => {
+    if (i <= 1) {
+      return stSum('CfS Exchanged Price ($)', 'Proposed Settled Date', i, SC, '4. Exchanged');
+    } else if (i === 2) {
+      return stSum('CfS Exchanged Price ($)', 'Proposed Settled Date', i, SC, '5. Settled')
+           + stSum('CfS Exchanged Price ($)', 'Proposed Settled Date', i, SC, '4. Exchanged')
+           + stSum('CfS Issued Price',        'Proposed Settled Date', i, SC, '3. Deposit');
+    } else {
+      return stSum('CfS Exchanged Price ($)', 'Proposed Settled Date', i, SC, '4. Exchanged')
+           + stSum('CfS Issued Price',        'Proposed Settled Date', i, SC, '3. Deposit');
+    }
+  });
+
+  // ACTUAL SETTLED: Settled Date, CfS Settled Price
+  calc.sett.act_lots = ST_MONTH_RANGES.map((_,i) =>
+    stCnt('Settled Date', i));
+  calc.sett.act_rev = ST_MONTH_RANGES.map((_,i) =>
+    stSum('CfS Settled Price ($)', 'Settled Date', i));
+
+  return calc;
 }
 
 function renderSalesTargetTable() {
   document.getElementById('st-loading').style.display = 'none';
   document.getElementById('st-error').style.display = 'none';
+  document.getElementById('st-table-wrap').style.display = 'block';
+  document.getElementById('st-save-bar').style.display = stDirty ? 'flex' : 'none';
 
+  const calc = stCalc();
   const table = document.getElementById('st-table');
   table.innerHTML = '';
-  stTargetRows = [];
 
-  if (!stSheetData || !stSheetData.length) {
-    document.getElementById('st-error-msg').textContent = 'No data found in salestarget sheet';
-    document.getElementById('st-error').style.display = 'block';
-    return;
-  }
+  const HDR_RED   = '#FF0000';   // Row 2: header bg
+  const TGT_BG    = '#EAF1DD';   // Rows 3-4, 8-9, 15-16: TARGET bg (theme 6 + tint 0.8)
+  const TGT_FC    = '#FF0000';   // TARGET font colour
+  const ACT_GRN   = '#83E28E';   // Rows 5-6: ACTUAL DEPOSIT bg
+  const ACT_GRN_FC= '#7B4B23';   // ACTUAL DEPOSIT font
+  const PROP_EXCH_BG = '#E5DFEC'; // Rows 10-11: PROPOSED EXCHANGED bg (theme 7 + tint 0.8)
+  const PROP_EXCH_FC = '#9BBB59'; // PROPOSED EXCHANGED font (theme 6)
+  const ACT_BLU   = '#95B3D7';   // Rows 12-13: ACTUAL EXCHANGED bg (theme 4 + tint 0.4)
+  const ACT_BLU_FC= '#7B4B23';   // ACTUAL EXCHANGED font
+  const TGT_SETT_BG  = '#DAEEF3'; // Rows 15-16: TARGET SETTLED bg (theme 8 + tint 0.8)
+  const PROP_SETT_BG = '#B6DDE8'; // Rows 17-18: PROPOSED SETTLEMENT bg (theme 8 + tint 0.6)
+  const ACT_SETT_BG  = '#92CDDC'; // Rows 19-20: ACTUAL SETTLED bg (theme 8 + tint 0.4)
+  const ACT_SETT_FC  = '#7B4B23'; // ACTUAL SETTLED font
+  const WHITE   = '#FFFFFF';
+  const DARK    = '#1A1A1A';
+  const RED_FC  = '#FF0000';
 
-  // Colour map based on cell content keywords
-  const getRowStyle = (row) => {
-    const label = String(row[0] || row[1] || '').toUpperCase();
-    if (label.includes('TARGET') || label.includes('# OF LOTS') && !label.includes('PROPOSED')) {
-      if (label.includes('DEPOSIT'))   return { bg:'#e53e3e', color:'white', bold:true };
-      if (label.includes('EXCHANGE'))  return { bg:'#e53e3e', color:'white', bold:true };
-      if (label.includes('SETTLED') || label.includes('SETTLEMENT')) return { bg:'#e53e3e', color:'white', bold:true };
-    }
-    if (label.includes('BASE'))        return { bg:'#e53e3e', color:'white', bold:true };
-    if (label.includes('PROPOSED'))    return { bg:'#3182ce', color:'white', bold:false };
-    if (label.includes('CFS') || label.includes('CfS')) return { bg:'#38a169', color:'white', bold:false };
-    return { bg:'white', color:'#1a1a1a', bold:false };
+  const fmtV = (v) => {
+    if (!v) return '—';
+    if (Math.abs(v) >= 1000) return '$\u00a0' + Math.round(v).toLocaleString();
+    return String(v);
   };
 
-  const fmtCell = (val) => {
-    if (val === null || val === undefined || val === '') return '—';
-    if (typeof val === 'number') {
-      if (val >= 1000) return '$' + val.toLocaleString();
-      return val;
-    }
-    return String(val);
+  const th = (txt, bg, fg, align='center') => {
+    const el = document.createElement('th');
+    el.textContent = txt;
+    el.style.cssText = `background:${bg};color:${fg};padding:5px 8px;border:1px solid rgba(0,0,0,0.1);text-align:${align};white-space:nowrap;font-size:11px;font-weight:700`;
+    return el;
   };
 
-  const numCols = stSheetData[0].length;
+  const td = (txt, bg, fg, bold=false, editable=false, onChange=null) => {
+    const el = document.createElement('td');
+    el.style.cssText = `background:${bg};color:${fg};padding:5px 8px;border:1px solid rgba(0,0,0,0.1);text-align:center;white-space:nowrap;font-size:11px;font-weight:${bold?'700':'400'}`;
+    if (editable) {
+      const inp = document.createElement('input');
+      inp.type = 'number';
+      inp.value = txt === '—' ? '' : txt;
+      inp.style.cssText = 'width:44px;background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.6);border-radius:3px;color:white;font-size:11px;text-align:center;padding:2px 4px;font-family:Aptos,sans-serif;font-weight:700';
+      inp.addEventListener('change', onChange);
+      el.appendChild(inp);
+    } else {
+      el.textContent = txt;
+    }
+    return el;
+  };
 
-  stSheetData.forEach((row, rowIdx) => {
+  const tdL = (txt, fg, bold=false) => {
+    const el = document.createElement('td');
+    el.textContent = txt;
+    el.style.cssText = `color:${fg};padding:5px 8px;border:1px solid rgba(0,0,0,0.1);text-align:left;white-space:nowrap;font-size:11px;font-weight:${bold?'700':'400'};min-width:${txt.length > 15 ? 140 : 80}px`;
+    return el;
+  };
+
+  const spacer = () => {
     const tr = document.createElement('tr');
-    const label = String(row[0] || row[1] || '').toUpperCase();
-    const isTarget = label.includes('TARGET') || (label.includes('# OF LOTS') && rowIdx < 4);
-    if (isTarget) stTargetRows.push(rowIdx);
+    const td = document.createElement('td');
+    td.colSpan = 11;
+    td.style.cssText = 'background:#f5f5f5;border:none;padding:2px';
+    tr.appendChild(td);
+    return tr;
+  };
 
-    const style = getRowStyle(row);
-
-    row.forEach((cell, colIdx) => {
-      const td = document.createElement(rowIdx === 0 ? 'th' : 'td');
-      td.style.cssText = `padding:5px 10px;border:1px solid #ddd;white-space:nowrap;text-align:${colIdx === 0 ? 'left' : 'center'};background:${rowIdx === 0 ? '#1a2a3a' : style.bg};color:${rowIdx === 0 ? 'white' : style.color};font-weight:${style.bold || rowIdx === 0 ? '600' : '400'}`;
-
-      if (isTarget && colIdx > 0 && rowIdx !== 0 && typeof cell === 'number') {
-        // Editable target cell
-        const input = document.createElement('input');
-        input.type = 'number';
-        input.value = cell === null || cell === '' ? '' : cell;
-        input.dataset.row = rowIdx;
-        input.dataset.col = colIdx;
-        input.style.cssText = 'width:50px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);border-radius:3px;color:white;font-size:11px;text-align:center;padding:2px 4px;font-family:Aptos,sans-serif';
-        input.addEventListener('change', (e) => {
-          stSheetData[rowIdx][colIdx] = Number(e.target.value);
+  const addRow = (status, section, metric, vals, bgData, fgData, boldData, isTarget, section_key, metric_key) => {
+    const tr = document.createElement('tr');
+    tr.appendChild(tdL(status, RED_FC, true));
+    tr.appendChild(tdL(section, RED_FC, true));
+    tr.appendChild(tdL(metric, DARK, false));
+    vals.forEach((v, i) => {
+      if (isTarget) {
+        const cell = td(v === 0 ? '' : v, bgData, fgData, true, true, (e) => {
+          stTargets[section_key][i] = Number(e.target.value) || 0;
           stDirty = true;
           document.getElementById('st-save-bar').style.display = 'flex';
         });
-        td.appendChild(input);
+        tr.appendChild(cell);
       } else {
-        td.textContent = rowIdx === 0 ? String(cell || '') : fmtCell(cell);
+        tr.appendChild(td(fmtV(v), bgData, fgData, boldData));
       }
-      tr.appendChild(td);
     });
-    table.appendChild(tr);
-  });
+    // TOTALS
+    const tot = vals.reduce((a,b) => a+b, 0);
+    const totEl = document.createElement('td');
+    totEl.textContent = fmtV(tot);
+    totEl.style.cssText = `background:${section_key==='exch' && !isTarget && metric.includes('Lots') ? ACT_BLU : (section_key==='exch' && !isTarget && metric.includes('Revenue') ? ACT_BLU : 'transparent')};color:${section_key==='exch' && !isTarget ? WHITE : DARK};padding:5px 8px;border:1px solid rgba(0,0,0,0.1);text-align:center;font-size:11px;font-weight:700`;
+    tr.appendChild(totEl);
+    return tr;
+  };
 
-  document.getElementById('st-table-wrap').style.display = 'block';
-  if (!stDirty) document.getElementById('st-save-bar').style.display = 'none';
+  const addActRow = (status, section, metric, vals, bg, fg) => {
+    const tr = document.createElement('tr');
+    tr.appendChild(tdL(status, fg === WHITE ? WHITE : DARK, true)).style.background = bg;
+    tr.appendChild(tdL(section, fg === WHITE ? WHITE : DARK, true)).style.background = bg;
+    tr.appendChild(tdL(metric, fg === WHITE ? WHITE : DARK, true)).style.background = bg;
+    vals.forEach(v => {
+      const el = td(fmtV(v), bg, fg === WHITE ? WHITE : DARK, false);
+      tr.appendChild(el);
+    });
+    const tot = vals.reduce((a,b) => a+b, 0);
+    tr.appendChild(td(fmtV(tot), 'transparent', DARK, true));
+    return tr;
+  };
+
+  const addPlainRow = (status, section, metric, vals) => {
+    const tr = document.createElement('tr');
+    tr.appendChild(tdL(status, DARK, true));
+    tr.appendChild(tdL(section, DARK, false));
+    tr.appendChild(tdL(metric, DARK, false));
+    vals.forEach(v => tr.appendChild(td(fmtV(v), 'transparent', DARK, false)));
+    const tot = vals.reduce((a,b) => a+b, 0);
+    tr.appendChild(td(fmtV(tot), 'transparent', DARK, true));
+    return tr;
+  };
+
+  // Header
+  const headRow = document.createElement('tr');
+  ['STATUS','SALES CONDITION','STOCK / REVENUE / PRODUCT',...ST_MONTHS,'TOTALS'].forEach((h,i) => {
+    headRow.appendChild(th(h, i <= 2 ? HDR_RED : 'transparent', i <= 2 ? WHITE : DARK, i <= 2 ? 'left' : 'center'));
+  });
+  table.appendChild(headRow);
+
+  // Helper: target rows
+  const tgtRow = (section, metric, vals, sk, mk) => {
+    const tr = document.createElement('tr');
+    const SC = section.toUpperCase();
+    // Pick bg colour per section to match Excel exactly
+    const tBg = sk === 'sett' ? TGT_SETT_BG : TGT_BG;
+    tr.appendChild(tdL('TARGET', TGT_FC, true)).style.background = tBg;
+    tr.appendChild(tdL(SC, TGT_FC, true)).style.background = tBg;
+    tr.appendChild(tdL(metric, DARK, false)).style.background = tBg;
+    vals.forEach((v, i) => {
+      if (mk === 'lots') {
+        const cell = td(v === 0 ? '' : v, tBg, TGT_FC, true, true, (e) => {
+          stTargets[sk][i] = Number(e.target.value) || 0;
+          stDirty = true;
+          document.getElementById('st-save-bar').style.display = 'flex';
+          renderSalesTargetTable();
+        });
+        // Fix editable input style to match new colours
+        if (cell.firstChild && cell.firstChild.tagName === 'INPUT') {
+          cell.firstChild.style.cssText = 'width:44px;background:rgba(255,255,255,0.5);border:1px solid rgba(0,0,0,0.25);border-radius:3px;color:#1A1A1A;font-size:11px;text-align:center;padding:2px 4px;font-family:Aptos,sans-serif;font-weight:700';
+        }
+        tr.appendChild(cell);
+      } else {
+        tr.appendChild(td(fmtV(v), tBg, TGT_FC, true));
+      }
+    });
+    const tot = vals.reduce((a,b) => a+b, 0);
+    tr.appendChild(td(fmtV(tot), 'transparent', DARK, true));
+    return tr;
+  };
+
+  // DEPOSIT
+  table.appendChild(tgtRow('Deposit', '# of Lots', stTargets.dep, 'dep', 'lots'));
+  table.appendChild(tgtRow('Deposit', '$BASE Revenue ($)', stTargets.dep.map(v => v * AVG_BASE), 'dep', 'rev'));
+  table.appendChild(addActRow('ACTUAL','DEPOSIT','# of Lots', calc.dep.act_lots, ACT_GRN, ACT_GRN_FC));
+  table.appendChild(addActRow('ACTUAL','DEPOSIT','$CfS Revenue ($)', calc.dep.act_rev, ACT_GRN, ACT_GRN_FC));
+  table.appendChild(spacer());
+
+  // EXCHANGED
+  table.appendChild(tgtRow('Exchanged', '# of Lots', stTargets.exch, 'exch', 'lots'));
+  table.appendChild(tgtRow('Exchanged', '$BASE Revenue ($)', stTargets.exch.map(v => v * AVG_BASE), 'exch', 'rev'));
+  table.appendChild(addActRow('Proposed','PROPOSED EXCHANGED','# of Lots', calc.exch.prop_lots, PROP_EXCH_BG, PROP_EXCH_FC));
+  table.appendChild(addActRow('Proposed','PROPOSED EXCHANGED','CfS Issued Revenue ($)', calc.exch.prop_rev, PROP_EXCH_BG, PROP_EXCH_FC));
+  table.appendChild(addActRow('ACTUAL','EXCHANGED','# of Lots', calc.exch.act_lots, ACT_BLU, ACT_BLU_FC));
+  table.appendChild(addActRow('ACTUAL','EXCHANGED','$CfS Revenue ($)', calc.exch.act_rev, ACT_BLU, ACT_BLU_FC));
+
+  table.appendChild(spacer());
+
+  // SETTLED
+  table.appendChild(tgtRow('Settled', '# of Lots', stTargets.sett, 'sett', 'lots'));
+  table.appendChild(tgtRow('Settled', '$BASE Revenue ($)', stTargets.sett.map(v => v * AVG_BASE), 'sett', 'rev'));
+  table.appendChild(addActRow('PROPOSED','PROPOSED SETTLEMENT','# of Lots', calc.sett.prop_lots, PROP_SETT_BG, ACT_SETT_FC));
+  table.appendChild(addActRow('PROPOSED','PROPOSED SETTLEMENT','$CfS Revenue ($)', calc.sett.prop_rev, PROP_SETT_BG, ACT_SETT_FC));
+  table.appendChild(addActRow('ACTUAL','SETTLED','# of Lots', calc.sett.act_lots, ACT_SETT_BG, ACT_SETT_FC));
+  table.appendChild(addActRow('ACTUAL','SETTLED','$CfS Revenue ($)', calc.sett.act_rev, ACT_SETT_BG, ACT_SETT_FC));
 }
 
 async function saveSalesTargets() {
@@ -2214,24 +2464,25 @@ async function saveSalesTargets() {
       ? `https://graph.microsoft.com/v1.0/drives/${fileDriveId}/items/${fileId}`
       : `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}`;
 
-    // Write all target row values back
-    for (const rowIdx of stTargetRows) {
-      const row = stSheetData[rowIdx];
-      // Build range address — row is 1-based in Excel, +1 for header offset
-      const excelRow = rowIdx + 1;
-      const lastCol = String.fromCharCode(64 + row.length);
-      const rangeAddr = `A${excelRow}:${lastCol}${excelRow}`;
+    // Save each target row back to Excel (rows 3, 8, 15 = # of Lots targets)
+    const targetMap = [
+      { row: 3, vals: stTargets.dep },
+      { row: 8, vals: stTargets.exch },
+      { row: 15, vals: stTargets.sett },
+    ];
 
+    for (const { row, vals } of targetMap) {
+      // Cols F-L = cols 6-12 in Excel (1-based)
+      const range = `F${row}:L${row}`;
       await fetch(
-        `${driveBase}/workbook/worksheets/${encodeURIComponent(ST_SHEET)}/range(address='${rangeAddr}')`,
+        `${driveBase}/workbook/worksheets/${encodeURIComponent('2.SalesTarget')}/range(address='${range}')`,
         {
           method: 'PATCH',
           headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ values: [row] })
+          body: JSON.stringify({ values: [vals] })
         }
       );
     }
-    stOriginalData = JSON.parse(JSON.stringify(stSheetData));
     stDirty = false;
     document.getElementById('st-save-bar').style.display = 'none';
     toast('Targets saved to Excel ✓', 'success');
@@ -2241,10 +2492,465 @@ async function saveSalesTargets() {
 }
 
 function cancelSalesTargets() {
-  stSheetData = JSON.parse(JSON.stringify(stOriginalData));
   stDirty = false;
   renderSalesTargetTable();
 }
+
+
+
+// ─── CFS TRACK ───────────────────────────────────────────────────────────────
+
+let cfsTrackData = [];      // raw rows from Excel sheet (all cols A–S)
+let cfsNoteCtx   = null;    // { excelRow, lotNo, existingNotes }
+
+const CFS_CONDITIONS = ['2. Pending SA', '3. Deposit', '4. Exchanged'];
+
+// Condition pill colours
+const CFS_COND_STYLE = {
+  '2. Pending SA': 'background:#faeeda;color:#7a4900',
+  '3. Deposit':    'background:#e8f0fd;color:#1a3a8b',
+  '4. Exchanged':  'background:#eaf3de;color:#2e6b0e',
+};
+
+function openCfsTrack() {
+  if (!fileId) { toast('Load data first', 'error'); return; }
+  document.getElementById('cfstrack-overlay').style.display = 'flex';
+  loadCfsTrack();
+}
+
+function closeCfsTrack() {
+  document.getElementById('cfstrack-overlay').style.display = 'none';
+}
+
+async function refreshCfsTrack() {
+  cfsTrackData = [];
+  await loadCfsTrack();
+}
+
+async function loadCfsTrack() {
+  const loading = document.getElementById('cfs-loading');
+  const wrap    = document.getElementById('cfs-table-wrap');
+  const errDiv  = document.getElementById('cfs-error');
+  loading.style.display = 'block';
+  wrap.style.display    = 'none';
+  errDiv.style.display  = 'none';
+
+  try {
+    const token = await getToken();
+    const driveBase = fileDriveId
+      ? `https://graph.microsoft.com/v1.0/drives/${fileDriveId}/items/${fileId}`
+      : `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}`;
+
+    // Read rows 1–60 cols A–S from 1.CfS_Track
+    const sheetEnc = encodeURIComponent('1.CfS_Track');
+    const res = await fetch(
+      `${driveBase}/workbook/worksheets/${sheetEnc}/range(address='A1:Q60')`,
+      { headers: { Authorization: 'Bearer ' + token } }
+    );
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`Graph API ${res.status}: ${txt.slice(0,120)}`);
+    }
+    const data = await res.json();
+    // Use data.text — returns display-formatted strings (dates as "30-Mar-26" not serials)
+    // Fall back to data.values if text not available
+    const rows = (data.text && data.text.length ? data.text : data.values) || [];
+    if (!rows.length) throw new Error('No data returned from CfS Track sheet');
+
+    // Row 0 = headers, rows 1+ = data
+    // Cols: A=0 Lot, B=1 Condition, C=2 SA Received, D=3 CfS Issued, E=4 Days from CfS,
+    //       F=5 Forecast Exch, G=6 Prop Exch, H=7 Exch Price, I=8 Prop Settle,
+    //       J=9 Days from Exch, K=10 Prop days settle, L=11 Days cool off,
+    //       A=0 Lot, B=1 Cond, C=2 SA Rec, D=3 CfS Issued, E=4 Days CfS,
+    //       F=5 Forecast Exch, G=6 Prop Exch, H=7 Exch Price, I=8 Prop Settle,
+    //       J=9 Days Exch, K=10 Prop days settle, L=11 Cool off,
+    //       M=12 Prop Settle Date, N=13 Agency, O=14 Sales notes,
+    //       P=15 CBP notes, Q=16 Action
+    cfsTrackData = rows.slice(1)
+      .map((r, i) => ({
+        excelRow: i + 2,  // 1-based, +1 for header
+        lot:       r[0],
+        cond:      r[1],
+        saRec:     r[2],
+        cfsIssued: r[3],
+        daysCfs:   r[4],
+        propExch:  r[6],
+        exchPrice: r[7],
+        propSettle:r[8],
+        daysExch:  r[9],
+        coolOff:   r[11],
+        propSettleDate: r[12],
+        agency:    r[13],
+        salesNotes:r[14] || '',
+        cbpNotes:  r[15] || '',
+        action:    r[16] || '',
+      }))
+      .filter(r => r.lot && CFS_CONDITIONS.includes(String(r.cond).trim()));
+
+    renderCfsTable();
+    loading.style.display = 'none';
+    wrap.style.display    = 'block';
+  } catch(e) {
+    loading.style.display = 'none';
+    errDiv.style.display  = 'block';
+    document.getElementById('cfs-error-msg').textContent = e.message;
+  }
+}
+
+function cfsDateFmt(v) {
+  if (!v || v === '' || v === '0:00:00') return '—';
+  const s = String(v).trim();
+  if (!s || s === '0') return '—';
+
+  // If it's already a formatted date string from data.text (e.g. "30-Mar-26"), normalise to 4-digit year
+  const textMatch = s.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2,4})$/);
+  if (textMatch) {
+    const day = parseInt(textMatch[1]);
+    const mon = textMatch[2].charAt(0).toUpperCase() + textMatch[2].slice(1,3).toLowerCase();
+    let yr = parseInt(textMatch[3]);
+    if (yr < 100) yr += 2000;
+    // Zero serial renders as "0-Jan-1900" or "0-Jan-2000" — treat as blank
+    if (day === 0 || yr < 1970) return '—';
+    return day.toString().padStart(2,'0') + '-' + mon + '-' + yr;
+  }
+
+  // If it's an ISO string from data.values fallback
+  const d = new Date(s);
+  if (!isNaN(d.getTime()) && d.getFullYear() >= 1970) {
+    return d.getDate().toString().padStart(2,'0') + '-' +
+      ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()] +
+      '-' + d.getFullYear();
+  }
+
+  // Excel serial number fallback (e.g. 46117)
+  const serial = parseFloat(s);
+  if (!isNaN(serial) && serial > 1000 && serial < 100000) {
+    // Excel epoch: 1 Jan 1900 = serial 1 (with leap year bug, serial 60 = 29-Feb-1900 never existed)
+    const excelEpoch = new Date(1899, 11, 30);
+    const d2 = new Date(excelEpoch.getTime() + serial * 86400000);
+    if (d2.getFullYear() >= 1970) {
+      return d2.getDate().toString().padStart(2,'0') + '-' +
+        ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d2.getMonth()] +
+        '-' + d2.getFullYear();
+    }
+  }
+  return '—';
+}
+
+function cfsCurrFmt(v) {
+  if (!v || v === '') return '—';
+  const n = parseFloat(v);
+  if (isNaN(n)) return '—';
+  return '$' + Math.round(n).toLocaleString();
+}
+
+function renderCfsTable() {
+  const table = document.getElementById('cfs-table');
+  table.innerHTML = '';
+
+  const HDR_BG  = '#1F497D';
+  const HDR_FG  = '#FFFFFF';
+
+  const th = (txt, align='center', minW='') => {
+    const el = document.createElement('th');
+    el.textContent = txt;
+    el.style.cssText = `background:${HDR_BG};color:${HDR_FG};padding:6px 8px;border:1px solid rgba(255,255,255,0.15);text-align:${align};white-space:nowrap;font-size:11px;font-weight:600;${minW ? 'min-width:'+minW : ''}`;
+    return el;
+  };
+
+  // Header row
+  const headRow = document.createElement('tr');
+  ['Lot','Condition','SA Received','CfS Issued','Days','Prop. Exch','Exch Price','Prop. Settle','Agency','Agent','Sales Notes'].forEach((h, i) => {
+    headRow.appendChild(th(h, i <= 1 ? 'left' : 'center', h === 'Sales Notes' ? '180px' : ''));
+  });
+  table.appendChild(headRow);
+
+  // Group rows by condition order
+  const ORDER = ['2. Pending SA','3. Deposit','4. Exchanged'];
+  const grouped = ORDER.flatMap(c => cfsTrackData.filter(r => String(r.cond).trim() === c));
+
+  let lastCond = null;
+  grouped.forEach((row, idx) => {
+    const cond = String(row.cond).trim();
+
+    // Condition section divider
+    if (cond !== lastCond) {
+      lastCond = cond;
+      const divRow = document.createElement('tr');
+      const divTd  = document.createElement('td');
+      divTd.colSpan = 11;
+      const label = cond.replace(/^\d+\.\s*/,'').toUpperCase();
+      divTd.style.cssText = 'padding:4px 8px;font-size:10px;font-weight:700;letter-spacing:0.08em;border:1px solid rgba(0,0,0,0.08);';
+      if (cond === '2. Pending SA')  { divTd.style.background='#faeeda'; divTd.style.color='#7a4900'; }
+      if (cond === '3. Deposit')     { divTd.style.background='#e8f0fd'; divTd.style.color='#1a3a8b'; }
+      if (cond === '4. Exchanged')   { divTd.style.background='#eaf3de'; divTd.style.color='#2e6b0e'; }
+      divTd.textContent = label;
+      divRow.appendChild(divTd);
+      table.appendChild(divRow);
+    }
+
+    const tr = document.createElement('tr');
+    const even = idx % 2 === 0;
+    const rowBg = even ? 'var(--bg)' : 'var(--surface)';
+
+    const td = (txt, align='center', bold=false, extra='') => {
+      const el = document.createElement('td');
+      el.textContent = txt;
+      el.style.cssText = `background:${rowBg};padding:6px 8px;border:1px solid var(--border);text-align:${align};font-size:11px;font-weight:${bold?'600':'400'};color:var(--ink);white-space:nowrap;${extra}`;
+      return el;
+    };
+
+    tr.appendChild(td(row.lot, 'left', true));
+
+    // Condition pill
+    const condTd = document.createElement('td');
+    condTd.style.cssText = `background:${rowBg};padding:6px 8px;border:1px solid var(--border);text-align:left`;
+    const pill = document.createElement('span');
+    pill.textContent = String(row.cond).replace(/^\d+\.\s*/,'');
+    pill.style.cssText = `display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;${CFS_COND_STYLE[cond] || ''}`;
+    condTd.appendChild(pill);
+    tr.appendChild(condTd);
+
+    tr.appendChild(td(cfsDateFmt(row.saRec)));
+    tr.appendChild(td(cfsDateFmt(row.cfsIssued)));
+
+    // Days — colour-code: >20 red, 10-20 orange
+    // Suppress Excel serial numbers (>1000) which appear when CfS Issued date is blank
+    const daysTd = document.createElement('td');
+    const daysRaw = parseInt(row.daysCfs) || 0;
+    const days = daysRaw > 1000 ? 0 : daysRaw;
+    let daysColor = 'var(--ink)';
+    if (days > 20) daysColor = '#c00';
+    else if (days > 10) daysColor = '#b86000';
+    daysTd.textContent = days || '—';
+    daysTd.style.cssText = `background:${rowBg};padding:6px 8px;border:1px solid var(--border);text-align:center;font-size:11px;font-weight:600;color:${daysColor}`;
+    tr.appendChild(daysTd);
+
+    tr.appendChild(td(cfsDateFmt(row.propExch)));
+    tr.appendChild(td(cfsCurrFmt(row.exchPrice)));
+    tr.appendChild(td(cfsDateFmt(row.propSettle)));
+    tr.appendChild(td(row.agency || '—', 'left'));
+    tr.appendChild(td(row.agent  || '—', 'left'));
+
+    // Sales Notes cell — truncated + expand + add note button
+    const notesTd = document.createElement('td');
+    notesTd.style.cssText = `background:${rowBg};padding:6px 8px;border:1px solid var(--border);max-width:220px;`;
+    const notes = String(row.salesNotes || '').trim();
+    const lines = notes ? notes.split('\n') : [];
+    const firstLine = lines[0] || '';
+    const hasMore   = lines.length > 1;
+    const noteId    = 'cfsnote-full-' + idx;
+
+    notesTd.innerHTML = `
+      <div style="display:flex;align-items:flex-start;gap:6px">
+        <div style="flex:1;min-width:0">
+          <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:var(--ink);cursor:${hasMore?'pointer':'default'}" onclick="${hasMore ? 'document.getElementById(\''+noteId+'\').classList.toggle(\'cfs-open\')' : ''}">${firstLine || '<span style=\"color:var(--muted);font-style:italic\">No notes</span>'}</div>
+          ${hasMore ? `<span style="font-size:10px;color:var(--muted);cursor:pointer" onclick="document.getElementById('${noteId}').classList.toggle('cfs-open')" id="${noteId}-btn">+${lines.length-1} more</span>` : ''}
+          <div id="${noteId}" style="display:none;font-size:11px;color:var(--ink);white-space:pre-line;margin-top:4px;line-height:1.5">${notes}</div>
+        </div>
+        <button onclick="openCfsNote(${row.excelRow}, '${String(row.lot)}', this)" title="Add note" style="flex-shrink:0;padding:2px 6px;font-size:11px;background:var(--accent-light);color:var(--accent);border:1px solid var(--accent);border-radius:4px;cursor:pointer;white-space:nowrap">+ Note</button>
+      </div>`;
+
+    // Toggle expand/collapse text
+    const fullDiv = notesTd.querySelector('#' + noteId);
+    const btnSpan = notesTd.querySelector('#' + noteId + '-btn');
+    if (hasMore && btnSpan && fullDiv) {
+      btnSpan.addEventListener('click', () => {
+        const open = fullDiv.style.display === 'block';
+        fullDiv.style.display = open ? 'none' : 'block';
+        btnSpan.textContent   = open ? '+' + (lines.length-1) + ' more' : '▲ less';
+      });
+    }
+
+    tr.appendChild(notesTd);
+    table.appendChild(tr);
+  });
+
+  if (!grouped.length) {
+    const empty = document.createElement('tr');
+    const emptyTd = document.createElement('td');
+    emptyTd.colSpan = 11;
+    emptyTd.style.cssText = 'padding:32px;text-align:center;color:var(--muted);font-size:13px';
+    emptyTd.textContent = 'No Pending SA, Deposit or Exchanged lots found in CfS Track';
+    empty.appendChild(emptyTd);
+    table.appendChild(empty);
+  }
+}
+
+function openCfsNote(excelRow, lotNo, btnEl) {
+  // Find current notes from cfsTrackData
+  const rowData = cfsTrackData.find(r => r.excelRow === excelRow);
+  const existing = rowData ? String(rowData.salesNotes || '').trim() : '';
+  cfsNoteCtx = { excelRow, lotNo, existing };
+
+  document.getElementById('cfsnote-lot-label').textContent = 'Lot ' + lotNo;
+  document.getElementById('cfsnote-existing').textContent  = existing || '—';
+  document.getElementById('cfsnote-input').value = '';
+  document.getElementById('cfsnote-overlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('cfsnote-input').focus(), 100);
+}
+
+function closeCfsNote() {
+  document.getElementById('cfsnote-overlay').style.display = 'none';
+  cfsNoteCtx = null;
+}
+
+async function saveCfsNote() {
+  if (!cfsNoteCtx) return;
+  const noteText = document.getElementById('cfsnote-input').value.trim();
+  if (!noteText) { toast('Please enter a note', 'error'); return; }
+
+  // Format: "6-Apr-2026 <note>"
+  const today = new Date();
+  const datePrefix = today.getDate() + '-' +
+    ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][today.getMonth()] +
+    '-' + today.getFullYear();
+  const newEntry = datePrefix + ' ' + noteText;
+
+  // Prepend to existing (newest first)
+  const combined = cfsNoteCtx.existing
+    ? newEntry + '\n' + cfsNoteCtx.existing
+    : newEntry;
+
+  try {
+    const token = await getToken();
+    const driveBase = fileDriveId
+      ? `https://graph.microsoft.com/v1.0/drives/${fileDriveId}/items/${fileId}`
+      : `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}`;
+
+    const sheetEnc = encodeURIComponent('1.CfS_Track');
+    const cellAddr = 'O' + cfsNoteCtx.excelRow;
+
+    const res = await fetch(
+      `${driveBase}/workbook/worksheets/${sheetEnc}/range(address='${cellAddr}')`,
+      {
+        method: 'PATCH',
+        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values: [[combined]] })
+      }
+    );
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error('Save failed: ' + res.status + ' ' + err.slice(0,80));
+    }
+
+    // Update local cache
+    const rowData = cfsTrackData.find(r => r.excelRow === cfsNoteCtx.excelRow);
+    if (rowData) rowData.salesNotes = combined;
+
+    closeCfsNote();
+    renderCfsTable();
+    toast('Note saved to Excel ✓', 'success');
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+}
+
+
+function downloadCfsTrack() {
+  if (!cfsTrackData.length) { toast('No data to download', 'error'); return; }
+
+  // SheetJS is loaded as XLSX global
+  if (typeof XLSX === 'undefined') { toast('XLSX library not available', 'error'); return; }
+
+  const wb = XLSX.utils.book_new();
+  const today = new Date();
+  const dateStr = today.getDate() + '-' +
+    ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][today.getMonth()] +
+    '-' + today.getFullYear();
+
+  // ── Styles (using write with cellStyles option via sheetjs-style workaround)
+  // We'll use XLSX.utils.aoa_to_sheet then apply styles via !cols and merge approach
+  // SheetJS CE doesn't support cell styles — we'll build a styled workbook
+  // using the write + bookSST approach with inline HTML via csv fallback is limited.
+  // Best approach for CE: build data array, set col widths, freeze pane, use named styles.
+
+  const HDR_COLS = ['Lot','Condition','SA Received','CfS Issued','Days\nfrom CfS','Prop. Exch Date','Exch Price ($)','Prop. Settle Date','Agency','Sales Notes'];
+  const ORDER = ['2. Pending SA','3. Deposit','4. Exchanged'];
+
+  const aoa = []; // array of arrays
+  const rowMeta = []; // track row type for styling: 'header'|'section'|'data'
+
+  // Header row
+  aoa.push(HDR_COLS);
+  rowMeta.push({ type: 'header' });
+
+  // Data grouped by condition
+  ORDER.forEach(cond => {
+    const group = cfsTrackData.filter(r => String(r.cond).trim() === cond);
+    if (!group.length) return;
+
+    // Section divider row
+    aoa.push([cond.replace(/^\d+\.\s*/,'').toUpperCase(), '', '', '', '', '', '', '', '', '']);
+    rowMeta.push({ type: 'section', cond });
+
+    group.forEach(row => {
+      const daysRaw = parseInt(row.daysCfs) || 0;
+      const days = daysRaw > 1000 ? 0 : daysRaw;
+      const exchPrice = parseFloat(row.exchPrice) || null;
+      aoa.push([
+        String(row.lot),
+        String(row.cond).replace(/^\d+\.\s*/,''),
+        cfsDateFmt(row.saRec),
+        cfsDateFmt(row.cfsIssued),
+        days || '',
+        cfsDateFmt(row.propExch),
+        exchPrice || '',
+        cfsDateFmt(row.propSettle),
+        row.agency || '',
+        String(row.salesNotes || '').trim(),
+      ]);
+      rowMeta.push({ type: 'data', days, cond });
+    });
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+  // Column widths
+  ws['!cols'] = [
+    { wch: 8  },   // Lot
+    { wch: 14 },   // Condition
+    { wch: 13 },   // SA Received
+    { wch: 13 },   // CfS Issued
+    { wch: 9  },   // Days
+    { wch: 14 },   // Prop Exch
+    { wch: 14 },   // Exch Price
+    { wch: 14 },   // Prop Settle
+    { wch: 14 },   // Agency
+    { wch: 45 },   // Sales Notes
+  ];
+
+  // Freeze top row
+  ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+
+  // Merge section divider rows across all columns
+  const merges = [];
+  rowMeta.forEach((meta, i) => {
+    if (meta.type === 'section') {
+      merges.push({ s: { r: i, c: 0 }, e: { r: i, c: 9 } });
+    }
+  });
+  if (merges.length) ws['!merges'] = merges;
+
+  // Apply number format to Exch Price column (col index 6) — SheetJS CE supports z format
+  rowMeta.forEach((meta, ri) => {
+    if (meta.type === 'data') {
+      const addr = XLSX.utils.encode_cell({ r: ri, c: 6 });
+      if (ws[addr] && ws[addr].v) {
+        ws[addr].t = 'n';
+        ws[addr].z = '$#,##0';
+      }
+    }
+  });
+
+  XLSX.utils.book_append_sheet(wb, ws, 'CfS Track');
+
+  const filename = 'CfS_Track_' + dateStr.replace(/-/g,'') + '.xlsx';
+  XLSX.writeFile(wb, filename);
+  toast('Downloaded ' + filename, 'success');
+}
+
+// ─── END CFS TRACK ────────────────────────────────────────────────────────────
 
 function saveChatKey() {
   const inp = document.getElementById('chat-key-input');
@@ -2291,10 +2997,10 @@ function dataSnapshot() {
   let totalVal = 0, valCount = 0;
 
   allData.forEach(r => {
-    const cond = String(r['Sales Condition ']||r['Sales Condition']||'Unknown').trim();
+    const cond = String(r['Sales Condition']||r['Sales Condition']||'Unknown').trim();
     const partner = String(r['Channel Partner']||'Unknown').trim();
     const stage = String(r['Stage']||'Unknown').trim();
-    const val = Number(r['$VAL ']||r['$VAL']||0);
+    const _vk = Object.keys(r).find(k => k.trim() === '$VAL'); const val = Number(_vk ? r[_vk] : 0);
     conditions[cond] = (conditions[cond]||0) + 1;
     partners[partner] = (partners[partner]||0) + 1;
     stages[stage] = (stages[stage]||0) + 1;
@@ -2306,9 +3012,9 @@ function dataSnapshot() {
   // Compact lot index — just lot number, condition, stage, value
   const lotIndex = allData.map(r => {
     const lot = r['Lot #']||r['Lot#']||'';
-    const cond = String(r['Sales Condition ']||r['Sales Condition']||'').trim();
+    const cond = String(r['Sales Condition']||r['Sales Condition']||'').trim();
     const stage = String(r['Stage']||'').trim();
-    const val = Number(r['$VAL ']||r['$VAL']||0);
+    const _vk = Object.keys(r).find(k => k.trim() === '$VAL'); const val = Number(_vk ? r[_vk] : 0);
     const partner = String(r['Channel Partner']||'').trim();
     return lot+'|'+cond+'|'+stage+'|$'+val.toLocaleString()+'|'+partner;
   }).join('\n');
@@ -2458,7 +3164,7 @@ function initDesktop() {
 }
 
 function updateDeskStats() {
-  const sc = r => String(r['Sales Condition '] || r['Sales Condition'] || '').trim();
+  const sc = r => String(r['Sales Condition'] || r['Sales Condition'] || '').trim();
   const fmtM = v => v ? '$' + (v/1000000).toFixed(2) + 'M' : '';
 
   const pendingRows   = allData.filter(r => sc(r).includes('Pending'));
@@ -2466,10 +3172,11 @@ function updateDeskStats() {
   const exchangedRows = allData.filter(r => sc(r).includes('Exchanged'));
   const settledRows   = allData.filter(r => sc(r).includes('Settled'));
 
-  const pendingRev   = pendingRows.reduce((s,r)   => s + (Number(r['$LIST '] || r['$LIST'] || 0)), 0);
-  const depositRev   = depositRows.reduce((s,r)   => s + (Number(r['CfS Issued Price'] || 0)), 0);
-  const exchangedRev = exchangedRows.reduce((s,r) => s + (Number(r['CfS Exchanged Price ($)'] || 0)), 0);
-  const settledRev   = settledRows.reduce((s,r)   => s + (Number(r['CfS Settled Price ($)'] || 0)), 0);
+  const n = v => parseFloat(String(v||'0').replace(/[^0-9.-]/g,''))||0;
+  const pendingRev   = pendingRows.reduce((s,r)   => s + n(r['$LIST']), 0);
+  const depositRev   = depositRows.reduce((s,r)   => s + n(r['CfS Issued Price']), 0);
+  const exchangedRev = exchangedRows.reduce((s,r) => s + n(r['CfS Exchanged Price ($)']), 0);
+  const settledRev   = settledRows.reduce((s,r)   => s + n(r['CfS Settled Price ($)']), 0);
 
   document.getElementById('d-stat-pending').textContent      = pendingRows.length;
   document.getElementById('d-stat-deposit').textContent      = depositRows.length;
@@ -2491,7 +3198,7 @@ let dtSelectedIdx = -1;
 
 function getHeaderColour(h) {
   const lightblue = ['Project Name','Lot ID','Property Address','Stage','Lot #','CfS Type','Product Line','Product Type','Lot Area (m²)','Lot Frontage (Width) (m)'];
-  const yellow = ['Sales Condition ','Pending S/A Date','Pending S/A Days','Pending S/A Agency','$VAL ','$BASE','$LIST ','Notes.1','March Campaign','OFFER Rebate','SETTLE Rebate','Type Of Purchaser','Special Condilions/Variations','2026 Report','Comments.1'];
+  const yellow = ['Sales Condition','Pending S/A Date','Pending S/A Days','Pending S/A Agency','$VAL','$BASE','$LIST','Notes.1','March Campaign','OFFER Rebate','SETTLE Rebate','Type Of Purchaser','Special Condilions/Variations','2026 Report','Comments.1'];
   const darkgrey = ['*LEADS Name'];
   const peachL = ['Property Type'];
   const purple = ['StockList','Notes'];
@@ -2588,12 +3295,12 @@ function renderDesktopTable() {
   }).join('') + '</tr>';
 
   document.getElementById('dt-body').innerHTML = filteredData.map((row, i) => {
-    const cond = String(row['Sales Condition ']||row['Sales Condition']||'');
+    const cond = String(row['Sales Condition']||row['Sales Condition']||'');
     const cells = headers.map((h, hi) => {
       const v = row[h]; const vs = String(v ?? '');
       let cls = hi === 0 ? 'td-lot' : '';
       let display;
-      if (h === 'Sales Condition ' || h === 'Sales Condition') {
+      if (h === 'Sales Condition' || h === 'Sales Condition') {
         const condStyle = badgeCellStyle(cond);
         return `<td class="${cls.trim()}" style="${condStyle}" title="${vs}">${cond}</td>`;
       } else {
@@ -2635,12 +3342,12 @@ function closeDtPanel() {
 
 
 const COL_GROUPS = [
-  { label: 'Property Details', colour: '#C0E6F5', textColour: '#000000', cols: ['Project Name','Lot ID','Property Address','Stage','Lot #','Sales Condition '] },
+  { label: 'Property Details', colour: '#C0E6F5', textColour: '#000000', cols: ['Project Name','Lot ID','Property Address','Stage','Lot #','Sales Condition'] },
   { label: 'Pending SA', colour: '#FFFF00', textColour: '#000000', cols: ['Pending S/A Date','Pending S/A Days','Pending S/A Agency','*LEADS Name'] },
   { label: 'Property Info', colour: '#156082', textColour: '#ffffff', cols: ['CfS Type','Property Type','Product Line','Product Type','Lot Area (m\u00b2)','Lot Frontage (Width) (m)'] },
   { label: 'Stock & Notes', colour: '#9437FF', textColour: '#ffffff', cols: ['StockList','Notes'] },
   { label: 'Channel & Allocation', colour: '#A02B93', textColour: '#ffffff', cols: ['Channel Market','Sales Channel','Channel Partner','Swap to/from Channel Partner','Allocation Date','Allocation Days','Allocation Period (days)','Allocation Days / Allocation Expiry Date'] },
-  { label: 'Pricing', colour: '#FFFF00', textColour: '#000000', cols: ['$VAL ','$BASE','$LIST '] },
+  { label: 'Pricing', colour: '#FFFF00', textColour: '#000000', cols: ['$VAL','$BASE','$LIST'] },
   { label: 'Price Checks', colour: '#FF0066', textColour: '#ffffff', cols: ['$CHECK$                   $BASE-$VAL','$CHECK$ $LIST-$BASE'] },
   { label: 'Land Tax', colour: '#FFFFFF', textColour: '#FF0000', cols: ['Land Tax Per lot Value','Land Tax $Uplift / $Shortfall'] },
   { label: 'Campaign & Rebates', colour: '#FFFF00', textColour: '#000000', cols: ['March Campaign','OFFER Rebate','SETTLE Rebate','H&L $House (S/S)','$H&L Total (S/S)','H&L $House (D/S)','$H&L Total (D/S)','Notes.1'] },
@@ -2744,7 +3451,7 @@ function deskEditFromPanel() {
 }
 
 const SALES_CONDITIONS = ['1. On Sale','2. Pending SA','3. Deposit','4. Exchanged','5. Settled','6. Unreleased','7. Withheld','8. Avantaus'];
-const SALES_COND_KEYS = new Set([sid('Sales Condition '), sid('Sales Condition')]);
+const SALES_COND_KEYS = new Set([sid('Sales Condition'), sid('Sales Condition')]);
 
 function fmtPercent(rawVal) {
   if (!rawVal || rawVal === '' || rawVal === 'NaN') return '<span style="color:var(--muted);font-style:italic">&#8212;</span>';
