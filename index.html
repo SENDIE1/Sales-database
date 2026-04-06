@@ -374,6 +374,18 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
 
       <!-- DESKTOP DATA SCREEN -->
       <div class="desktop-screen active" id="dscreen-data">
+        <!-- Desktop filter bar -->
+        <div style="background:var(--surface);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap">
+          <input type="text" id="dt-search" placeholder="Search..." oninput="applyFilters()" style="flex:1;min-width:160px;padding:6px 12px;border:1px solid var(--border);border-radius:20px;font-family:Aptos,sans-serif;font-size:12px;background:var(--surface2);color:var(--ink);outline:none">
+          <select class="filter-select" id="dt-f-stage" onchange="applyFilters()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:20px;background:var(--surface);color:var(--ink);cursor:pointer"><option value="">All stages</option></select>
+          <select class="filter-select" id="dt-f-condition" onchange="applyFilters()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:20px;background:var(--surface);color:var(--ink);cursor:pointer"><option value="">All conditions</option></select>
+          <select class="filter-select" id="dt-f-channel" onchange="applyFilters()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:20px;background:var(--surface);color:var(--ink);cursor:pointer"><option value="">All channels</option></select>
+          <select class="filter-select" id="dt-f-partner" onchange="applyFilters()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:20px;background:var(--surface);color:var(--ink);cursor:pointer"><option value="">All partners</option></select>
+          <select class="filter-select" id="dt-f-productline" onchange="applyFilters()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:20px;background:var(--surface);color:var(--ink);cursor:pointer"><option value="">All product lines</option></select>
+          <select class="filter-select" id="dt-f-market" onchange="applyFilters()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:20px;background:var(--surface);color:var(--ink);cursor:pointer"><option value="">All markets</option></select>
+          <select class="filter-select" id="dt-f-year" onchange="applyFilters()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:20px;background:var(--surface);color:var(--ink);cursor:pointer"><option value="">All years</option></select>
+          <button onclick="clearFilters()" style="padding:5px 12px;border:1px solid var(--border);border-radius:20px;background:var(--surface);color:var(--muted);font-size:12px;cursor:pointer;font-family:Aptos,sans-serif">&#10005; Clear</button>
+        </div>
         <div class="dt-toolbar">
           <span style="font-size:11px;color:var(--muted)" id="dt-active-filters"></span>
           <span class="dt-rec-count" id="dt-rec-count">— records</span>
@@ -1143,7 +1155,11 @@ function toggleQuickFilter(btn, condition) {
 }
 
 function applyFilters() {
-  const terms = document.getElementById('search-input').value.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean);
+  const mobSearch = document.getElementById('search-input')?.value || '';
+  const dskSearch = document.getElementById('dt-search')?.value || '';
+  const searchVal = isDesktop() ? dskSearch : mobSearch;
+  // Support both comma and space as separators; each term is OR'd against all columns
+  const terms = searchVal.split(/[,\s]+/).map(t=>t.trim().toLowerCase()).filter(Boolean);
   const dropVals = {}; let activeCount = 0;
   Object.entries(FILTER_MAP).forEach(([id, col]) => {
     const mob = document.getElementById(id);
@@ -1161,7 +1177,7 @@ function applyFilters() {
       const cond = String(row['Sales Condition']||row['Sales Condition']||'').trim();
       if (cond !== activeQuickFilter) return false;
     }
-    if (terms.length) { const text = Object.values(row).join(' ').toLowerCase(); if (!terms.every(t => text.includes(t))) return false; }
+    if (terms.length) { const text = Object.values(row).join(' ').toLowerCase(); if (!terms.some(t => text.includes(t))) return false; }
     return Object.entries(dropVals).every(([col, val]) => !val || String(row[col]||'').trim() === val);
   });
   const total = activeCount + (terms.length ? 1 : 0);
@@ -1544,7 +1560,7 @@ function applyAllFilters() {
   filteredData = allData.filter(row => {
     if (terms.length) {
       const text = Object.values(row).join(' ').toLowerCase();
-      if (!terms.every(t => text.includes(t))) return false;
+      if (!terms.some(t => text.includes(t))) return false;
     }
     if (!Object.entries(dropVals).every(([col, val]) => !val || String(row[col]||'').trim() === val)) return false;
     // Apply column filters
@@ -3656,7 +3672,7 @@ function applyFiltersWithCol() {
     dropVals[col] = el?.value || '';
   });
   filteredData = allData.filter(row => {
-    if (terms.length) { const text = Object.values(row).join(' ').toLowerCase(); if (!terms.every(t => text.includes(t))) return false; }
+    if (terms.length) { const text = Object.values(row).join(' ').toLowerCase(); if (!terms.some(t => text.includes(t))) return false; }
     if (!Object.entries(dropVals).every(([col, val]) => !val || String(row[col]||'').trim() === val)) return false;
     for (const [col, vals] of Object.entries(deskActiveColFilters)) {
       if (!vals.has(String(row[col] ?? '').trim())) return false;
