@@ -318,7 +318,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
   <div class="login-card">
     <div class="login-icon">&#128202;</div>
     <div class="login-title">Sales DB</div>
-    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.28</div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.30</div>
     <div class="login-sub">Sign in with your Microsoft account to access your OneDrive sales data.</div>
     <button class="ms-btn" onclick="signIn()">
       <div class="ms-logo"><div></div><div></div><div></div><div></div></div>
@@ -342,7 +342,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
 <!-- APP -->
 <div id="app-wrapper" style="display:none">
   <div class="app-header">
-    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.28</span></div>
+    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.30</span></div>
     <div class="header-right">
       <div class="user-pill">
         <div class="user-avatar" id="user-avatar">?</div>
@@ -426,6 +426,10 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
             <div class="desktop-report-btn" onclick="openSalesTarget()">
               <div class="report-icon" style="background:#fde8e8;border-radius:8px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">&#127919;</div>
               <div class="desktop-report-info"><div class="report-title">Sales Target</div><div class="report-sub">Deposit, Exchange & Settlement vs targets</div></div>
+            </div>
+            <div class="desktop-report-btn" onclick="openCfsTrack()">
+              <div class="desktop-report-icon" style="background:#e8f0fd">&#128203;</div>
+              <div class="desktop-report-info"><div class="report-title">CfS Track</div><div class="report-sub">Deposit lots · notes · follow-up actions</div></div>
             </div>
             <div class="desktop-report-btn" onclick="deskGenReport('summary')">
               <div class="desktop-report-icon" style="background:#e8f4ed">&#128202;</div>
@@ -585,6 +589,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
       </div>
       <div class="section-title">Generate AI reports</div>
       <div class="report-btn-card" onclick="openSalesTarget()"><div class="report-icon" style="background:#fde8e8">&#127919;</div><div class="report-info"><div class="report-title">Sales Target</div><div class="report-sub">Deposit, Exchange & Settlement vs targets</div></div></div>
+      <div class="report-btn-card" onclick="openCfsTrack()"><div class="report-icon" style="background:#e8f0fd">&#128203;</div><div class="report-info"><div class="report-title">CfS Track</div><div class="report-sub">Deposit lots · notes · follow-up actions</div></div></div>
       <div class="report-btn-card" onclick="genReport('summary')"><div class="report-icon" style="background:#e8f4ed">&#128202;</div><div class="report-info"><div class="report-title">Sales summary</div><div class="report-sub">Revenue, counts, key insights</div></div></div>
       <div class="report-btn-card" onclick="genReport('pipeline')"><div class="report-icon" style="background:#eeedfe">&#128270;</div><div class="report-info"><div class="report-title">Pipeline forecast</div><div class="report-sub">Open deals & risk assessment</div></div></div>
       <div class="report-btn-card" onclick="genReport('channel')"><div class="report-icon" style="background:#faeeda">&#127942;</div><div class="report-info"><div class="report-title">Channel performance</div><div class="report-sub">By partner & channel</div></div></div>
@@ -636,6 +641,61 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
       <div style="font-size:32px;margin-bottom:8px">&#9888;&#65039;</div>
       <div id="st-error-msg" style="font-size:13px;color:var(--ink)"></div>
       <button onclick="refreshSalesTarget()" style="margin-top:12px;padding:8px 20px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">Try Again</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- CFS TRACK MODAL -->
+<div id="cfstrack-overlay" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.5);align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto">
+  <div style="background:var(--bg);border-radius:12px;width:100%;max-width:1200px;margin:auto;display:flex;flex-direction:column;overflow:hidden">
+    <div style="padding:14px 20px;background:#1a2a3a;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+      <div>
+        <div style="font-size:16px;font-weight:700;color:white">&#128203; CfS Track</div>
+        <div style="font-size:11px;color:#a8d0d0;margin-top:2px">Pending SA &middot; Deposit &middot; Exchanged &middot; notes</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button onclick="refreshCfsTrack()" style="padding:5px 12px;background:rgba(255,255,255,0.15);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">&#8635; Refresh</button>
+        <button onclick="downloadCfsTrack()" style="padding:5px 12px;background:rgba(255,255,255,0.15);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">&#11015; Download</button>
+        <button onclick="closeCfsTrack()" style="background:none;border:none;font-size:20px;cursor:pointer;color:white;padding:4px">&#10005;</button>
+      </div>
+    </div>
+    <div id="cfs-loading" style="padding:40px;text-align:center;color:var(--muted)">
+      <div style="font-size:24px;margin-bottom:8px">&#8987;</div>
+      <div>Loading CfS Track data...</div>
+    </div>
+    <div id="cfs-table-wrap" style="display:none;overflow-x:auto;padding:16px">
+      <table id="cfs-table" style="border-collapse:collapse;font-size:11px;font-family:Aptos,sans-serif;min-width:900px;width:100%"></table>
+    </div>
+    <div id="cfs-error" style="display:none;padding:32px;text-align:center">
+      <div style="font-size:32px;margin-bottom:8px">&#9888;&#65039;</div>
+      <div id="cfs-error-msg" style="font-size:13px;color:var(--ink)"></div>
+      <button onclick="refreshCfsTrack()" style="margin-top:12px;padding:8px 20px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">Try Again</button>
+    </div>
+  </div>
+</div>
+
+<!-- CFS NOTE EDIT MODAL -->
+<div id="cfsnote-overlay" style="display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--bg);border-radius:12px;width:100%;max-width:500px;display:flex;flex-direction:column;overflow:hidden">
+    <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:14px;font-weight:600;color:var(--ink)">&#128221; Add Sales Note</div>
+        <div id="cfsnote-lot-label" style="font-size:11px;color:var(--muted);margin-top:2px"></div>
+      </div>
+      <button onclick="closeCfsNote()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted)">&#10005;</button>
+    </div>
+    <div style="padding:12px 20px;max-height:160px;overflow-y:auto;border-bottom:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600">EXISTING NOTES</div>
+      <div id="cfsnote-existing" style="font-size:12px;color:var(--ink);white-space:pre-line;line-height:1.6">—</div>
+    </div>
+    <div style="padding:16px 20px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600">NEW NOTE (prepended with today's date)</div>
+      <textarea id="cfsnote-input" placeholder="Enter note..." style="width:100%;height:80px;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:Aptos,sans-serif;color:var(--ink);background:var(--bg);resize:vertical;box-sizing:border-box"></textarea>
+    </div>
+    <div style="padding:0 20px 16px;display:flex;gap:10px;justify-content:flex-end">
+      <button onclick="closeCfsNote()" style="padding:8px 16px;background:none;border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;color:var(--muted)">Cancel</button>
+      <button onclick="saveCfsNote()" style="padding:8px 20px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">Save Note</button>
     </div>
   </div>
 </div>
@@ -765,7 +825,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.10.0/lib/msal-browser.min.js"></script>
 <script>
 
@@ -2213,10 +2273,19 @@ function renderSalesTargetTable() {
   const table = document.getElementById('st-table');
   table.innerHTML = '';
 
-  const HDR_RED = '#FF0000';
-  const TGT_ORA = '#FF3300';
-  const ACT_GRN = '#83E28E';
-  const ACT_BLU = '#44B3E1';
+  const HDR_RED   = '#FF0000';   // Row 2: header bg
+  const TGT_BG    = '#EAF1DD';   // Rows 3-4, 8-9, 15-16: TARGET bg (theme 6 + tint 0.8)
+  const TGT_FC    = '#FF0000';   // TARGET font colour
+  const ACT_GRN   = '#83E28E';   // Rows 5-6: ACTUAL DEPOSIT bg
+  const ACT_GRN_FC= '#7B4B23';   // ACTUAL DEPOSIT font
+  const PROP_EXCH_BG = '#E5DFEC'; // Rows 10-11: PROPOSED EXCHANGED bg (theme 7 + tint 0.8)
+  const PROP_EXCH_FC = '#9BBB59'; // PROPOSED EXCHANGED font (theme 6)
+  const ACT_BLU   = '#95B3D7';   // Rows 12-13: ACTUAL EXCHANGED bg (theme 4 + tint 0.4)
+  const ACT_BLU_FC= '#7B4B23';   // ACTUAL EXCHANGED font
+  const TGT_SETT_BG  = '#DAEEF3'; // Rows 15-16: TARGET SETTLED bg (theme 8 + tint 0.8)
+  const PROP_SETT_BG = '#B6DDE8'; // Rows 17-18: PROPOSED SETTLEMENT bg (theme 8 + tint 0.6)
+  const ACT_SETT_BG  = '#92CDDC'; // Rows 19-20: ACTUAL SETTLED bg (theme 8 + tint 0.4)
+  const ACT_SETT_FC  = '#7B4B23'; // ACTUAL SETTLED font
   const WHITE   = '#FFFFFF';
   const DARK    = '#1A1A1A';
   const RED_FC  = '#FF0000';
@@ -2328,20 +2397,26 @@ function renderSalesTargetTable() {
   const tgtRow = (section, metric, vals, sk, mk) => {
     const tr = document.createElement('tr');
     const SC = section.toUpperCase();
-    tr.appendChild(tdL('TARGET', RED_FC, true));
-    tr.appendChild(tdL(SC, RED_FC, true));
-    tr.appendChild(tdL(metric, DARK, false));
+    // Pick bg colour per section to match Excel exactly
+    const tBg = sk === 'sett' ? TGT_SETT_BG : TGT_BG;
+    tr.appendChild(tdL('TARGET', TGT_FC, true)).style.background = tBg;
+    tr.appendChild(tdL(SC, TGT_FC, true)).style.background = tBg;
+    tr.appendChild(tdL(metric, DARK, false)).style.background = tBg;
     vals.forEach((v, i) => {
       if (mk === 'lots') {
-        const cell = td(v === 0 ? '' : v, TGT_ORA, WHITE, true, true, (e) => {
+        const cell = td(v === 0 ? '' : v, tBg, TGT_FC, true, true, (e) => {
           stTargets[sk][i] = Number(e.target.value) || 0;
           stDirty = true;
           document.getElementById('st-save-bar').style.display = 'flex';
           renderSalesTargetTable();
         });
+        // Fix editable input style to match new colours
+        if (cell.firstChild && cell.firstChild.tagName === 'INPUT') {
+          cell.firstChild.style.cssText = 'width:44px;background:rgba(255,255,255,0.5);border:1px solid rgba(0,0,0,0.25);border-radius:3px;color:#1A1A1A;font-size:11px;text-align:center;padding:2px 4px;font-family:Aptos,sans-serif;font-weight:700';
+        }
         tr.appendChild(cell);
       } else {
-        tr.appendChild(td(fmtV(v), TGT_ORA, WHITE, true));
+        tr.appendChild(td(fmtV(v), tBg, TGT_FC, true));
       }
     });
     const tot = vals.reduce((a,b) => a+b, 0);
@@ -2352,34 +2427,27 @@ function renderSalesTargetTable() {
   // DEPOSIT
   table.appendChild(tgtRow('Deposit', '# of Lots', stTargets.dep, 'dep', 'lots'));
   table.appendChild(tgtRow('Deposit', '$BASE Revenue ($)', stTargets.dep.map(v => v * AVG_BASE), 'dep', 'rev'));
-  table.appendChild(addActRow('ACTUAL','DEPOSIT','# of Lots', calc.dep.act_lots, ACT_GRN, DARK));
-  table.appendChild(addActRow('ACTUAL','DEPOSIT','$CfS Revenue ($)', calc.dep.act_rev, ACT_GRN, DARK));
+  table.appendChild(addActRow('ACTUAL','DEPOSIT','# of Lots', calc.dep.act_lots, ACT_GRN, ACT_GRN_FC));
+  table.appendChild(addActRow('ACTUAL','DEPOSIT','$CfS Revenue ($)', calc.dep.act_rev, ACT_GRN, ACT_GRN_FC));
   table.appendChild(spacer());
 
   // EXCHANGED
   table.appendChild(tgtRow('Exchanged', '# of Lots', stTargets.exch, 'exch', 'lots'));
   table.appendChild(tgtRow('Exchanged', '$BASE Revenue ($)', stTargets.exch.map(v => v * AVG_BASE), 'exch', 'rev'));
-  table.appendChild(addPlainRow('Proposed','PROPOSED EXCHANGED','# of Lots', calc.exch.prop_lots));
-  table.appendChild(addPlainRow('Proposed','PROPOSED EXCHANGED','CfS Issued Revenue ($)', calc.exch.prop_rev));
-  table.appendChild(addPlainRow('ACTUAL','EXCHANGED','# of Lots', calc.exch.act_lots));
-  table.appendChild(addPlainRow('ACTUAL','EXCHANGED','$CfS Revenue ($)', calc.exch.act_rev));
-
-  // Override totals col for ACTUAL EXCHANGED to blue
-  const rows = table.querySelectorAll('tr');
-  [rows[rows.length-2], rows[rows.length-1]].forEach(r => {
-    const last = r.lastChild;
-    if (last) { last.style.background = ACT_BLU; last.style.color = WHITE; }
-  });
+  table.appendChild(addActRow('Proposed','PROPOSED EXCHANGED','# of Lots', calc.exch.prop_lots, PROP_EXCH_BG, PROP_EXCH_FC));
+  table.appendChild(addActRow('Proposed','PROPOSED EXCHANGED','CfS Issued Revenue ($)', calc.exch.prop_rev, PROP_EXCH_BG, PROP_EXCH_FC));
+  table.appendChild(addActRow('ACTUAL','EXCHANGED','# of Lots', calc.exch.act_lots, ACT_BLU, ACT_BLU_FC));
+  table.appendChild(addActRow('ACTUAL','EXCHANGED','$CfS Revenue ($)', calc.exch.act_rev, ACT_BLU, ACT_BLU_FC));
 
   table.appendChild(spacer());
 
   // SETTLED
   table.appendChild(tgtRow('Settled', '# of Lots', stTargets.sett, 'sett', 'lots'));
   table.appendChild(tgtRow('Settled', '$BASE Revenue ($)', stTargets.sett.map(v => v * AVG_BASE), 'sett', 'rev'));
-  table.appendChild(addPlainRow('PROPOSED','PROPOSED SETTLEMENT','# of Lots', calc.sett.prop_lots));
-  table.appendChild(addPlainRow('PROPOSED','PROPOSED SETTLEMENT','$CfS Revenue ($)', calc.sett.prop_rev));
-  table.appendChild(addPlainRow('ACTUAL','SETTLED','# of Lots', calc.sett.act_lots));
-  table.appendChild(addPlainRow('ACTUAL','SETTLED','$CfS Revenue ($)', calc.sett.act_rev));
+  table.appendChild(addActRow('PROPOSED','PROPOSED SETTLEMENT','# of Lots', calc.sett.prop_lots, PROP_SETT_BG, ACT_SETT_FC));
+  table.appendChild(addActRow('PROPOSED','PROPOSED SETTLEMENT','$CfS Revenue ($)', calc.sett.prop_rev, PROP_SETT_BG, ACT_SETT_FC));
+  table.appendChild(addActRow('ACTUAL','SETTLED','# of Lots', calc.sett.act_lots, ACT_SETT_BG, ACT_SETT_FC));
+  table.appendChild(addActRow('ACTUAL','SETTLED','$CfS Revenue ($)', calc.sett.act_rev, ACT_SETT_BG, ACT_SETT_FC));
 }
 
 async function saveSalesTargets() {
@@ -2422,6 +2490,480 @@ function cancelSalesTargets() {
   renderSalesTargetTable();
 }
 
+
+
+// ─── CFS TRACK ───────────────────────────────────────────────────────────────
+
+let cfsTrackData = [];      // raw rows from Excel sheet (all cols A–S)
+let cfsNoteCtx   = null;    // { excelRow, lotNo, existingNotes }
+
+const CFS_CONDITIONS = ['2. Pending SA', '3. Deposit', '4. Exchanged'];
+
+// Condition pill colours
+const CFS_COND_STYLE = {
+  '2. Pending SA': 'background:#faeeda;color:#7a4900',
+  '3. Deposit':    'background:#e8f0fd;color:#1a3a8b',
+  '4. Exchanged':  'background:#eaf3de;color:#2e6b0e',
+};
+
+function openCfsTrack() {
+  if (!fileId) { toast('Load data first', 'error'); return; }
+  document.getElementById('cfstrack-overlay').style.display = 'flex';
+  loadCfsTrack();
+}
+
+function closeCfsTrack() {
+  document.getElementById('cfstrack-overlay').style.display = 'none';
+}
+
+async function refreshCfsTrack() {
+  cfsTrackData = [];
+  await loadCfsTrack();
+}
+
+async function loadCfsTrack() {
+  const loading = document.getElementById('cfs-loading');
+  const wrap    = document.getElementById('cfs-table-wrap');
+  const errDiv  = document.getElementById('cfs-error');
+  loading.style.display = 'block';
+  wrap.style.display    = 'none';
+  errDiv.style.display  = 'none';
+
+  try {
+    const token = await getToken();
+    const driveBase = fileDriveId
+      ? `https://graph.microsoft.com/v1.0/drives/${fileDriveId}/items/${fileId}`
+      : `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}`;
+
+    // Read rows 1–60 cols A–S from 1.CfS_Track
+    const sheetEnc = encodeURIComponent('1.CfS_Track');
+    const res = await fetch(
+      `${driveBase}/workbook/worksheets/${sheetEnc}/range(address='A1:Q60')`,
+      { headers: { Authorization: 'Bearer ' + token } }
+    );
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`Graph API ${res.status}: ${txt.slice(0,120)}`);
+    }
+    const data = await res.json();
+    const rows = data.values || [];
+    if (!rows.length) throw new Error('No data returned from CfS Track sheet');
+
+    // Row 0 = headers, rows 1+ = data
+    // Cols: A=0 Lot, B=1 Condition, C=2 SA Received, D=3 CfS Issued, E=4 Days from CfS,
+    //       F=5 Forecast Exch, G=6 Prop Exch, H=7 Exch Price, I=8 Prop Settle,
+    //       J=9 Days from Exch, K=10 Prop days settle, L=11 Days cool off,
+    //       A=0 Lot, B=1 Cond, C=2 SA Rec, D=3 CfS Issued, E=4 Days CfS,
+    //       F=5 Forecast Exch, G=6 Prop Exch, H=7 Exch Price, I=8 Prop Settle,
+    //       J=9 Days Exch, K=10 Prop days settle, L=11 Cool off,
+    //       M=12 Prop Settle Date, N=13 Agency, O=14 Sales notes,
+    //       P=15 CBP notes, Q=16 Action
+    cfsTrackData = rows.slice(1)
+      .map((r, i) => ({
+        excelRow: i + 2,  // 1-based, +1 for header
+        lot:       r[0],
+        cond:      r[1],
+        saRec:     r[2],
+        cfsIssued: r[3],
+        daysCfs:   r[4],
+        propExch:  r[6],
+        exchPrice: r[7],
+        propSettle:r[8],
+        daysExch:  r[9],
+        coolOff:   r[11],
+        propSettleDate: r[12],
+        agency:    r[13],
+        salesNotes:r[14] || '',
+        cbpNotes:  r[15] || '',
+        action:    r[16] || '',
+      }))
+      .filter(r => r.lot && CFS_CONDITIONS.includes(String(r.cond).trim()));
+
+    renderCfsTable();
+    loading.style.display = 'none';
+    wrap.style.display    = 'block';
+  } catch(e) {
+    loading.style.display = 'none';
+    errDiv.style.display  = 'block';
+    document.getElementById('cfs-error-msg').textContent = e.message;
+  }
+}
+
+function cfsDateFmt(v) {
+  if (!v || v === '0:00:00' || v === '' ) return '—';
+  // Graph API returns dates as ISO strings or serial numbers
+  const d = new Date(v);
+  if (!isNaN(d.getTime())) {
+    return d.getDate().toString().padStart(2,'0') + '-' +
+      ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()] +
+      '-' + d.getFullYear();
+  }
+  return String(v);
+}
+
+function cfsCurrFmt(v) {
+  if (!v || v === '') return '—';
+  const n = parseFloat(v);
+  if (isNaN(n)) return '—';
+  return '$' + Math.round(n).toLocaleString();
+}
+
+function renderCfsTable() {
+  const table = document.getElementById('cfs-table');
+  table.innerHTML = '';
+
+  const HDR_BG  = '#1F497D';
+  const HDR_FG  = '#FFFFFF';
+
+  const th = (txt, align='center', minW='') => {
+    const el = document.createElement('th');
+    el.textContent = txt;
+    el.style.cssText = `background:${HDR_BG};color:${HDR_FG};padding:6px 8px;border:1px solid rgba(255,255,255,0.15);text-align:${align};white-space:nowrap;font-size:11px;font-weight:600;${minW ? 'min-width:'+minW : ''}`;
+    return el;
+  };
+
+  // Header row
+  const headRow = document.createElement('tr');
+  ['Lot','Condition','SA Received','CfS Issued','Days','Prop. Exch','Exch Price','Prop. Settle','Agency','Agent','Sales Notes'].forEach((h, i) => {
+    headRow.appendChild(th(h, i <= 1 ? 'left' : 'center', h === 'Sales Notes' ? '180px' : ''));
+  });
+  table.appendChild(headRow);
+
+  // Group rows by condition order
+  const ORDER = ['2. Pending SA','3. Deposit','4. Exchanged'];
+  const grouped = ORDER.flatMap(c => cfsTrackData.filter(r => String(r.cond).trim() === c));
+
+  let lastCond = null;
+  grouped.forEach((row, idx) => {
+    const cond = String(row.cond).trim();
+
+    // Condition section divider
+    if (cond !== lastCond) {
+      lastCond = cond;
+      const divRow = document.createElement('tr');
+      const divTd  = document.createElement('td');
+      divTd.colSpan = 11;
+      const label = cond.replace(/^\d+\.\s*/,'').toUpperCase();
+      divTd.style.cssText = 'padding:4px 8px;font-size:10px;font-weight:700;letter-spacing:0.08em;border:1px solid rgba(0,0,0,0.08);';
+      if (cond === '2. Pending SA')  { divTd.style.background='#faeeda'; divTd.style.color='#7a4900'; }
+      if (cond === '3. Deposit')     { divTd.style.background='#e8f0fd'; divTd.style.color='#1a3a8b'; }
+      if (cond === '4. Exchanged')   { divTd.style.background='#eaf3de'; divTd.style.color='#2e6b0e'; }
+      divTd.textContent = label;
+      divRow.appendChild(divTd);
+      table.appendChild(divRow);
+    }
+
+    const tr = document.createElement('tr');
+    const even = idx % 2 === 0;
+    const rowBg = even ? 'var(--bg)' : 'var(--surface)';
+
+    const td = (txt, align='center', bold=false, extra='') => {
+      const el = document.createElement('td');
+      el.textContent = txt;
+      el.style.cssText = `background:${rowBg};padding:6px 8px;border:1px solid var(--border);text-align:${align};font-size:11px;font-weight:${bold?'600':'400'};color:var(--ink);white-space:nowrap;${extra}`;
+      return el;
+    };
+
+    tr.appendChild(td(row.lot, 'left', true));
+
+    // Condition pill
+    const condTd = document.createElement('td');
+    condTd.style.cssText = `background:${rowBg};padding:6px 8px;border:1px solid var(--border);text-align:left`;
+    const pill = document.createElement('span');
+    pill.textContent = String(row.cond).replace(/^\d+\.\s*/,'');
+    pill.style.cssText = `display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;${CFS_COND_STYLE[cond] || ''}`;
+    condTd.appendChild(pill);
+    tr.appendChild(condTd);
+
+    tr.appendChild(td(cfsDateFmt(row.saRec)));
+    tr.appendChild(td(cfsDateFmt(row.cfsIssued)));
+
+    // Days — colour-code: >20 red, 10-20 orange
+    const daysTd = document.createElement('td');
+    const days = parseInt(row.daysCfs) || 0;
+    let daysColor = 'var(--ink)';
+    if (days > 20) daysColor = '#c00';
+    else if (days > 10) daysColor = '#b86000';
+    daysTd.textContent = days || '—';
+    daysTd.style.cssText = `background:${rowBg};padding:6px 8px;border:1px solid var(--border);text-align:center;font-size:11px;font-weight:600;color:${daysColor}`;
+    tr.appendChild(daysTd);
+
+    tr.appendChild(td(cfsDateFmt(row.propExch)));
+    tr.appendChild(td(cfsCurrFmt(row.exchPrice)));
+    tr.appendChild(td(cfsDateFmt(row.propSettle)));
+    tr.appendChild(td(row.agency || '—', 'left'));
+    tr.appendChild(td(row.agent  || '—', 'left'));
+
+    // Sales Notes cell — truncated + expand + add note button
+    const notesTd = document.createElement('td');
+    notesTd.style.cssText = `background:${rowBg};padding:6px 8px;border:1px solid var(--border);max-width:220px;`;
+    const notes = String(row.salesNotes || '').trim();
+    const lines = notes ? notes.split('\n') : [];
+    const firstLine = lines[0] || '';
+    const hasMore   = lines.length > 1;
+    const noteId    = 'cfsnote-full-' + idx;
+
+    notesTd.innerHTML = `
+      <div style="display:flex;align-items:flex-start;gap:6px">
+        <div style="flex:1;min-width:0">
+          <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:var(--ink);cursor:${hasMore?'pointer':'default'}" onclick="${hasMore ? 'document.getElementById(\''+noteId+'\').classList.toggle(\'cfs-open\')' : ''}">${firstLine || '<span style=\"color:var(--muted);font-style:italic\">No notes</span>'}</div>
+          ${hasMore ? `<span style="font-size:10px;color:var(--muted);cursor:pointer" onclick="document.getElementById('${noteId}').classList.toggle('cfs-open')" id="${noteId}-btn">+${lines.length-1} more</span>` : ''}
+          <div id="${noteId}" style="display:none;font-size:11px;color:var(--ink);white-space:pre-line;margin-top:4px;line-height:1.5">${notes}</div>
+        </div>
+        <button onclick="openCfsNote(${row.excelRow}, '${String(row.lot)}', this)" title="Add note" style="flex-shrink:0;padding:2px 6px;font-size:11px;background:var(--accent-light);color:var(--accent);border:1px solid var(--accent);border-radius:4px;cursor:pointer;white-space:nowrap">+ Note</button>
+      </div>`;
+
+    // Toggle expand/collapse text
+    const fullDiv = notesTd.querySelector('#' + noteId);
+    const btnSpan = notesTd.querySelector('#' + noteId + '-btn');
+    if (hasMore && btnSpan && fullDiv) {
+      btnSpan.addEventListener('click', () => {
+        const open = fullDiv.style.display === 'block';
+        fullDiv.style.display = open ? 'none' : 'block';
+        btnSpan.textContent   = open ? '+' + (lines.length-1) + ' more' : '▲ less';
+      });
+    }
+
+    tr.appendChild(notesTd);
+    table.appendChild(tr);
+  });
+
+  if (!grouped.length) {
+    const empty = document.createElement('tr');
+    const emptyTd = document.createElement('td');
+    emptyTd.colSpan = 11;
+    emptyTd.style.cssText = 'padding:32px;text-align:center;color:var(--muted);font-size:13px';
+    emptyTd.textContent = 'No Pending SA, Deposit or Exchanged lots found in CfS Track';
+    empty.appendChild(emptyTd);
+    table.appendChild(empty);
+  }
+}
+
+function openCfsNote(excelRow, lotNo, btnEl) {
+  // Find current notes from cfsTrackData
+  const rowData = cfsTrackData.find(r => r.excelRow === excelRow);
+  const existing = rowData ? String(rowData.salesNotes || '').trim() : '';
+  cfsNoteCtx = { excelRow, lotNo, existing };
+
+  document.getElementById('cfsnote-lot-label').textContent = 'Lot ' + lotNo;
+  document.getElementById('cfsnote-existing').textContent  = existing || '—';
+  document.getElementById('cfsnote-input').value = '';
+  document.getElementById('cfsnote-overlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('cfsnote-input').focus(), 100);
+}
+
+function closeCfsNote() {
+  document.getElementById('cfsnote-overlay').style.display = 'none';
+  cfsNoteCtx = null;
+}
+
+async function saveCfsNote() {
+  if (!cfsNoteCtx) return;
+  const noteText = document.getElementById('cfsnote-input').value.trim();
+  if (!noteText) { toast('Please enter a note', 'error'); return; }
+
+  // Format: "6-Apr-2026 <note>"
+  const today = new Date();
+  const datePrefix = today.getDate() + '-' +
+    ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][today.getMonth()] +
+    '-' + today.getFullYear();
+  const newEntry = datePrefix + ' ' + noteText;
+
+  // Prepend to existing (newest first)
+  const combined = cfsNoteCtx.existing
+    ? newEntry + '\n' + cfsNoteCtx.existing
+    : newEntry;
+
+  try {
+    const token = await getToken();
+    const driveBase = fileDriveId
+      ? `https://graph.microsoft.com/v1.0/drives/${fileDriveId}/items/${fileId}`
+      : `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}`;
+
+    const sheetEnc = encodeURIComponent('1.CfS_Track');
+    const cellAddr = 'O' + cfsNoteCtx.excelRow;
+
+    const res = await fetch(
+      `${driveBase}/workbook/worksheets/${sheetEnc}/range(address='${cellAddr}')`,
+      {
+        method: 'PATCH',
+        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values: [[combined]] })
+      }
+    );
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error('Save failed: ' + res.status + ' ' + err.slice(0,80));
+    }
+
+    // Update local cache
+    const rowData = cfsTrackData.find(r => r.excelRow === cfsNoteCtx.excelRow);
+    if (rowData) rowData.salesNotes = combined;
+
+    closeCfsNote();
+    renderCfsTable();
+    toast('Note saved to Excel ✓', 'success');
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+}
+
+
+function downloadCfsTrack() {
+  if (!cfsTrackData.length) { toast('No data to download', 'error'); return; }
+
+  // SheetJS is loaded as XLSX global
+  if (typeof XLSX === 'undefined') { toast('XLSX library not available', 'error'); return; }
+
+  const wb = XLSX.utils.book_new();
+  const today = new Date();
+  const dateStr = today.getDate() + '-' +
+    ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][today.getMonth()] +
+    '-' + today.getFullYear();
+
+  // ── Styles (using write with cellStyles option via sheetjs-style workaround)
+  // We'll use XLSX.utils.aoa_to_sheet then apply styles via !cols and merge approach
+  // SheetJS CE doesn't support cell styles — we'll build a styled workbook
+  // using the write + bookSST approach with inline HTML via csv fallback is limited.
+  // Best approach for CE: build data array, set col widths, freeze pane, use named styles.
+
+  const HDR_COLS = ['Lot','Condition','SA Received','CfS Issued','Days\nfrom CfS','Prop. Exch Date','Exch Price ($)','Prop. Settle Date','Agency','Sales Notes'];
+  const ORDER = ['2. Pending SA','3. Deposit','4. Exchanged'];
+
+  const aoa = []; // array of arrays
+  const rowMeta = []; // track row type for styling: 'header'|'section'|'data'
+
+  // Header row
+  aoa.push(HDR_COLS);
+  rowMeta.push({ type: 'header' });
+
+  // Data grouped by condition
+  ORDER.forEach(cond => {
+    const group = cfsTrackData.filter(r => String(r.cond).trim() === cond);
+    if (!group.length) return;
+
+    // Section divider row
+    aoa.push([cond.replace(/^\d+\.\s*/,'').toUpperCase(), '', '', '', '', '', '', '', '', '']);
+    rowMeta.push({ type: 'section', cond });
+
+    group.forEach(row => {
+      const days = parseInt(row.daysCfs) || 0;
+      const exchPrice = parseFloat(row.exchPrice) || null;
+      aoa.push([
+        String(row.lot),
+        String(row.cond).replace(/^\d+\.\s*/,''),
+        cfsDateFmt(row.saRec),
+        cfsDateFmt(row.cfsIssued),
+        days || '',
+        cfsDateFmt(row.propExch),
+        exchPrice || '',
+        cfsDateFmt(row.propSettle),
+        row.agency || '',
+        String(row.salesNotes || '').trim(),
+      ]);
+      rowMeta.push({ type: 'data', days, cond });
+    });
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+  // Column widths
+  ws['!cols'] = [
+    { wch: 8  },   // Lot
+    { wch: 14 },   // Condition
+    { wch: 13 },   // SA Received
+    { wch: 13 },   // CfS Issued
+    { wch: 9  },   // Days
+    { wch: 14 },   // Prop Exch
+    { wch: 14 },   // Exch Price
+    { wch: 14 },   // Prop Settle
+    { wch: 14 },   // Agency
+    { wch: 45 },   // Sales Notes
+  ];
+
+  // Freeze top row
+  ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+
+  // Merge section divider rows across all columns
+  const merges = [];
+  rowMeta.forEach((meta, i) => {
+    if (meta.type === 'section') {
+      merges.push({ s: { r: i, c: 0 }, e: { r: i, c: 9 } });
+    }
+  });
+  if (merges.length) ws['!merges'] = merges;
+
+  // Apply cell styles (requires sheetjs-style or xlsx-js-style — check if available)
+  // If not available, we still get a clean functional spreadsheet
+  const canStyle = typeof XLSX.utils.encode_cell === 'function';
+
+  if (canStyle) {
+    const HDR_FILL  = { patternType: 'solid', fgColor: { rgb: '1F497D' } };
+    const HDR_FONT  = { bold: true, color: { rgb: 'FFFFFF' }, name: 'Aptos', sz: 10 };
+    const HDR_ALIGN = { horizontal: 'center', vertical: 'center', wrapText: true };
+
+    const SECT_FILLS = {
+      '2. Pending SA': { patternType: 'solid', fgColor: { rgb: 'FAEEDA' } },
+      '3. Deposit':    { patternType: 'solid', fgColor: { rgb: 'E8F0FD' } },
+      '4. Exchanged':  { patternType: 'solid', fgColor: { rgb: 'EAF3DE' } },
+    };
+    const SECT_FONTS = {
+      '2. Pending SA': { bold: true, color: { rgb: '7A4900' }, name: 'Aptos', sz: 10 },
+      '3. Deposit':    { bold: true, color: { rgb: '1A3A8B' }, name: 'Aptos', sz: 10 },
+      '4. Exchanged':  { bold: true, color: { rgb: '2E6B0E' }, name: 'Aptos', sz: 10 },
+    };
+
+    const BODY_FONT  = { name: 'Aptos', sz: 10 };
+    const BODY_ALIGN = { vertical: 'top' };
+    const NOTES_ALIGN = { vertical: 'top', wrapText: true };
+    const BORDER = {
+      top:    { style: 'thin', color: { rgb: 'CCCCCC' } },
+      bottom: { style: 'thin', color: { rgb: 'CCCCCC' } },
+      left:   { style: 'thin', color: { rgb: 'CCCCCC' } },
+      right:  { style: 'thin', color: { rgb: 'CCCCCC' } },
+    };
+
+    rowMeta.forEach((meta, ri) => {
+      for (let ci = 0; ci < 10; ci++) {
+        const addr = XLSX.utils.encode_cell({ r: ri, c: ci });
+        if (!ws[addr]) ws[addr] = { t: 's', v: '' };
+
+        if (meta.type === 'header') {
+          ws[addr].s = { fill: HDR_FILL, font: HDR_FONT, alignment: HDR_ALIGN, border: BORDER };
+        } else if (meta.type === 'section') {
+          ws[addr].s = {
+            fill: SECT_FILLS[meta.cond] || {},
+            font: SECT_FONTS[meta.cond] || { bold: true },
+            alignment: { vertical: 'center' },
+            border: BORDER,
+          };
+        } else {
+          // Days column (index 4) — colour code
+          let font = { ...BODY_FONT };
+          if (ci === 4 && meta.days > 20)       font.color = { rgb: 'CC0000' };
+          else if (ci === 4 && meta.days > 10)  font.color = { rgb: 'B86000' };
+
+          // Exch Price column (index 6) — number format
+          const align = ci === 9 ? NOTES_ALIGN : BODY_ALIGN;
+          ws[addr].s = { font, alignment: align, border: BORDER };
+
+          if (ci === 6 && ws[addr].v) {
+            ws[addr].t = 'n';
+            ws[addr].z = '$#,##0';
+          }
+        }
+      }
+    });
+  }
+
+  XLSX.utils.book_append_sheet(wb, ws, 'CfS Track');
+
+  const filename = 'CfS_Track_' + dateStr.replace(/-/g,'') + '.xlsx';
+  XLSX.writeFile(wb, filename);
+  toast('Downloaded ' + filename, 'success');
+}
+
+// ─── END CFS TRACK ────────────────────────────────────────────────────────────
 
 function saveChatKey() {
   const inp = document.getElementById('chat-key-input');
