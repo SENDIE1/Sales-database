@@ -1302,7 +1302,8 @@ function updateStats() {
   const pendingRows   = allData.filter(r => sc(r).includes('Pending'));
   const depositRows   = allData.filter(r => sc(r).includes('Deposit'));
   const exchangedRows = allData.filter(r => sc(r).includes('Exchanged'));
-  const settledRows   = allData.filter(r => sc(r).includes('Settled') && r['Sales Advice Received Date']);
+  const yr26s = new Date(2026,0,1), yr26e = new Date(2026,7,1);
+  const settledRows   = allData.filter(r => sc(r).includes('Settled') && r['Sales Advice Received Date'] && (() => { const dt = stParseDate(r['Settled Date']); return dt && dt >= yr26s && dt < yr26e; })());
 
   const n = v => parseFloat(String(v||'0').replace(/[^0-9.-]/g,''))||0;
   const pendingRev   = pendingRows.reduce((s,r)   => s + n(r['$LIST']), 0);
@@ -3193,7 +3194,8 @@ function updateDeskStats() {
   const pendingRows   = allData.filter(r => sc(r).includes('Pending'));
   const depositRows   = allData.filter(r => sc(r).includes('Deposit'));
   const exchangedRows = allData.filter(r => sc(r).includes('Exchanged'));
-  const settledRows   = allData.filter(r => sc(r).includes('Settled') && r['Sales Advice Received Date']);
+  const yr26s = new Date(2026,0,1), yr26e = new Date(2026,7,1);
+  const settledRows   = allData.filter(r => sc(r).includes('Settled') && r['Sales Advice Received Date'] && (() => { const dt = stParseDate(r['Settled Date']); return dt && dt >= yr26s && dt < yr26e; })());
 
   const n = v => parseFloat(String(v||'0').replace(/[^0-9.-]/g,''))||0;
   const pendingRev   = pendingRows.reduce((s,r)   => s + n(r['$LIST']), 0);
