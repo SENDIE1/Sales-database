@@ -1356,15 +1356,22 @@ function openModal(idx) {
 
 function closeModal(e) {}
 function closeModalDirect() { showScreen('data'); }
-async function editFromDetail() {
+function editFromDetail() {
   const row = allData[modalRowIdx];
   const lotNum = String(row['Lot #'] || row['Lot#'] || '').trim();
-  const lock = await checkLock(lotNum);
-  if (lock) { showLockError(lotNum, lock); return; }
   closeModalDirect();
   editRowIdx = modalRowIdx;
   populateEditForm(allData[editRowIdx]);
-  acquireLock(lotNum);
+  // Check lock in background after opening
+  checkLock(lotNum).then(lock => {
+    if (lock) {
+      showLockError(lotNum, lock);
+      editRowIdx = -1;
+      showScreen('data');
+      return;
+    }
+    acquireLock(lotNum);
+  });
 }
 
 function populateEditForm(row) {
@@ -3586,11 +3593,18 @@ async function deskEditRow(idx) {
   modalRowIdx = allData.indexOf(filteredData[idx]);
   const row = allData[allData.indexOf(filteredData[idx])];
   const lotNum = String(row['Lot #'] || row['Lot#'] || '').trim();
-  const lock = await checkLock(lotNum);
-  if (lock) { showLockError(lotNum, lock); return; }
   editRowIdx = modalRowIdx;
-  acquireLock(lotNum);
   const lotNumDisp = row['Lot #'] || row['Lot#'] || '';
+  // Open edit screen immediately, check lock in background
+  checkLock(lotNum).then(lock => {
+    if (lock) {
+      showLockError(lotNum, lock);
+      editRowIdx = -1;
+      deskShowScreen('data');
+      return;
+    }
+    acquireLock(lotNum);
+  });
   document.getElementById('d-edit-title').textContent = 'Lot ' + lotNum;
   let editHtml = '<table style="width:100%;border-collapse:collapse">';
   const groupedCols = COL_GROUPS.flatMap(g => g.cols);
