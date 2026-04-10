@@ -324,7 +324,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
   <div class="login-card">
     <div class="login-icon">&#128202;</div>
     <div class="login-title">Sales DB</div>
-    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.32</div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.33</div>
     <div class="login-sub">Sign in with your Microsoft account to access your OneDrive sales data.</div>
     <button class="ms-btn" onclick="signIn()">
       <div class="ms-logo"><div></div><div></div><div></div><div></div></div>
@@ -348,7 +348,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
 <!-- APP -->
 <div id="app-wrapper" style="display:none">
   <div class="app-header">
-    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.32</span></div>
+    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.33</span></div>
     <div class="header-right">
       <div class="user-pill">
         <div class="user-avatar" id="user-avatar">?</div>
@@ -1044,11 +1044,11 @@ async function loadFileFromOneDrive() {
     if (seen[h] === undefined) { seen[h] = 0; return h; }
     seen[h]++; return h + '.' + seen[h];
   });
-  const json = rawRows.slice(1).map(row => {
-    const obj = {};
-    headers.forEach((h, i) => { obj[h] = row[i] ?? ''; });
+  const json = rawRows.slice(1).map((row, i) => {
+    const obj = { __excelRow: i + 2 }; // Excel row = rawRows index+1 (1-based) +1 (header)
+    headers.forEach((h, j) => { obj[h] = row[j] ?? ''; });
     return obj;
-  }).filter(r => headers.some(h => r[h] !== ''));
+  }).filter(r => headers.some(h => h !== '__excelRow' && r[h] !== ''));
   allData = json;
   filteredData = [...allData];
   populateDropdowns();
@@ -1081,23 +1081,17 @@ async function syncToOneDrive() {
     const token = await getToken();
 
     // Use Excel Graph API to update only changed cells — preserves all formatting
-    // Get actual sheet name
     const driveBase = fileDriveId
       ? `https://graph.microsoft.com/v1.0/drives/${fileDriveId}/items/${fileId}`
       : `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}`;
-    const sheetsRes = await fetch(`${driveBase}/workbook/worksheets`, {
-      headers: { Authorization: 'Bearer ' + token }
-    });
-    const sheetsData = await sheetsRes.json();
-    console.log('Sheets:', JSON.stringify(sheetsData));
-    const sheetName = sheetsData.value?.[0]?.name || 'Sheet1';
-    const encodedSheet = encodeURIComponent(sheetName);
+    const encodedSheet = encodeURIComponent('Database');
     const baseUrl = `${driveBase}/workbook/worksheets/${encodedSheet}/`;
 
     // Build list of cell updates
     const updates = [];
     for (const [rowIdx, cols] of Object.entries(pendingEdits)) {
-      const excelRow = parseInt(rowIdx) + 2; // +1 for header, +1 for 1-based
+      const dataRow = allData[parseInt(rowIdx)];
+      const excelRow = dataRow?.__excelRow ?? (parseInt(rowIdx) + 2);
       for (const [colName, value] of Object.entries(cols)) {
         const colIdx = headers.indexOf(colName);
         if (colIdx < 0) continue;
@@ -1206,7 +1200,7 @@ function applyFilters() {
     const cond = String(row['Sales Condition']||'').trim();
     if (activeQuickFilter && cond !== activeQuickFilter) return false;
     if (activeDeskQF && cond !== activeDeskQF) return false;
-    if (terms.length) { const text = Object.values(row).join(' ').toLowerCase(); if (!terms.some(t => text.includes(t))) return false; }
+    if (terms.length) { const text = Object.entries(row).filter(([k])=>k!=='__excelRow').map(([,v])=>v).join(' ').toLowerCase(); if (!terms.some(t => text.includes(t))) return false; }
     return Object.entries(dropVals).every(([col, val]) => !val || String(row[col]||'').trim() === val);
   });
   const total = activeCount + (terms.length ? 1 : 0);
@@ -1753,7 +1747,7 @@ function applyAllFilters() {
 
   filteredData = allData.filter(row => {
     if (terms.length) {
-      const text = Object.values(row).join(' ').toLowerCase();
+      const text = Object.entries(row).filter(([k])=>k!=='__excelRow').map(([,v])=>v).join(' ').toLowerCase();
       if (!terms.some(t => text.includes(t))) return false;
     }
     if (!Object.entries(dropVals).every(([col, val]) => !val || String(row[col]||'').trim() === val)) return false;
@@ -3984,7 +3978,7 @@ function applyFiltersWithCol() {
     dropVals[col] = el?.value || '';
   });
   filteredData = allData.filter(row => {
-    if (terms.length) { const text = Object.values(row).join(' ').toLowerCase(); if (!terms.some(t => text.includes(t))) return false; }
+    if (terms.length) { const text = Object.entries(row).filter(([k])=>k!=='__excelRow').map(([,v])=>v).join(' ').toLowerCase(); if (!terms.some(t => text.includes(t))) return false; }
     if (!Object.entries(dropVals).every(([col, val]) => !val || String(row[col]||'').trim() === val)) return false;
     for (const [col, vals] of Object.entries(deskActiveColFilters)) {
       if (!vals.has(String(row[col] ?? '').trim())) return false;
