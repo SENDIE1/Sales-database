@@ -324,7 +324,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
   <div class="login-card">
     <div class="login-icon">&#128202;</div>
     <div class="login-title">Sales DB</div>
-    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.39</div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.40</div>
     <div class="login-sub">Sign in with your Microsoft account to access your OneDrive sales data.</div>
     <button class="ms-btn" onclick="signIn()">
       <div class="ms-logo"><div></div><div></div><div></div><div></div></div>
@@ -348,7 +348,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
 <!-- APP -->
 <div id="app-wrapper" style="display:none">
   <div class="app-header">
-    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.39</span></div>
+    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.40</span></div>
     <div class="header-right">
       <div class="user-pill">
         <div class="user-avatar" id="user-avatar">?</div>
@@ -2085,22 +2085,7 @@ async function runScanPdf() {
   showScanStep('processing');
 
   try {
-    // Extract raw text from PDF using PDF.js (exact characters — avoids OCR misreads)
-    const arrayBuffer = await scanPdfFile.arrayBuffer();
-    let pdfText = '';
-    try {
-      if (typeof pdfjsLib !== 'undefined') {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        for (let p = 1; p <= pdfDoc.numPages; p++) {
-          const page = await pdfDoc.getPage(p);
-          const tc = await page.getTextContent();
-          pdfText += tc.items.map(i => i.str).join(' ') + '\n';
-        }
-      }
-    } catch(e) { console.warn('PDF.js text extraction failed, falling back to visual:', e); }
-
-    // Also read as base64 for visual checks (signatures, ID photos)
+    // Read PDF as base64 (used for visual checks — signatures, ID photos)
     const base64 = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = e => resolve(e.target.result.split(',')[1]);
@@ -2108,10 +2093,39 @@ async function runScanPdf() {
       reader.readAsDataURL(scanPdfFile);
     });
 
+    // Extract raw text using PDF.js — gives Claude exact characters, no OCR misreads
+    // Use Uint8Array copy so the buffer isn't transferred/detached when passed to PDF.js
+    let pdfText = '';
+    const statusEl = document.querySelector('#scan-step-processing div:nth-child(2)');
+    try {
+      if (typeof pdfjsLib !== 'undefined') {
+        // Use blob URL for worker to avoid CSP/CORS issues on GitHub Pages
+        if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+          const workerResp = await fetch('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js');
+          const workerText = await workerResp.text();
+          const workerBlob = new Blob([workerText], { type: 'text/javascript' });
+          pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(workerBlob);
+        }
+        const rawBuf = await scanPdfFile.arrayBuffer();
+        const uint8 = new Uint8Array(rawBuf).slice(0); // copy so original isn't transferred
+        const pdfDoc = await pdfjsLib.getDocument({ data: uint8 }).promise;
+        for (let p = 1; p <= pdfDoc.numPages; p++) {
+          const page = await pdfDoc.getPage(p);
+          const tc = await page.getTextContent();
+          pdfText += tc.items.map(i => i.str).join(' ') + '\n';
+        }
+        if (statusEl) statusEl.textContent = `Text extracted (${pdfText.trim().length} chars) — parsing fields...`;
+        console.log('PDF.js extracted chars:', pdfText.trim().length);
+      }
+    } catch(e) {
+      console.warn('PDF.js text extraction failed, using visual mode:', e);
+      if (statusEl) statusEl.textContent = 'Using visual mode — parsing fields...';
+    }
+
     // Ask Claude to extract fields
     const todayStr = new Date().toLocaleDateString('en-AU', { day:'2-digit', month:'2-digit', year:'numeric' }).replace(/\//g,'/');
     const textBlock = pdfText.trim()
-      ? `\n\nEXTRACTED PDF TEXT (exact characters — use this for all text fields, names, emails, dates, prices):\n${pdfText.slice(0, 8000)}`
+      ? `\n\nEXTRACTED PDF TEXT (exact characters — copy names, emails and all text fields EXACTLY from this, do not alter any characters):\n${pdfText.slice(0, 10000)}`
       : '';
     const prompt = `This is a Sales Advice (S/A) document for a property sale.${textBlock}\n\nExtract the following fields. Return ONLY a JSON object with these keys (use null if not found):
 
