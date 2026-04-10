@@ -1034,15 +1034,21 @@ async function loadFileFromOneDrive() {
   const buf = await res.arrayBuffer();
   const wb = XLSX.read(buf, { type: 'array' });
   const ws = wb.Sheets['Database'] || wb.Sheets[wb.SheetNames[0]];
-  const rawJson = XLSX.utils.sheet_to_json(ws, { defval: '' });
-  if (!rawJson.length) throw new Error('File is empty');
-  // Trim trailing/leading spaces from all header keys
-  const json = rawJson.map(row => {
-    const clean = {};
-    Object.keys(row).forEach(k => { clean[k.trim()] = row[k]; });
-    return clean;
+  // Use header:1 to get raw arrays, then dedup duplicate header names with .1/.2 suffixes
+  const rawRows = XLSX.utils.sheet_to_json(ws, { defval: '', header: 1 });
+  if (!rawRows.length) throw new Error('File is empty');
+  const rawHdrs = rawRows[0].map(h => String(h || '').trim());
+  const seen = {};
+  headers = rawHdrs.map(h => {
+    if (!h) return '__EMPTY';
+    if (seen[h] === undefined) { seen[h] = 0; return h; }
+    seen[h]++; return h + '.' + seen[h];
   });
-  headers = Object.keys(json[0]);
+  const json = rawRows.slice(1).map(row => {
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = row[i] ?? ''; });
+    return obj;
+  }).filter(r => headers.some(h => r[h] !== ''));
   allData = json;
   filteredData = [...allData];
   populateDropdowns();
@@ -3427,30 +3433,36 @@ let dtSelectedIdx = -1;
 
 
 function getHeaderColour(h) {
-  const lightblue = ['Project Name','Lot ID','Property Address','Stage','Lot #','CfS Type','Product Line','Product Type','Lot Area (m²)','Lot Frontage (Width) (m)'];
-  const yellow = ['Sales Condition','Pending S/A Date','Pending S/A Days','Pending S/A Agency','$VAL','$BASE','$LIST','Notes.1','March Campaign','OFFER Rebate','SETTLE Rebate','Type Of Purchaser','Special Condilions/Variations','2026 Report','Comments.1'];
-  const darkgrey = ['*LEADS Name'];
-  const peachL = ['Property Type'];
-  const purple = ['StockList','Notes'];
-  const hotpink = ['$CHECK$                   $BASE-$VAL','$CHECK$ $LIST-$BASE'];
-  const landtax = ['Land Tax Per lot Value','Land Tax $Uplift / $Shortfall'];
-  const peach = ['Sales Advice Received Date','Sales Advice Sent To Legal Date','Contract Issued Date','Days From CfS Issued','CfS Issued Price','Proposed Exchanged Date','Exchanged Date','CfS Exchanged Price ($)','Proposed Settled Date','Settled Date','Settled Month','Settled Year','CfS Settled Price ($)','Rebate','Deposit%','Cooling Off Date','FIRB Approval','March Campaign.1','Comments'];
-  const pink = ["(1) Purchaser's Name","(1) Purchaser's Email","(1) Purchaser's Mobile","(2) Purchaser's Name","(2) Purchaser's Email","(2) Purchaser's Mobile","Purchaser's Suburb","Purchaser's Postcode","Purchaser's Solicitor (P'Sol)","Purchaser's Solicitor Phone"];
-  if (lightblue.includes(h)) return '#BDD7EE';
-  if (yellow.includes(h)) return '#FFFF00';
-  if (darkgrey.includes(h)) return '#404040';
-  if (peachL.includes(h)) return '#FCE4D6';
-  if (purple.includes(h)) return '#7030A0';
-  if (hotpink.includes(h)) return '#FF0066';
-  if (landtax.includes(h)) return '#FFFFFF';
-  if (peach.includes(h)) return '#FCE4D6';
-  if (pink.includes(h)) return '#FCE4D6';
+  // Colours extracted directly from SalesDB-Main.xlsx header row
+  const lightblue = ['Project Name','Lot ID','Property Address','Stage','Lot #','Sales Condition']; // #C0E6F5
+  const yellow    = ['Pending S/A Date','Pending S/A Days','Pending S/A Agency','*LEADS Name','$VAL','March Campaign','OFFER Rebate','SETTLE Rebate','Notes.1','Type Of Purchaser','Special Condilions/Variations','2026 Report','Comments.1']; // #FFFF00
+  const darkblue  = ['CfS Type','Product Line','Product Type','Lot Area (m\u00b2)','Lot Frontage (Width) (m)']; // #156082
+  const purple    = ['StockList','Notes']; // #9437FF
+  const magenta   = ['Channel Market','Sales Channel','Channel Partner','Swap to/from Channel Partner','Allocation Date','Allocation Days','Allocation Period (days)','Allocation Days / Allocation Expiry Date','H&L $House (S/S)','$H&L Total (S/S)','H&L $House (D/S)','$H&L Total (D/S)','Vendors Agency','Vendors Agency Agent',"Agent's Mobile","Agent's Email"]; // #A02B93
+  const orange    = ['$BASE']; // #E97132
+  const lime      = ['$LIST']; // #CCFF66
+  const hotpink   = ['$CHECK$                   $BASE-$VAL','$CHECK$ $LIST-$BASE']; // #FF0066
+  const landtax   = ['Land Tax Per lot Value','Land Tax $Uplift / $Shortfall'];
+  const green     = ['Property Type','Sales Advice Received Date','Sales Advice Sent To Legal Date','Contract Issued Date','Days From CfS Issued','CfS Issued Price','Proposed Exchanged Date','Exchanged Date','CfS Exchanged Price ($)','Proposed Settled Date','Settled Date','Settled Month','Settled Year','CfS Settled Price ($)','Rebate','Deposit%','Cooling Off Date','FIRB Approval','March Campaign.1','Comments']; // #4EA72E
+  const peach     = ["(1) Purchaser's Name","(1) Purchaser's Email","(1) Purchaser's Mobile","(2) Purchaser's Name","(2) Purchaser's Email","(2) Purchaser's Mobile","Purchaser's Suburb","Purchaser's Postcode","Purchaser's Solicitor (P'Sol)","Purchaser's Solicitor Phone"]; // #E97132
+  if (lightblue.includes(h)) return '#C0E6F5';
+  if (yellow.includes(h))    return '#FFFF00';
+  if (darkblue.includes(h))  return '#156082';
+  if (purple.includes(h))    return '#9437FF';
+  if (magenta.includes(h))   return '#A02B93';
+  if (orange.includes(h))    return '#E97132';
+  if (lime.includes(h))      return '#CCFF66';
+  if (hotpink.includes(h))   return '#FF0066';
+  if (landtax.includes(h))   return '#FFFFFF';
+  if (green.includes(h))     return '#4EA72E';
+  if (peach.includes(h))     return '#E97132';
   return '#e8e3d8';
 }
 function getHeaderTextColour(bg, h) {
-  if (bg === '#404040' || bg === '#7030A0' || bg === '#FF0066') return '#ffffff';
+  // White text on dark/saturated backgrounds; black on light backgrounds
+  if (['#156082','#9437FF','#A02B93','#E97132','#FF0066'].includes(bg)) return '#ffffff';
   if (h === 'Land Tax Per lot Value' || h === 'Land Tax $Uplift / $Shortfall') return '#FF0000';
-  return '#1a1408';
+  return '#000000';
 }
 
 
@@ -3572,19 +3584,79 @@ function closeDtPanel() {
 
 
 const COL_GROUPS = [
-  { label: 'Property Details', colour: '#C0E6F5', textColour: '#000000', cols: ['Project Name','Lot ID','Property Address','Stage','Lot #','Sales Condition'] },
-  { label: 'Pending SA', colour: '#FFFF00', textColour: '#000000', cols: ['Pending S/A Date','Pending S/A Days','Pending S/A Agency','*LEADS Name'] },
-  { label: 'Property Info', colour: '#156082', textColour: '#ffffff', cols: ['CfS Type','Property Type','Product Line','Product Type','Lot Area (m\u00b2)','Lot Frontage (Width) (m)'] },
-  { label: 'Stock & Notes', colour: '#9437FF', textColour: '#ffffff', cols: ['StockList','Notes'] },
-  { label: 'Channel & Allocation', colour: '#A02B93', textColour: '#ffffff', cols: ['Channel Market','Sales Channel','Channel Partner','Swap to/from Channel Partner','Allocation Date','Allocation Days','Allocation Period (days)','Allocation Days / Allocation Expiry Date'] },
-  { label: 'Pricing', colour: '#FFFF00', textColour: '#000000', cols: ['$VAL','$BASE','$LIST'] },
-  { label: 'Price Checks', colour: '#FF0066', textColour: '#ffffff', cols: ['$CHECK$                   $BASE-$VAL','$CHECK$ $LIST-$BASE'] },
-  { label: 'Land Tax', colour: '#FFFFFF', textColour: '#FF0000', cols: ['Land Tax Per lot Value','Land Tax $Uplift / $Shortfall'] },
-  { label: 'Campaign & Rebates', colour: '#FFFF00', textColour: '#000000', cols: ['March Campaign','OFFER Rebate','SETTLE Rebate','H&L $House (S/S)','$H&L Total (S/S)','H&L $House (D/S)','$H&L Total (D/S)','Notes.1'] },
-  { label: 'Dates & CfS', colour: '#4EA72E', textColour: '#ffffff', cols: ['Sales Advice Received Date','Sales Advice Sent To Legal Date','Contract Issued Date','Days From CfS Issued','CfS Issued Price','Proposed Exchanged Date','Exchanged Date','CfS Exchanged Price ($)','Proposed Settled Date','Settled Date','Settled Month','Settled Year','CfS Settled Price ($)','Rebate','Deposit%','Cooling Off Date','FIRB Approval','March Campaign.1','Comments'] },
-  { label: 'Vendors & Agents', colour: '#A02B93', textColour: '#ffffff', cols: ['Vendors Agency','Vendors Agency Agent',"Agent's Mobile","Agent's Email"] },
-  { label: 'Purchaser Details', colour: '#E97132', textColour: '#ffffff', cols: ["(1) Purchaser's Name","(1) Purchaser's Email","(1) Purchaser's Mobile","(2) Purchaser's Name","(2) Purchaser's Email","(2) Purchaser's Mobile","Purchaser's Suburb","Purchaser's Postcode","Purchaser's Solicitor (P'Sol)","Purchaser's Solicitor Phone"] },
-  { label: 'Other', colour: '#FFFF00', textColour: '#000000', cols: ['Type Of Purchaser','Special Condilions/Variations','2026 Report','Comments.1'] },
+  // Columns A-F: Property Details (#C0E6F5)
+  { label: 'Property Details', colour: '#C0E6F5', textColour: '#000000', cols: [
+    'Project Name','Lot ID','Property Address','Stage','Lot #','Sales Condition'
+  ]},
+  // Columns G-J: Pending SA (#FFFF00)
+  { label: 'Pending SA', colour: '#FFFF00', textColour: '#000000', cols: [
+    'Pending S/A Date','Pending S/A Days','Pending S/A Agency','*LEADS Name'
+  ]},
+  // Column K: CfS Type (#156082)
+  { label: 'Property Info', colour: '#156082', textColour: '#ffffff', cols: [
+    'CfS Type'
+  ]},
+  // Column L: Property Type (#4EA72E)
+  { label: 'Property Type', colour: '#4EA72E', textColour: '#000000', cols: [
+    'Property Type'
+  ]},
+  // Columns M-P: Product Details (#156082)
+  { label: 'Product Details', colour: '#156082', textColour: '#ffffff', cols: [
+    'Product Line','Product Type','Lot Area (m²)','Lot Frontage (Width) (m)'
+  ]},
+  // Columns Q-R: Stock & Notes (#9437FF)
+  { label: 'Stock & Notes', colour: '#9437FF', textColour: '#ffffff', cols: [
+    'StockList','Notes'
+  ]},
+  // Columns S-Z: Channel & Allocation (#A02B93)
+  { label: 'Channel & Allocation', colour: '#A02B93', textColour: '#ffffff', cols: [
+    'Channel Market','Sales Channel','Channel Partner','Swap to/from Channel Partner',
+    'Allocation Date','Allocation Days','Allocation Period (days)',
+    'Allocation Days / Allocation Expiry Date'
+  ]},
+  // Column AA: $VAL (#FFFF00)
+  { label: 'Pricing', colour: '#FFFF00', textColour: '#000000', cols: ['$VAL'] },
+  // Column AB: $BASE (#E97132)
+  { label: 'Base Price', colour: '#E97132', textColour: '#ffffff', cols: ['$BASE'] },
+  // Column AC: $LIST (#CCFF66)
+  { label: 'List Price', colour: '#CCFF66', textColour: '#000000', cols: ['$LIST'] },
+  // Columns AD-AE: Price Checks (#FF0066)
+  { label: 'Price Checks', colour: '#FF0066', textColour: '#ffffff', cols: [
+    '$CHECK$                   $BASE-$VAL','$CHECK$ $LIST-$BASE'
+  ]},
+  // Columns AF-AG: Land Tax (white bg, red text)
+  { label: 'Land Tax', colour: '#FFFFFF', textColour: '#FF0000', cols: [
+    'Land Tax Per lot Value','Land Tax $Uplift / $Shortfall'
+  ]},
+  // Columns AH-AO: Campaign, Rebates, H&L, Notes (#FFFF00)
+  { label: 'Campaign & Rebates', colour: '#FFFF00', textColour: '#000000', cols: [
+    'March Campaign','OFFER Rebate','SETTLE Rebate',
+    'H&L $House (S/S)','$H&L Total (S/S)','H&L $House (D/S)','$H&L Total (D/S)',
+    'Notes.1'
+  ]},
+  // Columns AP-BI: Dates & CfS (#4EA72E)
+  { label: 'Dates & CfS', colour: '#4EA72E', textColour: '#000000', cols: [
+    'Sales Advice Received Date','Sales Advice Sent To Legal Date','Contract Issued Date',
+    'Days From CfS Issued','CfS Issued Price','Proposed Exchanged Date','Exchanged Date',
+    'CfS Exchanged Price ($)','Proposed Settled Date','Settled Date',
+    'Days from Exchanged to Settled','Settled Month','Settled Year','CfS Settled Price ($)',
+    'Rebate','Deposit%','Cooling Off Date','FIRB Approval','March Campaign.1','Comments'
+  ]},
+  // Columns BJ-BM: Vendors & Agents (#A02B93)
+  { label: 'Vendors & Agents', colour: '#A02B93', textColour: '#ffffff', cols: [
+    'Vendors Agency','Vendors Agency Agent',"Agent's Mobile","Agent's Email"
+  ]},
+  // Columns BN-BW: Purchaser Details (#E97132)
+  { label: 'Purchaser Details', colour: '#E97132', textColour: '#ffffff', cols: [
+    "(1) Purchaser's Name","(1) Purchaser's Email","(1) Purchaser's Mobile",
+    "(2) Purchaser's Name","(2) Purchaser's Email","(2) Purchaser's Mobile",
+    "Purchaser's Suburb","Purchaser's Postcode",
+    "Purchaser's Solicitor (P'Sol)","Purchaser's Solicitor Phone"
+  ]},
+  // Columns BX-CA: Other (#FFFF00)
+  { label: 'Other', colour: '#FFFF00', textColour: '#000000', cols: [
+    'Type Of Purchaser','Special Condilions/Variations','2026 Report','Comments.1'
+  ]},
 ];
 
 async function deskEditRow(idx) {
