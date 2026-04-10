@@ -1205,8 +1205,9 @@ function applyFilters() {
   });
   const total = activeCount + (terms.length ? 1 : 0);
   const badge = document.getElementById('filter-count-badge');
-  badge.style.display = total ? 'flex' : 'none'; badge.textContent = total;
-  document.getElementById('filter-toggle-btn').classList.toggle('has-filters', total > 0);
+  if (badge) { badge.style.display = total ? 'flex' : 'none'; badge.textContent = total; }
+  const ftBtn = document.getElementById('filter-toggle-btn');
+  if (ftBtn) ftBtn.classList.toggle('has-filters', total > 0);
   renderActivePills(terms, dropVals);
   renderLotList();
   if (isDesktop()) renderDesktopTable();
@@ -1218,7 +1219,7 @@ function applyFilters() {
 }
 
 function renderActivePills(terms, dropVals) {
-  const c = document.getElementById('active-pills'); c.innerHTML = '';
+  const c = document.getElementById('active-pills'); if (!c) return; c.innerHTML = '';
   terms.forEach(t => { const p = document.createElement('div'); p.className = 'pill'; p.innerHTML = `"${t}" <span class="pill-x" onclick="removeSearchTerm('${t}')">×</span>`; c.appendChild(p); });
   Object.entries(dropVals).forEach(([col, val]) => {
     if (!val) return;
@@ -1234,7 +1235,7 @@ function removeSearchTerm(term) {
   applyFilters();
 }
 function clearDropdown(id) { const el = document.getElementById(id); if (el) { el.value = ''; el.classList.remove('active'); } applyFilters(); }
-function clearFilters() { document.getElementById('search-input').value = ''; const dts = document.getElementById('dt-search'); if(dts) dts.value=''; activeDeskQF=''; document.querySelectorAll('.dt-qf-btn').forEach(b=>b.classList.remove('dt-qf-active')); Object.keys(FILTER_MAP).forEach(id => { ['','dt-'].forEach(p => { const el = document.getElementById(p+id); if (el) { el.value = ''; el.classList.remove('active'); } }); }); applyFilters(); }
+function clearFilters() { document.getElementById('search-input').value = ''; const dts = document.getElementById('dt-search'); if(dts) dts.value=''; activeDeskQF=''; activeQuickFilter=''; document.querySelectorAll('.dt-qf-btn,.qf-btn').forEach(b=>b.classList.remove('dt-qf-active','active')); Object.keys(FILTER_MAP).forEach(id => { ['','dt-'].forEach(p => { const el = document.getElementById(p+id); if (el) { el.value = ''; el.classList.remove('active'); } }); }); applyFilters(); }
 function toggleFilterDrawer() { filterDrawerOpen = !filterDrawerOpen; document.getElementById('filter-drawer').classList.toggle('open', filterDrawerOpen); }
 
 function fmtDate(v) {
