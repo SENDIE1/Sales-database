@@ -3003,9 +3003,8 @@ async function saveCfsNote() {
   // Format: "6-Apr-2026 <note>"
   const today = new Date();
   const datePrefix = today.getDate() + '-' +
-    ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][today.getMonth()] +
-    '-' + today.getFullYear();
-  const newEntry = datePrefix + ' ' + noteText;
+    ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][today.getMonth()];
+  const newEntry = datePrefix + ' - ' + noteText;
 
   // Prepend to existing (newest first)
   const combined = cfsNoteCtx.existing
@@ -3056,8 +3055,7 @@ function downloadCfsTrack() {
   const wb = XLSX.utils.book_new();
   const today = new Date();
   const dateStr = today.getDate() + '-' +
-    ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][today.getMonth()] +
-    '-' + today.getFullYear();
+    ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][today.getMonth()];
 
   // ── Styles (using write with cellStyles option via sheetjs-style workaround)
   // We'll use XLSX.utils.aoa_to_sheet then apply styles via !cols and merge approach
