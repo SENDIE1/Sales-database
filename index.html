@@ -328,7 +328,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
   <div class="login-card">
     <div class="login-icon">&#128202;</div>
     <div class="login-title">Sales DB</div>
-    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.43</div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">v2.44</div>
     <div class="login-sub">Sign in with your Microsoft account to access your OneDrive sales data.</div>
     <button class="ms-btn" onclick="signIn()">
       <div class="ms-logo"><div></div><div></div><div></div><div></div></div>
@@ -352,7 +352,7 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
 <!-- APP -->
 <div id="app-wrapper" style="display:none">
   <div class="app-header">
-    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.43</span></div>
+    <div class="header-logo">Sales<strong>DB</strong><span class="header-version">v2.44</span></div>
     <div class="header-right">
       <div class="user-pill">
         <div class="user-avatar" id="user-avatar">?</div>
@@ -2006,6 +2006,13 @@ function closeScanPdf() {
   document.getElementById('scan-pdf-overlay').style.display = 'none';
   scanPdfFile = null;
   scanExtractedData = {};
+  // Refresh edit form if it was open behind the modal — shows the newly written values
+  if (editRowIdx >= 0 && allData[editRowIdx]) {
+    populateEditForm(allData[editRowIdx]);
+  } else if (isDesktop() && modalRowIdx >= 0 && allData[modalRowIdx]) {
+    // Refresh desktop side panel if open
+    document.getElementById('dt-panel-body').innerHTML = buildDetailHtml(allData[modalRowIdx]);
+  }
   scanMatchedRowIdx = -1;
 }
 
@@ -2150,8 +2157,8 @@ async function runScanPdf() {
   "proposed_exchange_date": "look in SPECIAL (CfS) CONDITIONS for 'Exchanged Date' — return exactly as shown e.g. 05/06/26",
   "proposed_settled_date": "look in SPECIAL (CfS) CONDITIONS or 'Settlement Date' field — return exactly as shown e.g. 06/04/26",
   "cfs_issue_price": "the land price — look specifically for 'Land Price: $' field — return as number only, no $ or commas",
-  "rebate": "look in SPECIAL (CfS) CONDITIONS for any dollar rebate amount e.g. '$5,000 rebate on settlement' — return as number only (e.g. 5000), null if none",
-  "deposit_percent": "look in SPECIAL (CfS) CONDITIONS for a deposit percentage e.g. '5% deposit to exchange' — return as number only (e.g. 5), null if none. If only standard 10% is mentioned return 10",
+  "rebate": "look in SPECIAL (CfS) CONDITIONS for an EXPLICIT rebate, discount, incentive or cashback amount that is stated SEPARATELY from the land price — it must be labelled as a rebate/discount/incentive. Return as number only (e.g. 5000). Return null if no explicit rebate is stated — do NOT infer a rebate from the land price or other amounts",
+  "deposit_percent": "look in SPECIAL (CfS) CONDITIONS for an EXPLICITLY stated deposit percentage e.g. '5% deposit to exchange'. Return as number only (e.g. 5). Return null if no deposit percentage is explicitly stated — do NOT assume or default to 10%",
   "purchaser1_name": "Purchaser 1 Full Name as per ID — copy EXACTLY character-by-character. Count every letter — names may contain double letters (e.g. jj, ll, nn, pp, tt) that must NOT be collapsed to single letters",
   "purchaser1_email": "Purchaser 1 Email — copy EXACTLY character-by-character including every letter of the username part",
   "purchaser1_mobile": "Purchaser 1 mobile — first number from 'Purchaser 1 & 2 Mobile No'",
@@ -2309,7 +2316,7 @@ Return ONLY the JSON object, no other text.`;
       'Proposed Settled Date':         fixYear(extracted.proposed_settled_date),
       'CfS Issued Price':              extracted.cfs_issue_price,
       'Rebate':                        extracted.rebate,
-      'Deposit%':                      extracted.deposit_percent != null ? String(Number(extracted.deposit_percent) / 100) : null,
+      'Deposit%':                      extracted.deposit_percent != null ? String(Number(extracted.deposit_percent) / 100) : '0.1', // default 10% if not stated
       "(1) Purchaser's Name":          extracted.purchaser1_name,
       "(1) Purchaser's Email":         extracted.purchaser1_email,
       "(1) Purchaser's Mobile":        extracted.purchaser1_mobile ? fmtPhone(extracted.purchaser1_mobile) : null,
