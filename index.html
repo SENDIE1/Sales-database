@@ -316,6 +316,106 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
 .modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:10px auto 6px;flex-shrink:0}
 .modal-btn{flex:1;padding:12px;border-radius:4px;font-family:"Aptos",sans-serif;font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--ink)}
 .modal-btn.primary{background:var(--accent);color:white;border-color:var(--accent)}
+
+/* ───────────────────────────────────────────────────────────────────────
+   LOT CARD (.lc-) — desktop edit screen card UI
+   Source: lot-detail-card-option-A-18tabs.html (mockup)
+   All classes prefixed with lc- to avoid collisions.
+   ─────────────────────────────────────────────────────────────────────── */
+@media (min-width: 768px) {
+  /* Hide the existing edit-screen chrome — the card supplies its own header & footer */
+  #dscreen-edit .desktop-edit-header,
+  #dscreen-edit .desktop-edit-actions { display: none; }
+  #dscreen-edit .desktop-edit-body { padding: 0; }
+}
+.lc-shell { background: #fff; height: 100%; display: flex; flex-direction: column; min-height: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Aptos", sans-serif; color: #1e293b; }
+.lc-hdr { background: linear-gradient(to bottom, #000d35 0%, #002675 100%); color: #fff; padding: 20px 22px; display: flex; align-items: center; gap: 18px; flex-shrink: 0; }
+.lc-hdr-tile { width: 96px; height: 96px; border-radius: 12px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.18); display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; line-height: 1; }
+.lc-hdr-tile span { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.65); font-weight: 600; margin-bottom: 4px; }
+.lc-hdr-tile b { font-size: 36px; font-weight: 700; letter-spacing: -0.5px; color: #fff; }
+.lc-hdr-info { flex: 1; min-width: 0; }
+.lc-hdr-name { font-size: 18px; font-weight: 500; line-height: 1.25; }
+.lc-hdr-sub { font-size: 12px; color: rgba(255,255,255,0.65); margin-top: 3px; }
+.lc-hdr-row { display: flex; gap: 10px; font-size: 12.5px; margin-top: 5px; align-items: baseline; line-height: 1.4; }
+.lc-hdr-row-label { font-size: 10px; letter-spacing: 0.7px; text-transform: uppercase; color: rgba(255,255,255,0.55); font-weight: 600; flex-shrink: 0; width: 60px; padding-top: 1px; }
+.lc-hdr-row-value { color: rgba(255,255,255,0.92); min-width: 0; }
+.lc-hdr-row-value .lc-sep { color: rgba(255,255,255,0.35); margin: 0 6px; }
+.lc-hdr-pills { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; flex-shrink: 0; }
+.lc-pill { font-size: 11px; padding: 4px 11px; border-radius: 99px; font-weight: 500; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.lc-pill-val  { background: #cfe5fa; color: #002675; }
+.lc-pill-cond { background: #0e6e4a; color: #fff; }
+.lc-pill-cond .lc-dot { width: 6px; height: 6px; border-radius: 50%; background: #a7f3d0; }
+.lc-pill-tag  { background: #7a6a32; color: #fff; }
+.lc-hdr-alloc { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 4px 10px; background: rgba(255,255,255,0.10); border: 0.5px solid rgba(255,255,255,0.22); border-radius: 6px; font-size: 12px; color: #fff; width: fit-content; }
+.lc-hdr-alloc-label { font-size: 10px; letter-spacing: 0.6px; text-transform: uppercase; color: rgba(255,255,255,0.7); font-weight: 500; }
+.lc-hdr-alloc-value { font-weight: 500; }
+
+.lc-body { display: grid; grid-template-columns: 48% 1fr; flex: 1; min-height: 0; overflow: hidden; }
+.lc-body-left { background: #f5f7fa; padding: 18px 18px 14px; border-right: 0.5px solid #e2e8f0; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+.lc-body-right { background: #fff; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+
+.lc-left-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.lc-left-title { font-weight: 500; font-size: 14px; color: #002675; }
+.lc-left-count { font-size: 11px; color: #64748b; background: #fff; border: 0.5px solid #e2e8f0; padding: 2px 8px; border-radius: 99px; }
+.lc-comment-input { background: #fff; border: 0.5px solid #e2e8f0; border-radius: 8px; padding: 11px 12px; font-size: 13px; color: #94a3b8; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; min-height: 70px; margin-bottom: 14px; }
+.lc-comment-input span { flex: 1; }
+.lc-comment-arrow { width: 26px; height: 26px; border-radius: 50%; background: #cbd5e1; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; }
+.lc-feed-label { font-size: 10px; letter-spacing: 0.8px; text-transform: uppercase; color: #94a3b8; font-weight: 600; margin-bottom: 8px; }
+.lc-feed { flex: 1; overflow-y: auto; padding-right: 4px; }
+.lc-feed-empty { padding: 24px 8px; color: #94a3b8; font-size: 12px; font-style: italic; text-align: center; }
+
+.lc-process { padding: 16px 22px 0; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.lc-process-label { font-size: 11px; font-weight: 500; color: #64748b; letter-spacing: 0.6px; }
+.lc-process-right { display: flex; align-items: center; gap: 10px; }
+.lc-process-stages { display: flex; align-items: center; gap: 0; font-size: 11px; }
+.lc-pstage { padding: 4px 10px; color: #94a3b8; border-bottom: 2px solid transparent; cursor: pointer; user-select: none; transition: color 0.12s, border-color 0.12s, background 0.12s; border-radius: 4px 4px 0 0; }
+.lc-pstage:hover { background: #f1f5f9; color: #002675; }
+.lc-pstage.done    { color: #0e6e4a; border-bottom-color: #0e6e4a; font-weight: 500; }
+.lc-pstage.current { color: #002675; border-bottom-color: #002675; font-weight: 600; background: #e0e7ff; }
+.lc-process-count { font-size: 11px; color: #475569; padding: 3px 9px; background: #f1f5f9; border-radius: 99px; }
+
+.lc-tabs-wrap { padding: 14px 12px 0; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; }
+.lc-tabs { display: flex; gap: 3px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+.lc-tabs::-webkit-scrollbar { height: 4px; }
+.lc-tabs::-webkit-scrollbar-track { background: transparent; }
+.lc-tabs::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+.lc-tabs::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+.lc-tab { flex: 0 0 auto; padding: 8px 11px; text-align: center; font-size: 11.5px; font-weight: 500; color: #64748b; cursor: pointer; background: #fff; border-radius: 5px 5px 0 0; user-select: none; border-top: 3px solid transparent; line-height: 1.3; white-space: nowrap; font-family: inherit; }
+.lc-tab .lc-tab-swatch { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+.lc-tab:hover { background: #f8fafc; }
+.lc-tab.active { color: var(--lc-tab-fg, #fff); font-weight: 600; background: var(--lc-tab-bg, #002675); border-top-color: var(--lc-tab-bg, #002675); }
+.lc-tab.active .lc-tab-swatch { background: rgba(255,255,255,0.85) !important; }
+
+.lc-tab-body { flex: 1; overflow-y: auto; padding: 4px 22px 0; }
+.lc-tab-pane { display: none; }
+.lc-tab-pane.active { display: block; }
+
+.lc-sec-group { border-left: 3px solid var(--lc-sec-stripe, #94a3b8); padding-left: 12px; }
+.lc-sec-group + .lc-sec-group { margin-top: 14px; }
+
+.lc-frow { display: flex; align-items: center; justify-content: space-between; padding: 10px 4px; border-bottom: 0.5px solid #f1f5f9; font-size: 13px; gap: 12px; cursor: pointer; }
+.lc-frow:last-child { border-bottom: none; }
+.lc-frow:hover { background: #f8fafc; }
+.lc-flabel { color: #64748b; font-weight: 400; font-size: 12px; flex: 1; min-width: 0; }
+.lc-fval { color: #0f172a; font-weight: 500; display: flex; align-items: center; gap: 6px; text-align: right; max-width: 60%; word-break: break-word; }
+.lc-fval.empty { color: #cbd5e1; font-weight: 400; }
+.lc-fval.money { font-variant-numeric: tabular-nums; }
+.lc-fval.landtax { color: #FF0000; }
+.lc-fgrid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; }
+.lc-fgrid.single { grid-template-columns: 1fr; }
+.lc-fgrid.col-flow { display: block; column-count: 2; column-gap: 28px; }
+.lc-fgrid.col-flow > .lc-frow { break-inside: avoid; }
+
+.lc-note-block { padding: 10px 0; font-size: 13px; }
+.lc-note-block .lc-note-label { font-size: 11px; color: #64748b; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 500; }
+.lc-note-block .lc-note-body { background: #f8fafc; border: 0.5px solid #e2e8f0; border-radius: 6px; padding: 10px; color: #1e293b; line-height: 1.5; min-height: 50px; cursor: pointer; }
+
+.lc-footer { padding: 12px 22px; border-top: 0.5px solid #e2e8f0; background: #fff; display: flex; gap: 8px; flex-shrink: 0; }
+.lc-btn { padding: 10px 16px; background: #fff; border: 0.5px solid #e2e8f0; border-radius: 6px; color: #002675; font-weight: 500; font-size: 13px; cursor: pointer; font-family: inherit; }
+.lc-btn:hover { background: #f8fafc; }
+.lc-btn-primary { background: #1a6b3a; color: #fff; border-color: #1a6b3a; }
+.lc-btn-primary:hover { background: #155a2f; }
+.lc-btn-spacer { flex: 1; }
 </style>
 </head>
 <body>
@@ -3829,13 +3929,239 @@ const COL_GROUPS = [
   ]},
 ];
 
+// ─────────────────────────────────────────────────────────────────────────
+// LOT CARD RENDERER (lc-) — desktop edit screen UI
+// Builds the card HTML for a row. Field rows use d-row-${sid}/d-disp-${sid}
+// IDs and onclick=deskStartEdit so the existing edit logic continues to work.
+// ─────────────────────────────────────────────────────────────────────────
+const LC_SECTIONS = [
+  { idx: 1,  label: 'Property Details',     colour: '#C0E6F5',                fields: ['Project Name','Lot ID','Property Address','Stage','Lot #','Sales Condition'] },
+  { idx: 2,  label: 'Pending SA',           colour: '#FFFF00',                fields: ['Pending S/A Date','Pending S/A Days','Pending S/A Agency','*LEADS Name'] },
+  { idx: 5,  label: 'Product Details',      colour: '#156082', dark: true,    fields: ['Property Type','Product Line','Product Type','Lot Area (m²)','Lot Frontage (Width) (m)'] },
+  { idx: 6,  label: 'Stocklist & Notes',    colour: '#9437FF', dark: true,    fields: ['StockList','Notes'] },
+  { idx: 7,  label: 'Channel & Allocation', colour: '#A02B93', dark: true,    fields: ['Channel Market','Sales Channel','Channel Partner','Swap to/from Channel Partner','Allocation Date','Allocation Days','Allocation Period (days)','Allocation Days / Allocation Expiry Date'] },
+  { idx: 8,  label: 'Pricing',              colour: '#FFFF00',                fields: ['$VAL'] },
+  { idx: 9,  label: 'Base Price',           colour: '#E97132', dark: true,    fields: ['$BASE'] },
+  { idx: 10, label: 'List Price',           colour: '#CCFF66',                fields: ['$LIST'] },
+  { idx: 11, label: 'Price Checks',         colour: '#FF0066', dark: true,    fields: ['$CHECK$                   $BASE-$VAL','$CHECK$ $LIST-$BASE'] },
+  { idx: 12, label: 'Land Tax',             colour: '#FFFFFF', landtax: true, fields: ['Land Tax Per lot Value','Land Tax $Uplift / $Shortfall'] },
+  { idx: 13, label: 'Campaign & Rebates',   colour: '#FFFF00',                fields: ['March Campaign','OFFER Rebate','SETTLE Rebate','Notes.1'] },
+  { idx: 19, label: 'Home & Land',          colour: '#A02B93', dark: true,    fields: ['H&L $House (S/S)','$H&L Total (S/S)','H&L $House (D/S)','$H&L Total (D/S)'] },
+  { idx: 14, label: 'Dates & CfS',          colour: '#4EA72E', columnFlow: true, fields: ['CfS Type','Sales Advice Received Date','Sales Advice Sent To Legal Date','Contract Issued Date','Days From CfS Issued','CfS Issued Price','Proposed Exchanged Date','Exchanged Date','CfS Exchanged Price ($)','Proposed Settled Date','Settled Date','Days from Exchanged to Settled','Settled Month','Settled Year','CfS Settled Price ($)','Rebate','Deposit%','Cooling Off Date','FIRB Approval','March Campaign.1','Comments'] },
+  { idx: 15, label: 'Vendors & Agents',     colour: '#A02B93', dark: true,    fields: ['Vendors Agency','Vendors Agency Agent',"Agent's Mobile","Agent's Email"] },
+  { idx: 16, label: 'Lead Source',          colour: '#FFFF00',                fields: ['Source of Enquiry'] },
+  { idx: 17, label: 'Purchaser Details',    colour: '#E97132', dark: true,    fields: ["(1) Purchaser's Name","(1) Purchaser's Email","(1) Purchaser's Mobile","(2) Purchaser's Name","(2) Purchaser's Email","(2) Purchaser's Mobile","Purchaser's Suburb","Purchaser's Postcode","Purchaser's Solicitor (P'Sol)","Purchaser's Solicitor Phone"] },
+  { idx: 18, label: 'Other',                colour: '#FFFF00',                fields: ['Type Of Purchaser','Special Condilions/Variations','2026 Report','Comments.1'] },
+];
+
+const LC_TABS = [
+  { id: 'tab-1',       label: 'Property Details',     primaryColour: '#C0E6F5', dark: false, sections: [1] },
+  { id: 'tab-2',       label: 'Pending SA',           primaryColour: '#FFFF00', dark: false, sections: [2] },
+  { id: 'tab-5',       label: 'Product Details',      primaryColour: '#156082', dark: true,  sections: [5] },
+  { id: 'tab-6',       label: 'Stocklist & Notes',    primaryColour: '#9437FF', dark: true,  sections: [6] },
+  { id: 'tab-7',       label: 'Channel & Allocation', primaryColour: '#A02B93', dark: true,  sections: [7] },
+  { id: 'tab-pricing', label: 'Pricing',              primaryColour: '#E97132', dark: true,  sections: [8, 9, 10, 11, 12] },
+  { id: 'tab-13',      label: 'Campaign & Rebates',   primaryColour: '#FFFF00', dark: false, sections: [13] },
+  { id: 'tab-19',      label: 'Home & Land',          primaryColour: '#A02B93', dark: true,  sections: [19] },
+  { id: 'tab-14',      label: 'Dates & CfS',          primaryColour: '#4EA72E', dark: false, sections: [14] },
+  { id: 'tab-15',      label: 'Vendors & Agents',     primaryColour: '#A02B93', dark: true,  sections: [15] },
+  { id: 'tab-16',      label: 'Lead Source',          primaryColour: '#FFFF00', dark: false, sections: [16] },
+  { id: 'tab-17',      label: 'Purchaser Details',    primaryColour: '#E97132', dark: true,  sections: [17] },
+  { id: 'tab-18',      label: 'Other',                primaryColour: '#FFFF00', dark: false, sections: [18] },
+];
+
+const LC_NOTE_FIELDS = new Set(['Notes', 'Notes.1', 'Comments', 'Comments.1', 'Special Condilions/Variations']);
+
+function lcTabBg(colour) {
+  if (colour === '#FFFF00') return '#b88a00';
+  if (colour === '#CCFF66') return '#7a9a3d';
+  if (colour === '#FFFFFF') return '#475569';
+  if (colour === '#C0E6F5') return '#5d99b8';
+  return colour;
+}
+
+function lcEscapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function lcRenderField(row, fieldName, opts) {
+  const raw = row[fieldName];
+  const display = formatCellValue(fieldName, raw) || '';
+  const isEmpty = display === '' || display === 'NaN' || display === 'undefined';
+  const valForEdit = String(raw ?? '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  const cls = ['lc-fval'];
+  if (isEmpty) cls.push('empty');
+  if (opts && opts.landtax) cls.push('money', 'landtax');
+  else if (fieldName.startsWith('$') || /Price|Rebate|Tax/.test(fieldName)) cls.push('money');
+  const key = sid(fieldName);
+  return `<div class="lc-frow" id="d-row-${key}" onclick="deskStartEdit('${key}','${valForEdit}')">
+    <span class="lc-flabel">${lcEscapeHtml(fieldName.trim())}</span>
+    <span class="${cls.join(' ')}" id="d-disp-${key}">${isEmpty ? '—' : display}</span>
+  </div>`;
+}
+
+function lcRenderSectionBody(row, s) {
+  // Only include fields that exist in the headers (graceful when DB schema drifts)
+  const presentFields = s.fields.filter(f => headers.includes(f));
+  const noteFields = presentFields.filter(f => LC_NOTE_FIELDS.has(f));
+  const rowFields = presentFields.filter(f => !LC_NOTE_FIELDS.has(f));
+  const useGrid = rowFields.length > 4;
+  const rowsHtml = rowFields.map(f => lcRenderField(row, f, { landtax: !!s.landtax })).join('');
+  const gridClass = useGrid ? (s.columnFlow ? 'lc-fgrid col-flow' : 'lc-fgrid') : 'lc-fgrid single';
+  const wrapper = `<div class="${gridClass}">${rowsHtml}</div>`;
+  const notesHtml = noteFields.map(f => {
+    const raw = row[f];
+    const display = String(raw ?? '').trim();
+    const valForEdit = display.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    const key = sid(f);
+    return `<div class="lc-note-block">
+      <div class="lc-note-label">${lcEscapeHtml(f.trim())}</div>
+      <div class="lc-note-body" id="d-disp-${key}" onclick="deskStartEdit('${key}','${valForEdit}')">${display ? lcEscapeHtml(display) : '—'}</div>
+    </div>`;
+  }).join('');
+  return wrapper + notesHtml;
+}
+
+function lcRenderSectionBlock(row, s) {
+  const stripe = s.colour === '#FFFFFF' ? '#94a3b8' : s.colour;
+  return `<div class="lc-sec-group" style="--lc-sec-stripe:${stripe}">${lcRenderSectionBody(row, s)}</div>`;
+}
+
+function lcBuildCard(row) {
+  const sectionsByIdx = Object.fromEntries(LC_SECTIONS.map(s => [s.idx, s]));
+  const lotNum = String(row['Lot #'] || row['Lot#'] || '—');
+  const projectName = String(row['Project Name'] || '').trim();
+  const propAddr = String(row['Property Address'] || '').trim();
+  const stage = String(row['Stage'] || '').trim();
+  const lotId = String(row['Lot ID'] || '').trim();
+  const subParts = [stage && 'Stage ' + stage.replace(/^Stage\s*/i, ''), projectName, lotId && 'Lot ID ' + lotId].filter(Boolean);
+  const sub = subParts.join(' · ');
+
+  const vendAgency = String(row['Vendors Agency'] || '').trim();
+  const vendAgent = String(row['Vendors Agency Agent'] || '').trim();
+  const buyer1 = String(row["(1) Purchaser's Name"] || '').trim();
+  const buyer2 = String(row["(2) Purchaser's Name"] || '').trim();
+
+  // Header value pill — depends on Sales Condition
+  const cond = String(row['Sales Condition'] || '').toLowerCase();
+  let pillRaw = '';
+  if (cond.includes('on sale') || cond.includes('pending')) pillRaw = row['$LIST'];
+  else if (cond.includes('deposit')) pillRaw = row['CfS Issued Price'];
+  else if (cond.includes('exchanged')) pillRaw = row['CfS Exchanged Price ($)'];
+  else if (cond.includes('settled')) pillRaw = row['CfS Settled Price ($)'];
+  const pillVal = (pillRaw && !isNaN(Number(pillRaw))) ? '$' + Number(pillRaw).toLocaleString() : '';
+
+  const condText = String(row['Sales Condition'] || '—').trim() || '—';
+  const firb = String(row['FIRB Approval'] || '').trim();
+  const showFirb = firb && firb.toLowerCase() !== 'no' && firb.toLowerCase() !== 'n/a';
+
+  // Sales Condition strip — 5 stage pipeline
+  const stageNames = [
+    {idx: 1, label: '1. On Sale',    text: 'On&nbsp;Sale'},
+    {idx: 2, label: '2. Pending SA', text: 'Pending&nbsp;SA'},
+    {idx: 3, label: '3. Deposit',    text: 'Deposit'},
+    {idx: 4, label: '4. Exchanged',  text: 'Exchanged'},
+    {idx: 5, label: '5. Settled',    text: 'Settled'},
+  ];
+  let currentStage = 0;
+  if (cond.includes('on sale')) currentStage = 1;
+  else if (cond.includes('pending')) currentStage = 2;
+  else if (cond.includes('deposit')) currentStage = 3;
+  else if (cond.includes('exchanged')) currentStage = 4;
+  else if (cond.includes('settled')) currentStage = 5;
+  const stagesHtml = stageNames.map(st => {
+    const cls = st.idx < currentStage ? 'done' : (st.idx === currentStage ? 'current' : '');
+    return `<span class="lc-pstage ${cls}" data-idx="${st.idx}" data-label="${st.label}" onclick="lcSetCondition(${st.idx})">${st.text}</span>`;
+  }).join('');
+
+  // Tabs and panes
+  const tabsHtml = LC_TABS.map((t, i) => {
+    const fg = t.dark ? '#fff' : '#0f172a';
+    const bg = lcTabBg(t.primaryColour);
+    const swatchStyle = `background:${t.primaryColour};${t.primaryColour==='#FFFFFF'?'border:0.5px solid #94a3b8;':''}`;
+    return `<div class="lc-tab ${i===0?'active':''}" data-tab="${t.id}" style="--lc-tab-bg:${bg};--lc-tab-fg:${fg}" onclick="lcSwitchTab('${t.id}')">
+      <span class="lc-tab-swatch" style="${swatchStyle}"></span>${lcEscapeHtml(t.label)}
+    </div>`;
+  }).join('');
+
+  const panesHtml = LC_TABS.map((t, i) => {
+    const sections = t.sections.map(idx => sectionsByIdx[idx]).filter(Boolean);
+    const inner = sections.map(s => lcRenderSectionBlock(row, s)).join('');
+    return `<div class="lc-tab-pane ${i===0?'active':''}" id="lc-pane-${t.id}">${inner}</div>`;
+  }).join('');
+
+  return `<div class="lc-shell">
+      <div class="lc-hdr">
+        <div class="lc-hdr-tile"><span>Lot</span><b>${lcEscapeHtml(lotNum)}</b></div>
+        <div class="lc-hdr-info">
+          <div class="lc-hdr-name">${lcEscapeHtml(propAddr || '—')}</div>
+          ${sub ? `<div class="lc-hdr-sub">${lcEscapeHtml(sub)}</div>` : ''}
+          ${(vendAgency || vendAgent) ? `<div class="lc-hdr-row"><span class="lc-hdr-row-label">Agency</span><span class="lc-hdr-row-value">${lcEscapeHtml(vendAgency)}${vendAgency && vendAgent ? '<span class="lc-sep">·</span>' : ''}${lcEscapeHtml(vendAgent)}</span></div>` : ''}
+          ${(buyer1 || buyer2) ? `<div class="lc-hdr-row"><span class="lc-hdr-row-label">Buyers</span><span class="lc-hdr-row-value">${lcEscapeHtml(buyer1)}${buyer1 && buyer2 ? '<span class="lc-sep">&amp;</span>' : ''}${lcEscapeHtml(buyer2)}</span></div>` : ''}
+          ${projectName ? `<div class="lc-hdr-alloc"><span class="lc-hdr-alloc-label">Project</span><span class="lc-hdr-alloc-value">${lcEscapeHtml(projectName)}</span></div>` : ''}
+        </div>
+        <div class="lc-hdr-pills">
+          ${pillVal ? `<span class="lc-pill lc-pill-val">${lcEscapeHtml(pillVal)}</span>` : ''}
+          <span class="lc-pill lc-pill-cond" id="lc-cond-pill"><span class="lc-dot"></span>${lcEscapeHtml(condText)}</span>
+          ${showFirb ? `<span class="lc-pill lc-pill-tag">FIRB ${lcEscapeHtml(firb)}</span>` : ''}
+        </div>
+      </div>
+      <div class="lc-body">
+        <div class="lc-body-left">
+          <div class="lc-left-head">
+            <div class="lc-left-title">Comments / interactions</div>
+            <div class="lc-left-count">0 entries</div>
+          </div>
+          <div class="lc-comment-input">
+            <span>Add a comment or interaction…</span>
+            <div class="lc-comment-arrow">→</div>
+          </div>
+          <div class="lc-feed-label">Activity</div>
+          <div class="lc-feed">
+            <div class="lc-feed-empty">No comments or interactions yet.</div>
+          </div>
+        </div>
+        <div class="lc-body-right">
+          <div class="lc-process">
+            <div class="lc-process-label">SALES CONDITION</div>
+            <div class="lc-process-right">
+              <div class="lc-process-stages" id="lc-cond-stages">${stagesHtml}</div>
+              <span class="lc-process-count" id="lc-cond-count">${currentStage}/5</span>
+            </div>
+          </div>
+          <div class="lc-tabs-wrap"><div class="lc-tabs">${tabsHtml}</div></div>
+          <div class="lc-tab-body">${panesHtml}</div>
+          <div class="lc-footer">
+            <button class="lc-btn" onclick="deskCancelEditCheck()">Cancel</button>
+            <div class="lc-btn-spacer"></div>
+            <button class="lc-btn" onclick="openScanPdf()">Scan PDF</button>
+            <button class="lc-btn lc-btn-primary" onclick="deskSaveEdit()">Save &amp; Sync</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function lcSwitchTab(tabId) {
+  document.querySelectorAll('.lc-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
+  document.querySelectorAll('.lc-tab-pane').forEach(p => p.classList.toggle('active', p.id === 'lc-pane-' + tabId));
+}
+
+function lcSetCondition(idx) {
+  // Phase 1: open the existing Sales Condition dropdown (the popup will replace this in phase 2)
+  const key = sid('Sales Condition');
+  const row = allData[editRowIdx];
+  if (!row) return;
+  const currentVal = String(row['Sales Condition'] || '');
+  deskStartEdit(key, currentVal);
+}
+
 async function deskEditRow(idx) {
   dtSelectedIdx = idx;
   modalRowIdx = allData.indexOf(filteredData[idx]);
   const row = allData[allData.indexOf(filteredData[idx])];
   const lotNum = String(row['Lot #'] || row['Lot#'] || '').trim();
   editRowIdx = modalRowIdx;
-  const lotNumDisp = row['Lot #'] || row['Lot#'] || '';
   // Open edit screen immediately, check lock in background
   checkLock(lotNum).then(lock => {
     if (lock) {
@@ -3847,41 +4173,7 @@ async function deskEditRow(idx) {
     acquireLock(lotNum);
   });
   document.getElementById('d-edit-title').textContent = 'Lot ' + lotNum;
-  let editHtml = '<table style="width:100%;border-collapse:collapse">';
-  const groupedCols = COL_GROUPS.flatMap(g => g.cols);
-  COL_GROUPS.forEach(group => {
-    const groupCols = group.cols.filter(c => headers.includes(c));
-    if (!groupCols.length) return;
-    // Section header row spanning full width
-
-    groupCols.forEach(h => {
-      const val = String(row[h] ?? '').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const bg = group.colour;
-      const tc = group.textColour;
-      const labelBg = group.colour;
-      const labelTc = group.textColour;
-      const fmtDisp = deskFormatDisplay(h, String(row[h] ?? ''));
-      editHtml += `<tr id="d-row-${sid(h)}" onclick="deskStartEdit('${sid(h)}','${val}')" style="cursor:pointer">
-        <td style="padding:9px 16px;border-bottom:0.5px solid rgba(0,0,0,0.1);white-space:nowrap;width:1%;font-size:12px;font-weight:500;background:${labelBg};color:${labelTc};user-select:none">${h.trim()}</td>
-        <td style="padding:9px 16px;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--ink);background:var(--surface)" id="d-disp-${sid(h)}">${fmtDisp}</td>
-      </tr>`;
-    });
-  });
-  // Ungrouped
-  const ungrouped = headers.filter(h => !groupedCols.includes(h));
-  if (ungrouped.length) {
-
-    ungrouped.forEach(h => {
-      const val = String(row[h] ?? '').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const fmtDispU = deskFormatDisplay(h, String(row[h] ?? ''));
-      editHtml += `<tr id="d-row-${sid(h)}" onclick="deskStartEdit('${sid(h)}','${val}')" style="cursor:pointer">
-        <td style="padding:9px 16px;border-bottom:0.5px solid rgba(0,0,0,0.1);white-space:nowrap;width:1%;font-size:12px;font-weight:500;background:#e8e3d8;color:#1a1408;user-select:none">${h.trim()}</td>
-        <td style="padding:9px 16px;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--ink);background:var(--surface)" id="d-disp-${sid(h)}">${fmtDispU}</td>
-      </tr>`;
-    });
-  }
-  editHtml += '</table>';
-  document.getElementById('d-edit-fields').innerHTML = editHtml;
+  document.getElementById('d-edit-fields').innerHTML = lcBuildCard(row);
   formDirty = false;
   closeDtPanel();
   deskShowScreen('edit');
@@ -3894,41 +4186,7 @@ function deskEditFromPanel() {
   const row = allData[editRowIdx];
   const lotNum = row['Lot #'] || row['Lot#'] || '';
   document.getElementById('d-edit-title').textContent = 'Lot ' + lotNum;
-  let editHtml = '<table style="width:100%;border-collapse:collapse">';
-  const groupedCols = COL_GROUPS.flatMap(g => g.cols);
-  COL_GROUPS.forEach(group => {
-    const groupCols = group.cols.filter(c => headers.includes(c));
-    if (!groupCols.length) return;
-    // Section header row spanning full width
-
-    groupCols.forEach(h => {
-      const val = String(row[h] ?? '').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const bg = group.colour;
-      const tc = group.textColour;
-      const labelBg = group.colour;
-      const labelTc = group.textColour;
-      const fmtDisp = deskFormatDisplay(h, String(row[h] ?? ''));
-      editHtml += `<tr id="d-row-${sid(h)}" onclick="deskStartEdit('${sid(h)}','${val}')" style="cursor:pointer">
-        <td style="padding:9px 16px;border-bottom:0.5px solid rgba(0,0,0,0.1);white-space:nowrap;width:1%;font-size:12px;font-weight:500;background:${labelBg};color:${labelTc};user-select:none">${h.trim()}</td>
-        <td style="padding:9px 16px;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--ink);background:var(--surface)" id="d-disp-${sid(h)}">${fmtDisp}</td>
-      </tr>`;
-    });
-  });
-  // Ungrouped
-  const ungrouped = headers.filter(h => !groupedCols.includes(h));
-  if (ungrouped.length) {
-
-    ungrouped.forEach(h => {
-      const val = String(row[h] ?? '').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const fmtDispU = deskFormatDisplay(h, String(row[h] ?? ''));
-      editHtml += `<tr id="d-row-${sid(h)}" onclick="deskStartEdit('${sid(h)}','${val}')" style="cursor:pointer">
-        <td style="padding:9px 16px;border-bottom:0.5px solid rgba(0,0,0,0.1);white-space:nowrap;width:1%;font-size:12px;font-weight:500;background:#e8e3d8;color:#1a1408;user-select:none">${h.trim()}</td>
-        <td style="padding:9px 16px;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--ink);background:var(--surface)" id="d-disp-${sid(h)}">${fmtDispU}</td>
-      </tr>`;
-    });
-  }
-  editHtml += '</table>';
-  document.getElementById('d-edit-fields').innerHTML = editHtml;
+  document.getElementById('d-edit-fields').innerHTML = lcBuildCard(row);
   formDirty = false;
   deskShowScreen('edit');
 }
