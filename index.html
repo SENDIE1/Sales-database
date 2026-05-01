@@ -4220,6 +4220,54 @@ const LC_DEPOSIT_FIELDS = [
   { key: 'FIRB Approval',                  label: 'FIRB Approval',          type: 'firb',     req: 'optional' },
 ];
 
+// Permissive date parser — accepts: 1-1-26, 01-02-26, 01-02-2026, 01/01/26, 1.1.26, 15-Mar-2026
+// Returns Date object, or null if not parseable. Day-first (Australian/UK convention).
+function lcParseDate(input) {
+  if (!input) return null;
+  const s = String(input).trim();
+  if (!s) return null;
+
+  // Excel serial number
+  const num = Number(s);
+  if (!isNaN(num) && num > 40000) {
+    return new Date(Math.round((num - 25569) * 86400 * 1000));
+  }
+
+  // Numeric: D(D)[-/.]M(M)[-/.]YY(YY)
+  const m1 = s.match(/^(\d{1,2})[\-\/\.](\d{1,2})[\-\/\.](\d{2,4})$/);
+  if (m1) {
+    let day = parseInt(m1[1], 10);
+    let month = parseInt(m1[2], 10);
+    let year = parseInt(m1[3], 10);
+    if (year < 100) year += 2000;
+    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+    const d = new Date(year, month - 1, day);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  // Named month: D(D)[- ]Mmm[- ]YY(YY)  e.g. 15-Mar-2026, 1 Jan 26
+  const months = { jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6, aug:7, sep:8, oct:9, nov:10, dec:11 };
+  const m2 = s.match(/^(\d{1,2})[\-\s]([a-z]{3})[a-z]*[\-\s](\d{2,4})$/i);
+  if (m2) {
+    const day = parseInt(m2[1], 10);
+    const month = months[m2[2].toLowerCase()];
+    let year = parseInt(m2[3], 10);
+    if (month == null || day < 1 || day > 31) return null;
+    if (year < 100) year += 2000;
+    const d = new Date(year, month, day);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  // ISO YYYY-MM-DD (e.g. from native date pickers, just in case)
+  const m3 = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m3) {
+    const d = new Date(parseInt(m3[1], 10), parseInt(m3[2], 10) - 1, parseInt(m3[3], 10));
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  return null;
+}
+
 function lcOpenDepositPopup(targetIdx, targetLabel) {
   if (editRowIdx < 0) return;
   const row = allData[editRowIdx];
@@ -4250,14 +4298,10 @@ function lcOpenDepositPopup(targetIdx, targetLabel) {
       const val = !isNaN(n) ? String(n > 0 && n <= 1 ? n * 100 : n) : '';
       inputHtml = `<div class="lcm-suf"><input class="lcm-input" type="text" data-field="${escKey}" data-req="${f.req}" data-type="percent" value="${val}" placeholder="e.g. 10"><span class="lcm-suf-text">%</span></div>`;
     } else if (f.type === 'date') {
-      let val = '';
-      if (raw) {
-        let d;
-        if (typeof raw === 'number' && raw > 40000) d = new Date(Math.round((raw - 25569) * 86400 * 1000));
-        else d = new Date(raw);
-        if (!isNaN(d.getTime())) val = d.toISOString().slice(0, 10);
-      }
-      inputHtml = `<input class="lcm-input" type="date" data-field="${escKey}" data-req="${f.req}" data-type="date" value="${val}">`;
+      // Free-text input — accepts 1-1-26, 01/02/26, 01-02-2026, 15-Mar-2026, etc.
+      // Pre-fill in the readable DD-Mmm-YYYY format that fmtDate produces.
+      const val = raw ? fmtDate(raw) : '';
+      inputHtml = `<input class="lcm-input" type="text" data-field="${escKey}" data-req="${f.req}" data-type="date" value="${val}" placeholder="DD-MM-YY or DD/MM/YYYY">`;
     } else {
       const v = String(raw ?? '').replace(/"/g, '&quot;');
       inputHtml = `<input class="lcm-input" type="${f.type}" data-field="${escKey}" data-req="${f.req}" data-type="${f.type}" value="${v}">`;
@@ -4299,18 +4343,26 @@ function lcOpenDepositPopup(targetIdx, targetLabel) {
 
 function lcValidatePopup() {
   const overlay = document.getElementById('lcm-overlay');
-  let hardMissing = 0, softMissing = 0;
+  let hardMissing = 0, softMissing = 0, badDates = 0;
   overlay.querySelectorAll('.lcm-input').forEach(el => {
-    const isEmpty = String(el.value || '').trim() === '';
+    const val = String(el.value || '').trim();
+    const isEmpty = val === '';
     const req = el.dataset.req;
+    const type = el.dataset.type;
+    const isBadDate = type === 'date' && !isEmpty && !lcParseDate(val);
+    if (isBadDate) badDates++;
     if (isEmpty && req === 'hard') { el.classList.add('empty-required'); hardMissing++; }
-    else el.classList.remove('empty-required');
+    else if (isBadDate) { el.classList.add('empty-required'); }
+    else { el.classList.remove('empty-required'); }
     if (isEmpty && req === 'soft') softMissing++;
   });
   const summary = document.getElementById('lcm-summary');
-  if (hardMissing > 0) {
+  if (hardMissing > 0 || badDates > 0) {
     summary.classList.remove('hidden', 'warn');
-    summary.innerHTML = `<span>⚠</span><span><strong>${hardMissing} required field${hardMissing > 1 ? 's' : ''} missing</strong> — fields marked <span style="color:#dc2626">*</span> must be filled to advance.</span>`;
+    const parts = [];
+    if (hardMissing > 0) parts.push(`<strong>${hardMissing} required field${hardMissing > 1 ? 's' : ''} missing</strong>`);
+    if (badDates > 0) parts.push(`<strong>${badDates} date${badDates > 1 ? 's' : ''} unrecognised</strong> (try formats like 1-1-26, 01/02/2026, 15-Mar-2026)`);
+    summary.innerHTML = `<span>⚠</span><span>${parts.join(' · ')}</span>`;
   } else if (softMissing > 0) {
     summary.classList.remove('hidden');
     summary.classList.add('warn');
@@ -4318,7 +4370,7 @@ function lcValidatePopup() {
   } else {
     summary.classList.add('hidden');
   }
-  return hardMissing === 0;
+  return hardMissing === 0 && badDates === 0;
 }
 
 function lcCancelPopup() {
@@ -4349,7 +4401,8 @@ function lcSavePopup(targetIdx, targetLabel) {
       const n = parseFloat(String(val).replace(/%/g, '').trim());
       displayHtml = isNaN(n) ? '' : ((n > 0 && n <= 1 ? n * 100 : n) + '%');
     } else if (type === 'date') {
-      displayHtml = lcEscapeHtml(fmtDate(val));
+      const parsed = lcParseDate(val);
+      displayHtml = parsed ? lcEscapeHtml(fmtDate(parsed)) : lcEscapeHtml(val);
     } else {
       displayHtml = lcEscapeHtml(val);
     }
