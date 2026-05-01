@@ -4339,6 +4339,15 @@ function lcOpenDepositPopup(targetIdx, targetLabel) {
     el.addEventListener('input', lcValidatePopup);
     el.addEventListener('change', lcValidatePopup);
   });
+  // Date fields: normalise to DD-Mmm-YYYY on blur so user sees confirmation immediately
+  overlay.querySelectorAll('.lcm-input[data-type="date"]').forEach(el => {
+    el.addEventListener('blur', () => {
+      const v = el.value.trim();
+      if (!v) return;
+      const parsed = lcParseDate(v);
+      if (parsed) { el.value = fmtDate(parsed); lcValidatePopup(); }
+    });
+  });
 }
 
 function lcValidatePopup() {
