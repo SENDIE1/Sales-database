@@ -435,6 +435,15 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
 .lcm-banner button { background: none; border: none; color: #002675; text-decoration: underline; padding: 0; font-size: 12px; cursor: pointer; font-family: inherit; }
 .lcm-body { flex: 1; overflow-y: auto; padding: 16px 22px; }
 .lcm-summary { padding: 10px 14px; border-radius: 6px; font-size: 12px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+/* Context bar — shows CfS Type at the top of the popup so the user knows the lot context (especially Resc/Exch) */
+.lcm-context { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; }
+.lcm-context.warn { background: #fef3c7; border-color: #f59e0b; }
+.lcm-context-row { display: flex; align-items: center; gap: 12px; }
+.lcm-context-label { font-size: 10px; letter-spacing: 0.6px; text-transform: uppercase; color: #64748b; font-weight: 600; flex-shrink: 0; min-width: 70px; }
+.lcm-context.warn .lcm-context-label { color: #78350f; }
+.lcm-context select.lcm-input { max-width: 240px; }
+.lcm-context-warn { display: flex; align-items: center; gap: 6px; margin-top: 10px; padding-top: 8px; border-top: 1px solid #f59e0b; font-size: 12px; color: #78350f; font-weight: 500; }
+.lcm-context-warn.hidden { display: none; }
 .lcm-summary.warn { background: #fffbeb; border-color: #fde68a; color: #78350f; }
 .lcm-summary.hidden { display: none; }
 .lcm-row { display: grid; grid-template-columns: 180px 1fr; gap: 16px; align-items: center; padding: 9px 0; border-bottom: 0.5px solid #f1f5f9; }
@@ -4277,7 +4286,32 @@ function lcOpenDepositPopup(targetIdx, targetLabel) {
   const lotNum = row['Lot #'] || row['Lot#'] || '—';
   const propAddr = row['Property Address'] || '';
 
-  let bodyHtml = '<div class="lcm-summary hidden" id="lcm-summary"></div>';
+  // Context bar — shows CfS Type prominently. Resc/Exch lots flagged with amber warning.
+  const cfsTypeRaw = String(row['CfS Type'] || row['CFS Type'] || '').trim();
+  const cfsTypeIsResc = cfsTypeRaw.toLowerCase().includes('resc');
+  // Build options from existing data so any historical CfS Type values are preserved
+  const cfsTypeOptionsSet = new Set(allData.map(r => String(r['CfS Type'] || r['CFS Type'] || '').trim()).filter(Boolean));
+  cfsTypeOptionsSet.add('1. New Sale');
+  cfsTypeOptionsSet.add('2.Resc/Exch');
+  if (cfsTypeRaw) cfsTypeOptionsSet.add(cfsTypeRaw);
+  const cfsTypeOptions = Array.from(cfsTypeOptionsSet).sort();
+  const cfsOptHtml = ['<option value="">—</option>']
+    .concat(cfsTypeOptions.map(v => `<option value="${lcEscapeHtml(v).replace(/"/g, '&quot;')}" ${v === cfsTypeRaw ? 'selected' : ''}>${lcEscapeHtml(v)}</option>`))
+    .join('');
+
+  let bodyHtml = `
+    <div class="lcm-context ${cfsTypeIsResc ? 'warn' : ''}" id="lcm-cfs-context">
+      <div class="lcm-context-row">
+        <span class="lcm-context-label">CfS Type</span>
+        <select class="lcm-input" id="lcm-cfs-type" data-field="CfS Type" data-type="cfstype">${cfsOptHtml}</select>
+      </div>
+      <div class="lcm-context-warn ${cfsTypeIsResc ? '' : 'hidden'}" id="lcm-cfs-warn">
+        <span>⚠</span>
+        <span><strong>Rescission / Exchange lot</strong> — verify all fields carefully. Re-exchange terms may differ from a new sale.</span>
+      </div>
+    </div>
+    <div class="lcm-summary hidden" id="lcm-summary"></div>
+  `;
   LC_DEPOSIT_FIELDS.forEach(f => {
     const raw = row[f.key];
     const labelClass = f.req === 'hard' ? 'lcm-label required' : 'lcm-label';
@@ -4342,6 +4376,16 @@ function lcOpenDepositPopup(targetIdx, targetLabel) {
     el.addEventListener('input', lcValidatePopup);
     el.addEventListener('change', lcValidatePopup);
   });
+  // Live-update the Resc/Exch warning when the CfS Type dropdown changes
+  const cfsSel = document.getElementById('lcm-cfs-type');
+  if (cfsSel) {
+    cfsSel.addEventListener('change', () => {
+      const val = String(cfsSel.value || '').trim();
+      const isResc = val.toLowerCase().includes('resc');
+      document.getElementById('lcm-cfs-context').classList.toggle('warn', isResc);
+      document.getElementById('lcm-cfs-warn').classList.toggle('hidden', !isResc);
+    });
+  }
   // Date fields: normalise to DD-Mmm-YYYY on blur so user sees confirmation immediately
   overlay.querySelectorAll('.lcm-input[data-type="date"]').forEach(el => {
     el.addEventListener('blur', () => {
