@@ -124,6 +124,8 @@ html,body{height:100%;font-family:"Aptos",sans-serif;font-size:13px;background:#
   table.dt tr:nth-child(even) td.td-lot{background:#faf8f4 !important}
   table.dt tr:hover td.td-lot{background:#e8f4ed !important}
   table.dt tr.dt-sel td.td-lot{background:#dff0e8 !important}
+  /* Lot # header cell — sticky-left so the header stays aligned with the frozen body column */
+  table.dt th.th-lot{position:sticky;left:0;z-index:6;border-right:2px solid #c8c0b0}
   table.dt td.td-val{text-align:right}
   table.dt td.td-badge{overflow:visible}
 
@@ -3842,14 +3844,15 @@ function renderDesktopTable() {
     const bg = getHeaderColour(h);
     const tc = getHeaderTextColour(bg, h);
     const filtered = deskActiveColFilters[h] ? ' filtered' : '';
-    return `<th data-col="${h}" class="${filtered}" style="background:${bg};color:${tc}" onclick="openCfPopup(event,'${h.replace(/'/g,"\'")}')" title="Click to filter: ${h.trim()}">${h.trim()} &#9660;</th>`;
+    const stickyCls = h === 'Lot #' ? ' th-lot' : '';
+    return `<th data-col="${h}" class="${(filtered + stickyCls).trim()}" style="background:${bg};color:${tc}" onclick="openCfPopup(event,'${h.replace(/'/g,"\'")}')" title="Click to filter: ${h.trim()}">${h.trim()} &#9660;</th>`;
   }).join('') + '</tr>';
 
   document.getElementById('dt-body').innerHTML = filteredData.map((row, i) => {
     const cond = String(row['Sales Condition']||row['Sales Condition']||'');
     const cells = headers.map((h, hi) => {
       const v = row[h]; const vs = String(v ?? '');
-      let cls = hi === 0 ? 'td-lot' : '';
+      let cls = h === 'Lot #' ? 'td-lot' : '';
       let display;
       if (h === 'Sales Condition' || h === 'Sales Condition') {
         const condStyle = badgeCellStyle(cond);
